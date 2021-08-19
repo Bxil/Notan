@@ -62,7 +62,7 @@ namespace Notan
             }
         }
 
-        internal void Send<T>(int storageid, MessageType type, Handle handle, ref T entity) where T : struct, IEntity
+        internal void Send<T>(int storageid, MessageType type, int index, int generation, ref T entity) where T : struct, IEntity
         {
             //Leave space for the length prefix
             int prefixPosition = (int)outgoing.Position;
@@ -70,8 +70,8 @@ namespace Notan
 
             writer.Write(storageid);
             writer.Write((byte)type);
-            writer.Write(handle.Index);
-            writer.Write(handle.Generation);
+            writer.Write(index);
+            writer.Write(generation);
 
             switch (type)
             {
@@ -107,13 +107,14 @@ namespace Notan
             return tcpClient.Available >= lengthPrefix;
         }
 
-        internal int ReadHeader(out MessageType type, out Handle handle)
+        internal int ReadHeader(out MessageType type, out int index, out int generation)
         {
             LastCommunicated = DateTimeOffset.Now;
 
             int storageid = reader.ReadInt32();
             type = (MessageType)reader.ReadByte();
-            handle = new(reader.ReadInt32(), reader.ReadInt32());
+            index = reader.ReadInt32();
+            generation = reader.ReadInt32();
 
             lengthPrefix = 0;
             return storageid;

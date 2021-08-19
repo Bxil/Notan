@@ -19,7 +19,7 @@ namespace Notan
 
         internal abstract void Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>;
 
-        internal abstract void HandleMessage(Client client, MessageType type, Handle handle);
+        internal abstract void HandleMessage(Client client, MessageType type, int index, int generation);
     }
 
     //Common
@@ -34,6 +34,17 @@ namespace Notan
         private protected int remaniningHandles = 0;
 
         internal StorageBase(int id) : base(id) { }
+
+        internal ref T Get(int index, int generation)
+        {
+            Debug.Assert(Alive(index, generation));
+            return ref entities[indexToEntity[index]];
+        }
+
+        internal bool Alive(int index, int generation)
+        {
+            return generations[index] == generation;
+        }
 
         private protected void Recycle(int index)
         {
@@ -134,42 +145,68 @@ namespace Notan
             }
 
             Log($"Creating {hndind}|{generations[hndind]}");
-            entities.Add(new T { Handle = new(hndind, generations[hndind]) });
+            entities.Add(new T { Handle = new(this, hndind, generations[hndind]) });
             entityToIndex.Add(hndind);
 
             return ref entities[entind];
         }
 
-        public void Destroy(Handle handle)
+        internal void Destroy(int index, int generation)
         {
-            Log($"Destroying {handle.Index}|{handle.Generation}");
-            Debug.Assert(Alive(handle));
+            Log($"Destroying {index}|{generation}");
+            Debug.Assert(Alive(index, generation));
 
-            foreach (var observer in entityToObservers[indexToEntity[handle.Index]].AsSpan())
+            foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
             {
-                observer.Send(Id, MessageType.Destroy, handle, ref Unsafe.NullRef<T>());
+                observer.Send(Id, MessageType.Destroy, index, generation, ref Unsafe.NullRef<T>());
             }
 
-            var index = indexToEntity[handle.Index];
+            var entityIndex = indexToEntity[index];
 
-            entityToObservers.RemoveAt(index);
-            entityToAuthority.RemoveAt(index);
-            entities.RemoveAt(index);
-            indexToEntity[entityToIndex[^1]] = index;
-            entityToIndex.RemoveAt(index);
-            generations[handle.Index]++;
-            Recycle(handle.Index);
+            entityToObservers.RemoveAt(entityIndex);
+            entityToAuthority.RemoveAt(entityIndex);
+            entities.RemoveAt(entityIndex);
+            indexToEntity[entityToIndex[^1]] = entityIndex;
+            entityToIndex.RemoveAt(entityIndex);
+            generations[index]++;
+            Recycle(index);
         }
 
-        public ref T Get(Handle handle)
+        internal void AddObserver(int index, int generation, Client client)
         {
-            Debug.Assert(Alive(handle));
-            return ref entities[indexToEntity[handle.Index]];
+            Debug.Assert(Alive(index, generation));
+            entityToObservers[indexToEntity[index]].Add(client);
+            client.Send(Id, MessageType.Create, index, generation, ref Get(index, generation));
         }
 
-        public bool Alive(Handle handle)
+        internal void RemoveObserver(int index, int generation, Client client)
         {
-            return generations[handle.Index] == handle.Generation;
+            Debug.Assert(Alive(index, generation));
+            client.Send(Id, MessageType.Destroy, index, generation, ref Unsafe.NullRef<T>());
+            entityToObservers[indexToEntity[index]].Remove(client);
+        }
+
+        internal void UpdateObservers(int index, int generation)
+        {
+            Debug.Assert(Alive(index, generation));
+            ref var entity = ref Get(index, generation);
+            foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
+            {
+                observer.Send(Id, MessageType.Update, index, generation, ref entity);
+            }
+            entity.PostUpdate();
+        }
+
+        internal void MakeAuthority(int index, int generation, Client? client)
+        {
+            Debug.Assert(Alive(index, generation));
+            entityToAuthority[indexToEntity[index]] = client;
+        }
+
+        internal Client? GetAuthority(int index, int generation)
+        {
+            Debug.Assert(Alive(index, generation));
+            return entityToAuthority[indexToEntity[index]];
         }
 
         public void Run<TSystem>(ref TSystem system) where TSystem : ISystem<T>
@@ -178,42 +215,8 @@ namespace Notan
             while (i > 0)
             {
                 i--;
-                system.Work(this, ref entities[i]);
+                system.Work(ref entities[i]);
             }
-        }
-
-        public void AddObserver(Handle handle, Client client)
-        {
-            entityToObservers[indexToEntity[handle.Index]].Add(client);
-            client.Send(Id, MessageType.Create, handle, ref Get(handle));
-        }
-
-        public void RemoveObserver(Handle handle, Client client)
-        {
-            client.Send(Id, MessageType.Destroy, handle, ref Unsafe.NullRef<T>());
-            entityToObservers[indexToEntity[handle.Index]].Remove(client);
-        }
-
-        public void UpdateObservers(Handle handle)
-        {
-            Debug.Assert(Alive(handle));
-            ref var entity = ref Get(handle);
-            foreach (var observer in entityToObservers[indexToEntity[handle.Index]].AsSpan())
-            {
-                observer.Send(Id, MessageType.Update, handle, ref entity);
-            }
-            entity.PostUpdate();
-        }
-
-        public void MakeAuthority(Handle handle, Client? client)
-        {
-            entityToAuthority[indexToEntity[handle.Index]] = client;
-        }
-
-        public Client? Authority(Handle handle)
-        {
-            Debug.Assert(Alive(handle));
-            return entityToAuthority[indexToEntity[handle.Index]];
         }
 
         internal override void Deserialize<TDeserializer>(TDeserializer deserializer)
@@ -224,7 +227,7 @@ namespace Notan
             base.Deserialize(deserializer);
         }
 
-        internal override void HandleMessage(Client client, MessageType type, Handle handle)
+        internal override void HandleMessage(Client client, MessageType type, int index, int generation)
         {
             switch (type)
             {
@@ -233,7 +236,7 @@ namespace Notan
                     {
                         ref var entity = ref Create();
                         client.ReadIntoEntity(ref entity);
-                        MakeAuthority(entity.Handle, client);
+                        MakeAuthority(entity.Handle.Index, entity.Handle.Generation, client);
                     }
                     else
                     {
@@ -242,15 +245,15 @@ namespace Notan
                     }
                     break;
                 case MessageType.Update:
-                    if (Alive(handle) && entityToAuthority[indexToEntity[handle.Index]] == client)
+                    if (Alive(index, generation) && entityToAuthority[indexToEntity[index]] == client)
                     {
-                        client.ReadIntoEntity(ref Get(handle));
+                        client.ReadIntoEntity(ref Get(index, generation));
                     }
                     break;
                 case MessageType.Destroy:
-                    if (Alive(handle) && entityToAuthority[indexToEntity[handle.Index]] == client)
+                    if (Alive(index, generation) && entityToAuthority[indexToEntity[index]] == client)
                     {
-                        Destroy(handle);
+                        Destroy(index, generation);
                     }
                     break;
             }
@@ -269,45 +272,45 @@ namespace Notan
 
         public void RequestCreate(T entity)
         {
-            server.Send(Id, MessageType.Create, new(), ref entity);
+            server.Send(Id, MessageType.Create, 0, 0, ref entity);
         }
 
         public void RequestUpdate(Handle handle, T entity)
         {
-            server.Send(Id, MessageType.Update, handle, ref entity);
+            server.Send(Id, MessageType.Update, handle.Index, handle.Generation, ref entity);
         }
 
         public void RequestDestroy(Handle handle)
         {
-            server.Send(Id, MessageType.Destroy, handle, ref Unsafe.NullRef<T>());
+            server.Send(Id, MessageType.Destroy, handle.Index, handle.Generation, ref Unsafe.NullRef<T>());
         }
 
-        internal override void HandleMessage(Client client, MessageType type, Handle handle)
+        internal override void HandleMessage(Client client, MessageType type, int index, int generation)
         {
             switch (type)
             {
                 case MessageType.Create:
-                    Log($"Creating {handle.Index}|{handle.Generation}");
+                    Log($"Creating {index}|{generation}");
                     int entid = entityToIndex.Count;
-                    entityToIndex.Add(handle.Index);
+                    entityToIndex.Add(index);
                     T entity = default;
                     client.ReadIntoEntity(ref entity);
                     entities.Add(entity);
-                    indexToEntity.EnsureSize(handle.Index + 1);
-                    indexToEntity[handle.Index] = entid;
-                    generations.EnsureSize(handle.Index + 1);
-                    generations[handle.Index] = handle.Generation;
+                    indexToEntity.EnsureSize(index + 1);
+                    indexToEntity[index] = entid;
+                    generations.EnsureSize(index + 1);
+                    generations[index] = generation;
                     break;
                 case MessageType.Update:
-                    Log($"Updating {handle.Index}|{handle.Generation}");
-                    client.ReadIntoEntity(ref entities[indexToEntity[handle.Index]]);
+                    Log($"Updating {index}|{generation}");
+                    client.ReadIntoEntity(ref entities[indexToEntity[index]]);
                     break;
                 case MessageType.Destroy:
-                    Log($"Destroying {handle.Index}|{handle.Generation}");
-                    var index = indexToEntity[handle.Index];
-                    entities.RemoveAt(index);
-                    indexToEntity[entityToIndex[^1]] = index;
-                    entityToIndex.RemoveAt(index);
+                    Log($"Destroying {index}|{generation}");
+                    var entityIndex = indexToEntity[index];
+                    entities.RemoveAt(entityIndex);
+                    indexToEntity[entityToIndex[^1]] = entityIndex;
+                    entityToIndex.RemoveAt(entityIndex);
                     break;
             }
         }
@@ -318,7 +321,7 @@ namespace Notan
             while (i > 0)
             {
                 i--;
-                system.Work(this, ref entities[i]);
+                system.Work(ref entities[i]);
             }
         }
     }

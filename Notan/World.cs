@@ -127,12 +127,12 @@ namespace Notan
                     int messagesRead = 0;
                     while (messagesRead < messageReadMaximum && client.CanRead())
                     {
-                        int id = client.ReadHeader(out var type, out var handle);
+                        int id = client.ReadHeader(out var type, out var index, out var generation);
                         if (id < 0 || id >= IdToStorage.Count)
                         {
                             throw new IOException();
                         }
-                        IdToStorage[id].HandleMessage(client, type, handle);
+                        IdToStorage[id].HandleMessage(client, type, index, generation);
 
                         messagesRead++;
                     }
@@ -189,7 +189,7 @@ namespace Notan
             server.Flush();
             while (server.CanRead())
             {
-                IdToStorage[server.ReadHeader(out var type, out var handle)].HandleMessage(server, type, handle);
+                IdToStorage[server.ReadHeader(out var type, out int index, out var generation)].HandleMessage(server, type, index, generation);
             }
 
             Sleep();

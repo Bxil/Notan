@@ -41,28 +41,28 @@ namespace Test2
     struct OuterAdderSystem : ISystem<Adder>
     {
         public Storage<Number> NumberStorage;
-        public void Work(Storage<Adder> storage, ref Adder entity)
+        public void Work(ref Adder entity)
         {
             var adderSystem = new AdderSystem { Value = entity.Value };
             NumberStorage.Run(ref adderSystem);
-            storage.Destroy(entity.Handle);
+            entity.Handle.Destroy<Adder>();
         }
 
         struct AdderSystem : ISystem<Number>
         {
             public int Value;
 
-            public void Work(Storage<Number> storage, ref Number entity)
+            public void Work(ref Number entity)
             {
                 entity.Value += Value;
-                storage.UpdateObservers(entity.Handle);
+                entity.Handle.UpdateObservers<Number>();
             }
         }
     }
 
     struct ConsoleSystem : IViewSystem<Number>
     {
-        public void Work(StorageView<Number> Storage, ref Number entity)
+        public void Work(ref Number entity)
         {
             Console.Write(entity.Value);
             Console.Write(",");
@@ -73,9 +73,9 @@ namespace Test2
     {
         public Client Client;
 
-        public void Work(Storage<Number> storage, ref Number entity)
+        public void Work(ref Number entity)
         {
-            storage.AddObserver(entity.Handle, Client);
+            entity.Handle.AddObserver<Number>(Client);
         }
     }
 
@@ -117,7 +117,7 @@ namespace Test2
             var del = numberStorage.Create();
             del.Value = 4;
             numberStorage.Create().Value = 8;
-            numberStorage.Destroy(del.Handle);
+            del.Handle.Destroy<Number>();
             while (world.Loop())
             {
                 while (world.TryDequeueClient(out var client))

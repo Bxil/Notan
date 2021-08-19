@@ -6,9 +6,19 @@ namespace Notan
     //TODO: Make this a generic when https://github.com/dotnet/runtime/issues/6924 is finally fixed.
     public struct HandleCollection
     {
+        private readonly Storage storage;
+
         private FastList<Handle> handles;
         private FastList<Handle> addedDelta;
         private FastList<Handle> removedDelta;
+
+        public HandleCollection(Storage storage)
+        {
+            this.storage = storage;
+            handles = new();
+            addedDelta = new();
+            removedDelta = new();
+        }
 
         /// <returns>true if a handle was added.</returns>
         public bool Add(Handle handle)
@@ -57,6 +67,7 @@ namespace Notan
                 foreach (var handle in handles.AsSpan())
                 {
                     writer.Write(handle.Index);
+                    writer.Write(handle.Generation);
                 }
             }
             else
@@ -65,11 +76,13 @@ namespace Notan
                 foreach (var handle in removedDelta.AsSpan())
                 {
                     writer.Write(handle.Index);
+                    writer.Write(handle.Generation);
                 }
                 writer.Write(addedDelta.Count);
                 foreach (var handle in addedDelta.AsSpan())
                 {
                     writer.Write(handle.Index);
+                    writer.Write(handle.Generation);
                 }
             }
         }
@@ -79,13 +92,13 @@ namespace Notan
             int removedDeltaCount = reader.ReadInt32();
             for (int i = 0; i < removedDeltaCount; i++)
             {
-                handles.Remove(new Handle(reader.ReadInt32(), 0));
+                handles.Remove(new Handle(storage, reader.ReadInt32(), reader.ReadInt32()));
             }
             int addedDeltaCount = reader.ReadInt32();
             handles.EnsureCapacity(handles.Count + addedDeltaCount);
             for (int i = 0; i < addedDeltaCount; i++)
             {
-                handles.Add(new Handle(reader.ReadInt32(), 0));
+                handles.Add(new Handle(storage, reader.ReadInt32(), reader.ReadInt32()));
             }
         }
     }

@@ -26,7 +26,7 @@ namespace Test
 
     struct SystemA : ISystem<EntityA>
     {
-        public void Work(Storage<EntityA> storage, ref EntityA entity)
+        public void Work(ref EntityA entity)
         {
             Console.WriteLine(entity.Value);
         }
@@ -50,8 +50,8 @@ namespace Test
             storage.Run(ref systemA);
             Console.WriteLine();
 
-            storage.Destroy(one.Handle);
-            storage.Destroy(two.Handle);
+            one.Handle.Destroy<EntityA>();
+            two.Handle.Destroy<EntityA>();
 
             storage.Run(ref systemA);
             Console.WriteLine();
