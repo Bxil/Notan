@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <Nullable>Enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <RootNamespace>Notan</RootNamespace>
+    <Version>0.0.1</Version>
+    <Authors>Bxil</Authors>
+  </PropertyGroup>
+
+</Project>

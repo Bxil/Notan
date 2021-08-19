@@ -1,0 +1,130 @@
+﻿using Notan.Serialization;
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+
+namespace Notan
+{
+    public class Client
+    {
+        private readonly TcpClient tcpClient;
+        private readonly MemoryStream outgoing;
+        private readonly NetworkStream stream;
+        private readonly BinaryWriter writer;
+        private readonly BinaryReader reader;
+
+        private static readonly Encoding encoding = new UTF8Encoding(false);
+
+        public int Id { get; }
+        public bool Authenticated { get; set; } = false;
+        public bool Connected => tcpClient.Connected;
+        public DateTimeOffset LastCommunicated { get; private set; }
+        public DateTimeOffset LoginTime { get; }
+        public IPEndPoint IPEndPoint => (IPEndPoint)tcpClient.Client.RemoteEndPoint!;
+
+        internal Client(TcpClient tcpClient, int id)
+        {
+            this.tcpClient = tcpClient;
+            Id = id;
+
+            outgoing = new MemoryStream();
+
+            LastCommunicated = DateTimeOffset.Now;
+            LoginTime = LastCommunicated;
+
+            stream = tcpClient.GetStream();
+            tcpClient.Client.Blocking = false; //Blocking cannot be false before the acquisiton of a stream.
+
+            writer = new BinaryWriter(outgoing, encoding);
+            reader = new BinaryReader(stream, encoding);
+
+            lengthPrefix = 0;
+
+            Log("Connected.");
+        }
+
+        public void Disconnect()
+        {
+            Log("Disconnecting.");
+            tcpClient.Close();
+        }
+
+        internal void Flush()
+        {
+            if (outgoing.Position > 0)
+            {
+                outgoing.WriteTo(stream);
+                outgoing.SetLength(0);
+                LastCommunicated = DateTimeOffset.Now;
+            }
+        }
+
+        internal void Send<T>(int storageid, MessageType type, Handle handle, ref T entity) where T : struct, IEntity
+        {
+            //Leave space for the length prefix
+            int prefixPosition = (int)outgoing.Position;
+            outgoing.Position += sizeof(int);
+
+            writer.Write(storageid);
+            writer.Write((byte)type);
+            writer.Write(handle.Index);
+            writer.Write(handle.Generation);
+
+            switch (type)
+            {
+                case MessageType.Create:
+                    entity.Serialize(new BinarySerializer(writer), true);
+                    break;
+                case MessageType.Update:
+                    entity.Serialize(new BinarySerializer(writer), false);
+                    break;
+                case MessageType.Destroy:
+                    break;
+            }
+
+            int endPosition = (int)outgoing.Position;
+            outgoing.Position = prefixPosition;
+            writer.Write(endPosition - prefixPosition - sizeof(int));
+            outgoing.Position = endPosition;
+        }
+
+        private int lengthPrefix;
+        // After this function returns true and immediate read must follow.
+        internal bool CanRead()
+        {
+            if (lengthPrefix == 0) //We are yet to read the prefix,
+            {
+                if (tcpClient.Available < sizeof(int)) //but it is unavailable.
+                {
+                    return false;
+                }
+
+                lengthPrefix = reader.ReadInt32();
+            }
+            return tcpClient.Available >= lengthPrefix;
+        }
+
+        internal int ReadHeader(out MessageType type, out Handle handle)
+        {
+            LastCommunicated = DateTimeOffset.Now;
+
+            int storageid = reader.ReadInt32();
+            type = (MessageType)reader.ReadByte();
+            handle = new(reader.ReadInt32(), reader.ReadInt32());
+
+            lengthPrefix = 0;
+            return storageid;
+        }
+
+        internal void ReadIntoEntity<T>(ref T entity) where T : struct, IEntity
+        {
+            entity.Deserialize(new BinaryDeserializer(reader));
+        }
+
+        [Conditional("DEBUG")]
+        private protected void Log(string log) => Console.WriteLine($"{IPEndPoint} ({Id}) - {log}");
+    }
+}
