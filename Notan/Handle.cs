@@ -17,23 +17,39 @@ namespace Notan
             Generation = generation;
         }
 
-        public ref T Get<T>() where T : struct, IEntity => ref Unsafe.As<StorageBase<T>>(storage).Get(Index, Generation);
+        public StrongHandle<T> Strong<T>() where T : struct, IEntity => new(Unsafe.As<StorageBase<T>>(storage), Index, Generation);
+    }
 
-        public void Alive<T>() where T : struct, IEntity => Unsafe.As<StorageBase<T>>(storage).Alive(Index, Generation);
+    public readonly ref struct StrongHandle<T> where T : struct, IEntity
+    {
+        private readonly StorageBase<T> storage;
 
-        public void Destroy<T>() where T : struct, IEntity => GetStorage<T>().Destroy(Index, Generation);
+        public readonly int Index;
+        public readonly int Generation;
 
-        public void AddObserver<T>(Client client) where T : struct, IEntity => GetStorage<T>().AddObserver(Index, Generation, client);
+        internal StrongHandle(StorageBase<T> storage, int index, int generation)
+        {
+            this.storage = storage;
+            Index = index;
+            Generation = generation;
+        }
 
-        public void RemoveObserver<T>(int index, int generation, Client client) where T : struct, IEntity => GetStorage<T>().RemoveObserver(index, generation, client);
+        public ref T Get() => ref storage.Get(Index, Generation);
 
-        public void UpdateObservers<T>() where T : struct, IEntity => GetStorage<T>().UpdateObservers(Index, Generation);
+        public void Alive() => storage.Alive(Index, Generation);
 
-        public void MakeAuthority<T>(Client? client) where T : struct, IEntity => GetStorage<T>().MakeAuthority(Index, Generation, client);
+        public void Destroy() => GetStorage().Destroy(Index, Generation);
 
-        public Client? GetAuthority<T>() where T : struct, IEntity => GetStorage<T>().GetAuthority(Index, Generation);
+        public void AddObserver(Client client) => GetStorage().AddObserver(Index, Generation, client);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Storage<T> GetStorage<T>() where T : struct, IEntity => Unsafe.As<Storage<T>>(storage);
+        public void RemoveObserver(int index, int generation, Client client) => GetStorage().RemoveObserver(index, generation, client);
+
+        public void UpdateObservers() => GetStorage().UpdateObservers(Index, Generation);
+
+        public void MakeAuthority(Client? client) => GetStorage().MakeAuthority(Index, Generation, client);
+
+        public Client? GetAuthority() => GetStorage().GetAuthority(Index, Generation);
+
+        public Storage<T> GetStorage() => Unsafe.As<Storage<T>>(storage);
     }
 }

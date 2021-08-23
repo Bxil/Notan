@@ -45,7 +45,7 @@ namespace Test2
         {
             var adderSystem = new AdderSystem { Value = entity.Value };
             NumberStorage.Run(ref adderSystem);
-            entity.Handle.Destroy<Adder>();
+            entity.Handle.Strong<Adder>().Destroy();
         }
 
         struct AdderSystem : ISystem<Number>
@@ -55,7 +55,7 @@ namespace Test2
             public void Work(ref Number entity)
             {
                 entity.Value += Value;
-                entity.Handle.UpdateObservers<Number>();
+                entity.Handle.Strong<Number>().UpdateObservers();
             }
         }
     }
@@ -75,7 +75,7 @@ namespace Test2
 
         public void Work(ref Number entity)
         {
-            entity.Handle.AddObserver<Number>(Client);
+            entity.Handle.Strong<Number>().AddObserver(Client);
         }
     }
 
@@ -117,7 +117,7 @@ namespace Test2
             var del = numberStorage.Create();
             del.Value = 4;
             numberStorage.Create().Value = 8;
-            del.Handle.Destroy<Number>();
+            del.Handle.Strong<Number>().Destroy();
             while (world.Loop())
             {
                 while (world.TryDequeueClient(out var client))

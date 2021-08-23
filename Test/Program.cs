@@ -50,8 +50,8 @@ namespace Test
             storage.Run(ref systemA);
             Console.WriteLine();
 
-            one.Handle.Destroy<EntityA>();
-            two.Handle.Destroy<EntityA>();
+            one.Handle.Strong<EntityA>().Destroy();
+            two.Handle.Strong<EntityA>().Destroy();
 
             storage.Run(ref systemA);
             Console.WriteLine();
