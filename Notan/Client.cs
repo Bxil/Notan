@@ -10,6 +10,8 @@ namespace Notan
 {
     public class Client
     {
+        private readonly World world;
+
         private readonly TcpClient tcpClient;
         private readonly MemoryStream outgoing;
         private readonly NetworkStream stream;
@@ -25,8 +27,9 @@ namespace Notan
         public DateTimeOffset LoginTime { get; }
         public IPEndPoint IPEndPoint => (IPEndPoint)tcpClient.Client.RemoteEndPoint!;
 
-        internal Client(TcpClient tcpClient, int id)
+        internal Client(World world, TcpClient tcpClient, int id)
         {
+            this.world = world;
             this.tcpClient = tcpClient;
             Id = id;
 
@@ -76,10 +79,10 @@ namespace Notan
             switch (type)
             {
                 case MessageType.Create:
-                    entity.Serialize(new BinarySerializer(writer), true);
+                    entity.Serialize(new BinarySerializer(writer));
                     break;
                 case MessageType.Update:
-                    entity.Serialize(new BinarySerializer(writer), false);
+                    entity.Serialize(new BinarySerializer(writer));
                     break;
                 case MessageType.Destroy:
                     break;
@@ -122,7 +125,7 @@ namespace Notan
 
         internal void ReadIntoEntity<T>(ref T entity) where T : struct, IEntity
         {
-            entity.Deserialize(new BinaryDeserializer(reader));
+            entity.Deserialize(new BinaryDeserializer(world, reader));
         }
 
         [Conditional("DEBUG")]

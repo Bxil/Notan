@@ -5,19 +5,29 @@ namespace Notan
     //TODO: Make this a generic when https://github.com/dotnet/runtime/issues/6924 is finally fixed.
     public readonly struct Handle
     {
-        private readonly Storage storage;
+        internal readonly Storage Storage;
 
         public readonly int Index;
         public readonly int Generation;
 
         internal Handle(Storage storage, int index, int generation)
         {
-            this.storage = storage;
+            Storage = storage;
             Index = index;
             Generation = generation;
         }
 
-        public StrongHandle<T> Strong<T>() where T : struct, IEntity => new(Unsafe.As<StorageBase<T>>(storage), Index, Generation);
+        public StrongHandle<T> Strong<T>() where T : struct, IEntity => new(Unsafe.As<StorageBase<T>>(Storage), Index, Generation);
+
+        public static bool operator ==(Handle a, Handle b)
+        {
+            return a.Storage == b.Storage && a.Index == b.Index && a.Generation == b.Generation;
+        }
+
+        public static bool operator !=(Handle a, Handle b)
+        {
+            return a.Storage != b.Storage || a.Index != b.Index || a.Generation != b.Generation;
+        }
     }
 
     public readonly ref struct StrongHandle<T> where T : struct, IEntity
@@ -51,5 +61,15 @@ namespace Notan
         public Client? GetAuthority() => GetStorage().GetAuthority(Index, Generation);
 
         public Storage<T> GetStorage() => Unsafe.As<Storage<T>>(storage);
+
+        public static bool operator ==(StrongHandle<T> a, StrongHandle<T> b)
+        {
+            return a.storage == b.storage && a.Index == b.Index && a.Generation == b.Generation;
+        }
+
+        public static bool operator !=(StrongHandle<T> a, StrongHandle<T> b)
+        {
+            return a.storage != b.storage || a.Index != b.Index || a.Generation != b.Generation;
+        }
     }
 }

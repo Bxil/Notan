@@ -14,13 +14,13 @@ namespace Notan
     public abstract class World
     {
         private protected readonly Dictionary<string, Storage> TypeNameToStorage = new();
-        private protected FastList<Storage> IdToStorage = new();
+        internal FastList<Storage> IdToStorage = new();
 
         public TimeSpan Timestep { get; set; } = TimeSpan.FromSeconds(1.0 / 60.0);
 
         private protected World() { }
 
-        private protected StorageBase<T> GetStorageInternal<T>() where T : struct, IEntity
+        public StorageBase<T> GetStorageBase<T>() where T : struct, IEntity
         {
             return Unsafe.As<StorageBase<T>>(TypeNameToStorage[typeof(T).FullName!]);
         }
@@ -96,7 +96,7 @@ namespace Notan
                     nextClientId++;
                 }
 
-                client = new(listener.AcceptTcpClient(), id);
+                client = new(this, listener.AcceptTcpClient(), id);
                 clients.Add(client);
                 return true;
             }
@@ -105,8 +105,9 @@ namespace Notan
 
         public Storage<T> GetStorage<T>() where T : struct, IEntity
         {
-            return Unsafe.As<Storage<T>>(GetStorageInternal<T>());
+            return Unsafe.As<Storage<T>>(GetStorageBase<T>());
         }
+
         public bool Loop()
         {
             if (exit)
@@ -155,16 +156,16 @@ namespace Notan
     {
         private readonly Client server;
 
-        private ClientWorld(Client server)
+        private ClientWorld(TcpClient server)
         {
-            this.server = server;
+            this.server = new Client(this, server, 0);
         }
 
         public static async Task<ClientWorld> StartAsync(string host, int port)
         {
             var client = new TcpClient();
             await client.ConnectAsync(host, port);
-            var world = new ClientWorld(new Client(client, 0));
+            var world = new ClientWorld(client);
             return world;
         }
 
@@ -177,7 +178,7 @@ namespace Notan
 
         public StorageView<T> GetStorageView<T>() where T : struct, IEntity
         {
-            return Unsafe.As<StorageView<T>>(GetStorageInternal<T>());
+            return Unsafe.As<StorageView<T>>(GetStorageBase<T>());
         }
         public bool Loop()
         {

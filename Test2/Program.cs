@@ -15,7 +15,7 @@ namespace Test2
             Value = deserializer.GetEntry(nameof(Value)).ReadInt32();
         }
 
-        public void Serialize<T>(T serializer, bool nodelta) where T : ISerializer
+        public void Serialize<T>(T serializer) where T : ISerializer
         {
             serializer.Write(nameof(Value), Value);
         }
@@ -32,7 +32,7 @@ namespace Test2
             Value = deserializer.GetEntry(nameof(Value)).ReadInt32();
         }
 
-        public void Serialize<T>(T serializer, bool nodelta) where T : ISerializer
+        public void Serialize<T>(T serializer) where T : ISerializer
         {
             serializer.Write(nameof(Value), Value);
         }

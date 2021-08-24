@@ -8,11 +8,15 @@ namespace Notan
     //For storing in collections
     public abstract class Storage
     {
+        //TODO: delete me once Handle became generic
+        internal Type InnerType { get; }
+
         public int Id { get; }
 
-        protected Storage(int id)
+        private protected Storage(int id, Type innerType)
         {
             Id = id;
+            InnerType = innerType;
         }
 
         internal abstract void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer;
@@ -33,7 +37,7 @@ namespace Notan
         private protected int nextIndex;
         private protected int remaniningHandles = 0;
 
-        internal StorageBase(int id) : base(id) { }
+        internal StorageBase(int id) : base(id, typeof(T)) { }
 
         internal ref T Get(int index, int generation)
         {
@@ -67,7 +71,7 @@ namespace Notan
                 if (entityToIndex[index] == i)
                 {
                     serializer.Write("$alive", true);
-                    entities[index].Serialize(serializer, true);
+                    entities[index].Serialize(serializer);
                 }
                 else
                 {
@@ -156,6 +160,8 @@ namespace Notan
             Log($"Destroying {index}|{generation}");
             Debug.Assert(Alive(index, generation));
 
+            Get(index, generation).OnDestroy();
+
             foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
             {
                 observer.Send(Id, MessageType.Destroy, index, generation, ref Unsafe.NullRef<T>());
@@ -194,7 +200,6 @@ namespace Notan
             {
                 observer.Send(Id, MessageType.Update, index, generation, ref entity);
             }
-            entity.PostUpdate();
         }
 
         internal void MakeAuthority(int index, int generation, Client? client)
@@ -219,7 +224,7 @@ namespace Notan
             }
         }
 
-        internal override void Deserialize<TDeserializer>(TDeserializer deserializer)
+        internal sealed override void Deserialize<TDeserializer>(TDeserializer deserializer)
         {
             entityToObservers.Clear();
             entityToAuthority.Clear();
@@ -227,7 +232,7 @@ namespace Notan
             base.Deserialize(deserializer);
         }
 
-        internal override void HandleMessage(Client client, MessageType type, int index, int generation)
+        internal sealed override void HandleMessage(Client client, MessageType type, int index, int generation)
         {
             switch (type)
             {

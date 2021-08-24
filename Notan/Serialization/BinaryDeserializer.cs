@@ -4,9 +4,15 @@ namespace Notan.Serialization
 {
     public struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
     {
+        public World World { get; set; }
+
         private readonly BinaryReader reader;
 
-        public BinaryDeserializer(BinaryReader reader) => this.reader = reader;
+        public BinaryDeserializer(World world, BinaryReader reader)
+        {
+            World = world;
+            this.reader = reader;
+        }
 
         public int BeginArray() => reader.Read7BitEncodedInt();
 

@@ -18,7 +18,7 @@ namespace Test
             Value = deserializer.GetEntry(nameof(Value)).ReadString();
         }
 
-        public void Serialize<T>(T serializer, bool nodelta) where T : ISerializer
+        public void Serialize<T>(T serializer) where T : ISerializer
         {
             serializer.Write(nameof(Value), Value);
         }
@@ -96,7 +96,7 @@ namespace Test
     ]
 }
 ";
-            world.Deserialize(new JsonDeserializer(JsonDocument.Parse(save).RootElement));
+            world.Deserialize(new JsonDeserializer(world, JsonDocument.Parse(save).RootElement));
 
             JsonConsole(world);
         }

@@ -15,4 +15,17 @@
         void Write(string name, int value);
         void Write(string name, string value);
     }
+
+    public static class SerializerExtensions
+    {
+        public static void Write<T>(this T serializer, string name, Handle handle) where T : ISerializer
+        {
+            serializer.WriteEntry(name);
+            serializer.BeginObject();
+            serializer.Write("storage", handle.Storage.Id);
+            serializer.Write("index", handle.Index);
+            serializer.Write("gen", handle.Generation);
+            serializer.EndObject();
+        }
+    }
 }
