@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -18,7 +19,12 @@ namespace Notan
 
         public TimeSpan Timestep { get; set; } = TimeSpan.FromSeconds(1.0 / 60.0);
 
-        private protected World() { }
+        public IPEndPoint EndPoint { get; protected set; }
+
+        private protected World()
+        {
+            EndPoint = null!;
+        }
 
         public StorageBase<T> GetStorageBase<T>() where T : struct, IEntity
         {
@@ -76,6 +82,7 @@ namespace Notan
         {
             listener = TcpListener.Create(port);
             listener.Start();
+            EndPoint = (IPEndPoint)listener.LocalEndpoint;
         }
 
         public override void AddStorage<T>(ClientAuthority clientauthority = ClientAuthority.None)
@@ -159,6 +166,7 @@ namespace Notan
         private ClientWorld(TcpClient server)
         {
             this.server = new Client(this, server, 0);
+            EndPoint = (IPEndPoint)server.Client.LocalEndPoint!;
         }
 
         public static async Task<ClientWorld> StartAsync(string host, int port)
