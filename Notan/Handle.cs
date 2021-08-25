@@ -46,7 +46,7 @@ namespace Notan
 
         public ref T Get() => ref storage.Get(Index, Generation);
 
-        public void Alive() => storage.Alive(Index, Generation);
+        public bool Alive() => storage.Alive(Index, Generation);
 
         public void Destroy() => GetStorage().Destroy(Index, Generation);
 
@@ -61,6 +61,8 @@ namespace Notan
         public Client? GetAuthority() => GetStorage().GetAuthority(Index, Generation);
 
         public Storage<T> GetStorage() => Unsafe.As<Storage<T>>(storage);
+
+        public Handle Weak() => new(storage, Index, Generation);
 
         public static bool operator ==(StrongHandle<T> a, StrongHandle<T> b)
         {

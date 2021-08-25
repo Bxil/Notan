@@ -119,6 +119,7 @@ namespace Notan
         {
             if (exit)
             {
+                listener.Stop();
                 return false;
             }
 

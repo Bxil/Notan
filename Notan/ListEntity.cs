@@ -3,88 +3,102 @@ using System.Runtime.CompilerServices;
 
 namespace Notan
 {
-    struct ListEntity : IEntity
+    public struct ListEntity : IEntity
     {
         public Handle Handle { get; set; }
 
-        private Handle previous;
-        private Handle next;
+        private Handle? next;
+        private Handle item; //The head has no item!
 
-        public Handle Item { get; private set; }
-
-        public void Create(Handle item)
+        public void Add(Handle item)
         {
-            previous = next = Handle;
-            Item = item;
-        }
-
-        public void Append(Handle item)
-        {
-            var listEntity = Unsafe.As<Storage<ListEntity>>(Handle.Storage).Create();
-            listEntity.Create(item);
-
-            next.Strong<ListEntity>().Get().previous = listEntity.Handle;
-            listEntity.previous = Handle;
+            ref var listEntity = ref Unsafe.As<Storage<ListEntity>>(Handle.Storage).Create();
+            listEntity.item = item;
             listEntity.next = next;
+
             next = listEntity.Handle;
         }
 
         public void Serialize<TSer>(TSer serializer) where TSer : ISerializer
         {
-            serializer.Write(nameof(previous), previous);
-            serializer.Write(nameof(next), next);
-            serializer.Write(nameof(Item), Item);
+            serializer.Write("hasNext", next.HasValue);
+            if (next.HasValue)
+            {
+                serializer.Write(nameof(next), next.Value);
+            }
+            serializer.Write(nameof(item), item);
         }
 
         public void Deserialize<TDeser>(TDeser deserializer) where TDeser : IDeserializer<TDeser>
         {
-            previous = deserializer.GetEntry(nameof(previous)).ReadHandle();
-            next = deserializer.GetEntry(nameof(next)).ReadHandle();
-            Item = deserializer.GetEntry(nameof(Item)).ReadHandle();
+            if (deserializer.GetEntry("hasNext").ReadBool())
+            {
+                next = deserializer.GetEntry(nameof(next)).ReadHandle();
+            }
+            item = deserializer.GetEntry(nameof(item)).ReadHandle();
         }
 
         public void OnDestroy()
         {
-            if (this.next == Item)
+            foreach (var item in this)
             {
-                return;
+                item.Remove();
             }
-
-            var prev = previous.Strong<ListEntity>().Get();
-            var next = this.next.Strong<ListEntity>().Get();
-
-            prev.next = this.next;
-            next.previous = previous;
+            Handle.Strong<ListEntity>().Destroy();
         }
 
-        public Enumerator<T> GetEnumerator<T>() where T : struct, IEntity => new(Handle.Strong<ListEntity>());
+        public Enumerator GetEnumerator() => new(Handle, next);
 
-        public ref struct Enumerator<T> where T : struct, IEntity
+        public struct Enumerator
         {
-            private readonly StrongHandle<ListEntity> first;
-            private StrongHandle<ListEntity> current;
-            private StrongHandle<ListEntity> next;
+            private Handle current;
+            private Handle? next;
 
-            public StrongHandle<T> Current { get; private set; }
+            public Holder Current { get; private set; }
 
-            public Enumerator(StrongHandle<ListEntity> first)
+            internal Enumerator(Handle head, Handle? next)
             {
-                this.first = first;
-                next = first;
-                current = new();
+                current = head;
+                this.next = next;
                 Current = new();
             }
 
             public bool MoveNext()
             {
-                if (next == first)
+                if (!next.HasValue)
                 {
                     return false;
                 }
-                current = next;
-                Current = current.Get().Item.Strong<T>();
-                next = next.Get().next.Strong<ListEntity>();
+                var last = this.current;
+                this.current = next.Value;
+                ref var current = ref this.current.Strong<ListEntity>().Get();
+                next = current.next;
+
+                Current = new Holder(last, this.current, current.item);
+
                 return true;
+            }
+
+            public struct Holder
+            {
+                private readonly Handle last;
+                private readonly Handle current;
+                public Handle Item { get; }
+
+                internal Holder(Handle last, Handle current, Handle item)
+                {
+                    this.last = last;
+                    this.current = current;
+                    Item = item;
+                }
+
+                public void Remove()
+                {
+                    var currentStrong = current.Strong<ListEntity>();
+                    ref var last = ref this.last.Strong<ListEntity>().Get();
+                    last.next = currentStrong.Get().next;
+                    currentStrong.Destroy();
+                }
             }
         }
     }
