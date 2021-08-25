@@ -40,11 +40,10 @@ namespace Notan
 
         public void OnDestroy()
         {
-            foreach (var item in this)
+            if (next.HasValue)
             {
-                item.Remove();
+                next.Value.Strong<ListEntity>().Destroy();
             }
-            Handle.Strong<ListEntity>().Destroy();
         }
 
         public Enumerator GetEnumerator() => new(Handle, next);
@@ -94,9 +93,11 @@ namespace Notan
 
                 public void Remove()
                 {
-                    var currentStrong = current.Strong<ListEntity>();
+                    var currentStrong = this.current.Strong<ListEntity>();
                     ref var last = ref this.last.Strong<ListEntity>().Get();
-                    last.next = currentStrong.Get().next;
+                    ref var current = ref currentStrong.Get();
+                    last.next = current.next;
+                    current.next = null;
                     currentStrong.Destroy();
                 }
             }

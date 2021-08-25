@@ -160,11 +160,12 @@ namespace Notan.Testing
             ref var newlist = ref liststorage.Create();
             newlist.Add(bytehandles[4]);
             newlist.Add(bytehandles[1]);
+            var newlistHandle = newlist.Handle;
 
             head.Strong<ListEntity>().Destroy();
 
             int sum = 0;
-            foreach (var item in newlist)
+            foreach (var item in newlistHandle.Strong<ListEntity>().Get())
             {
                 sum += item.Item.Strong<ByteEntity>().Get().Value;
             }
@@ -172,7 +173,7 @@ namespace Notan.Testing
 
             var system = new ListSystem();
             liststorage.Run(ref system);
-            Assert.AreEqual(5, system.Count);
+            Assert.AreEqual(3, system.Count);
         }
 
 
