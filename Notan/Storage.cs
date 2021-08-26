@@ -9,13 +9,16 @@ namespace Notan
     public abstract class Storage
     {
         //TODO: delete me once Handle became generic
-        internal Type InnerType { get; }
+        internal readonly Type InnerType;
+
+        internal readonly bool NoSerialization;
 
         public int Id { get; }
 
-        private protected Storage(int id, Type innerType)
+        private protected Storage(int id, bool noSerialization, Type innerType)
         {
             Id = id;
+            NoSerialization = noSerialization;
             InnerType = innerType;
         }
 
@@ -39,7 +42,7 @@ namespace Notan
         private protected int nextIndex;
         private protected int remaniningHandles = 0;
 
-        internal StorageBase(int id) : base(id, typeof(T)) { }
+        internal StorageBase(int id, bool noSerialization) : base(id, noSerialization, typeof(T)) { }
 
         internal ref T Get(int index, int generation)
         {
@@ -129,9 +132,9 @@ namespace Notan
 
         private readonly ClientAuthority authority;
 
-        internal Storage(int id, ClientAuthority authority) : base(id)
+        internal Storage(int id, StorageOptions options) : base(id, options.NoSerialization)
         {
-            this.authority = authority;
+            authority = options.ClientAuthority;
         }
 
         public ref T Create()
@@ -295,7 +298,7 @@ namespace Notan
     {
         private readonly Client server;
 
-        internal StorageView(int id, Client server) : base(id)
+        internal StorageView(int id, StorageOptions options, Client server) : base(id, options.NoSerialization)
         {
             this.server = server;
         }

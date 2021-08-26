@@ -100,7 +100,7 @@ namespace Test2
         private static void SetupWorld(World world)
         {
             world.AddStorage<Number>();
-            world.AddStorage<Adder>(ClientAuthority.Unauthenticated);
+            world.AddStorage<Adder>(new StorageOptions { ClientAuthority = ClientAuthority.Unauthenticated });
         }
 
         static void ServerProcess()

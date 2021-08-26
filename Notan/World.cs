@@ -47,12 +47,12 @@ namespace Notan
         private protected volatile bool exit = false;
         public void Exit() => exit = true;
 
-        public abstract void AddStorage<T>(ClientAuthority clientauthority = ClientAuthority.None) where T : struct, IEntity;
+        public abstract void AddStorage<T>(StorageOptions options = default) where T : struct, IEntity;
 
         public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer
         {
             serializer.BeginObject();
-            foreach (var pair in TypeNameToStorage.OrderBy(x => x.Key))
+            foreach (var pair in TypeNameToStorage.Where(x => !x.Value.NoSerialization).OrderBy(x => x.Key))
             {
                 serializer.WriteEntry(pair.Key);
                 pair.Value.Serialize(serializer);
@@ -85,9 +85,9 @@ namespace Notan
             EndPoint = (IPEndPoint)listener.LocalEndpoint;
         }
 
-        public override void AddStorage<T>(ClientAuthority clientauthority = ClientAuthority.None)
+        public override void AddStorage<T>(StorageOptions options = default)
         {
-            Storage newstorage = new Storage<T>(IdToStorage.Count, clientauthority);
+            Storage newstorage = new Storage<T>(IdToStorage.Count, options);
             TypeNameToStorage.Add(typeof(T).FullName!, newstorage);
             IdToStorage.Add(newstorage);
         }
@@ -183,9 +183,9 @@ namespace Notan
             return world;
         }
 
-        public override void AddStorage<T>(ClientAuthority clientauthority = ClientAuthority.None)
+        public override void AddStorage<T>(StorageOptions options = default)
         {
-            Storage newstorage = new StorageView<T>(IdToStorage.Count, server);
+            Storage newstorage = new StorageView<T>(IdToStorage.Count, options, server);
             TypeNameToStorage.Add(typeof(T).FullName!, newstorage);
             IdToStorage.Add(newstorage);
         }
