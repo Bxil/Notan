@@ -123,6 +123,8 @@ namespace Notan
         private FastList<FastList<Client>> entityToObservers = new();
         private FastList<Client?> entityToAuthority = new();
 
+        private FastList<bool> entityIsDead = new();
+
         private FastList<int> destroyedEntityIndices = new();
 
         private readonly ClientAuthority authority;
@@ -137,6 +139,7 @@ namespace Notan
             int entind = entities.Count;
             entityToObservers.Add(new());
             entityToAuthority.Add(null);
+            entityIsDead.Add(false);
             int hndind;
             if (remaniningHandles > 0)
             {
@@ -162,6 +165,7 @@ namespace Notan
         internal void Destroy(int index, int generation)
         {
             Get(index, generation).OnDestroy();
+            entityIsDead[indexToEntity[index]] = true;
             generations[index]++;
             destroyedEntityIndices.Add(index);
         }
@@ -177,6 +181,7 @@ namespace Notan
 
             entityToObservers.RemoveAt(entityIndex);
             entityToAuthority.RemoveAt(entityIndex);
+            entityIsDead.RemoveAt(entityIndex);
             entities.RemoveAt(entityIndex);
             indexToEntity[entityToIndex[^1]] = entityIndex;
             entityToIndex.RemoveAt(entityIndex);
@@ -226,7 +231,7 @@ namespace Notan
             {
                 i--;
                 ref var entity = ref entities[i];
-                if (Alive(entity.Handle.Index, entity.Handle.Generation))
+                if (!entityIsDead[i])
                 {
                     system.Work(ref entity);
                 }
@@ -237,6 +242,7 @@ namespace Notan
         {
             entityToObservers.Clear();
             entityToAuthority.Clear();
+            entityIsDead.Clear();
             destroyedEntityIndices.Clear();
             remaniningHandles = 0;
             base.Deserialize(deserializer);
