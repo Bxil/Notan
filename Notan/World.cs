@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,6 +49,26 @@ namespace Notan
         public void Exit() => exit = true;
 
         public abstract void AddStorage<T>(StorageOptions options = default) where T : struct, IEntity;
+
+        public void AddDefaultStorages()
+        {
+            AddStorage<ListEntity>();
+        }
+
+        /// <summary>
+        /// Adds a Storage for every IEntity implementor in the given assembly.
+        /// </summary>
+        public void AddStorages(Assembly assembly)
+        {
+            var arr = new object[1];
+            foreach (var type in assembly.GetTypes())
+            {
+                if (typeof(IEntity).IsAssignableFrom(type))
+                {
+                    GetType().GetMethod(nameof(AddStorage))!.MakeGenericMethod(type).Invoke(this, arr);
+                }
+            }
+        }
 
         public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer
         {

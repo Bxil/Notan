@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Notan.Testing
@@ -23,8 +24,8 @@ namespace Notan.Testing
             {
                 Timestep = TimeSpan.Zero
             };
-            world.AddStorage<ByteEntity>();
-            world.AddStorage<ListEntity>();
+            world.AddDefaultStorages();
+            world.AddStorages(Assembly.GetExecutingAssembly());
             bytestorage = world.GetStorage<ByteEntity>();
             liststorage = world.GetStorage<ListEntity>();
 
