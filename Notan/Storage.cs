@@ -209,9 +209,21 @@ namespace Notan
         {
             Debug.Assert(Alive(index, generation));
             ref var entity = ref Get(index, generation);
-            foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
+            var list = entityToObservers[indexToEntity[index]];
+            var span = list.AsSpan();
+            int i = span.Length;
+            while (i > 0)
             {
-                observer.Send(Id, MessageType.Update, index, generation, ref entity);
+                i--;
+                var observer = span[i];
+                if (observer.Connected)
+                {
+                    observer.Send(Id, MessageType.Update, index, generation, ref entity);
+                }
+                else
+                {
+                    list.RemoveAt(i);
+                }
             }
         }
 
