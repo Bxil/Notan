@@ -162,6 +162,7 @@ namespace Notan
             entities.Add(new T { Handle = new(this, hndind, generations[hndind]) });
             entityToIndex.Add(hndind);
 
+            entities[entind].OnCreate();
             return ref entities[entind];
         }
 
