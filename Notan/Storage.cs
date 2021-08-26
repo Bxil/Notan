@@ -24,6 +24,8 @@ namespace Notan
         internal abstract void Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>;
 
         internal abstract void HandleMessage(Client client, MessageType type, int index, int generation);
+
+        internal abstract void FinalizeFrame();
     }
 
     //Common
@@ -121,6 +123,8 @@ namespace Notan
         private FastList<FastList<Client>> entityToObservers = new();
         private FastList<Client?> entityToAuthority = new();
 
+        private FastList<int> destroyedEntityIndices = new();
+
         private readonly ClientAuthority authority;
 
         internal Storage(int id, ClientAuthority authority) : base(id)
@@ -157,14 +161,16 @@ namespace Notan
 
         internal void Destroy(int index, int generation)
         {
-            Log($"Destroying {index}|{generation}");
-            Debug.Assert(Alive(index, generation));
-
             Get(index, generation).OnDestroy();
+            generations[index]++;
+            destroyedEntityIndices.Add(index);
+        }
 
+        private void DestroyImmediate(int index)
+        {
             foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
             {
-                observer.Send(Id, MessageType.Destroy, index, generation, ref Unsafe.NullRef<T>());
+                observer.Send(Id, MessageType.Destroy, index, generations[index], ref Unsafe.NullRef<T>());
             }
 
             var entityIndex = indexToEntity[index];
@@ -174,7 +180,6 @@ namespace Notan
             entities.RemoveAt(entityIndex);
             indexToEntity[entityToIndex[^1]] = entityIndex;
             entityToIndex.RemoveAt(entityIndex);
-            generations[index]++;
             Recycle(index);
         }
 
@@ -220,7 +225,11 @@ namespace Notan
             while (i > 0)
             {
                 i--;
-                system.Work(ref entities[i]);
+                ref var entity = ref entities[i];
+                if (Alive(entity.Handle.Index, entity.Handle.Generation))
+                {
+                    system.Work(ref entity);
+                }
             }
         }
 
@@ -228,6 +237,7 @@ namespace Notan
         {
             entityToObservers.Clear();
             entityToAuthority.Clear();
+            destroyedEntityIndices.Clear();
             remaniningHandles = 0;
             base.Deserialize(deserializer);
         }
@@ -258,10 +268,19 @@ namespace Notan
                 case MessageType.Destroy:
                     if (Alive(index, generation) && entityToAuthority[indexToEntity[index]] == client)
                     {
-                        Destroy(index, generation);
+                        DestroyImmediate(index);
                     }
                     break;
             }
+        }
+
+        internal override void FinalizeFrame()
+        {
+            foreach (var index in destroyedEntityIndices.AsSpan())
+            {
+                DestroyImmediate(index);
+            }
+            destroyedEntityIndices.Clear();
         }
     }
 
@@ -329,5 +348,7 @@ namespace Notan
                 system.Work(ref entities[i]);
             }
         }
+
+        internal override void FinalizeFrame() { }
     }
 }

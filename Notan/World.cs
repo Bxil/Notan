@@ -117,6 +117,11 @@ namespace Notan
 
         public bool Loop()
         {
+            foreach (var storage in IdToStorage.AsSpan())
+            {
+                storage.FinalizeFrame();
+            }
+
             if (exit)
             {
                 listener.Stop();

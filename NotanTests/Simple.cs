@@ -91,6 +91,8 @@ namespace Notan.Testing
             bytestorage.Run(ref system);
             Assert.AreEqual(bytehandles.Length / 2 + 1, system.Count);
 
+            world.Loop();
+
             for (int i = 0; i < bytehandles.Length / 2; i++)
             {
                 ref var byteent = ref bytestorage.Create();
