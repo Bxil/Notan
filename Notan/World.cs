@@ -50,11 +50,6 @@ namespace Notan
 
         public abstract void AddStorage<T>(StorageOptions options = default) where T : struct, IEntity;
 
-        public void AddDefaultStorages()
-        {
-            AddStorage<ListEntity>();
-        }
-
         /// <summary>
         /// Adds a Storage for every IEntity implementor in the given assembly.
         /// </summary>
@@ -109,7 +104,7 @@ namespace Notan
         public override void AddStorage<T>(StorageOptions options = default)
         {
             Storage newstorage = new Storage<T>(IdToStorage.Count, options);
-            TypeNameToStorage.Add(typeof(T).FullName!, newstorage);
+            TypeNameToStorage.Add(typeof(T).ToString(), newstorage);
             IdToStorage.Add(newstorage);
         }
 
@@ -207,7 +202,7 @@ namespace Notan
         public override void AddStorage<T>(StorageOptions options = default)
         {
             Storage newstorage = new StorageView<T>(IdToStorage.Count, options, server);
-            TypeNameToStorage.Add(typeof(T).FullName!, newstorage);
+            TypeNameToStorage.Add(typeof(T).ToString(), newstorage);
             IdToStorage.Add(newstorage);
         }
 

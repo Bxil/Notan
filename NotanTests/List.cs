@@ -24,7 +24,7 @@ namespace Notan.Testing
             {
                 Timestep = TimeSpan.Zero
             };
-            world.AddDefaultStorages();
+            world.AddStorage<ListEntity>();
             world.AddStorages(Assembly.GetExecutingAssembly());
             bytestorage = world.GetStorage<ByteEntity>();
             liststorage = world.GetStorage<ListEntity>();
