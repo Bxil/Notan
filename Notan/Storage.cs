@@ -162,7 +162,6 @@ namespace Notan
             entities.Add(new T { Handle = new(this, hndind, generations[hndind]) });
             entityToIndex.Add(hndind);
 
-            entities[entind].OnCreate();
             return ref entities[entind];
         }
 
@@ -274,6 +273,7 @@ namespace Notan
                         ref var entity = ref Create();
                         client.ReadIntoEntity(ref entity);
                         MakeAuthority(entity.Handle.Index, entity.Handle.Generation, client);
+                        entity.OnNetworkCreate();
                     }
                     else
                     {
