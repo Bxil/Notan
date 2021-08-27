@@ -58,7 +58,7 @@ namespace Notan
 
         public bool Remove(T value)
         {
-            var index = Array.IndexOf(array, value);
+            var index = Array.IndexOf(array ?? Array.Empty<T>(), value);
             if (index != -1)
             {
                 RemoveAt(index);
@@ -70,10 +70,10 @@ namespace Notan
             }
         }
 
-        public int IndexOf(T item) => Array.IndexOf(array, item, 0, Count);
+        public int IndexOf(T item) => Array.IndexOf(array ?? Array.Empty<T>(), item, 0, Count);
 
         public ref T this[int index] => ref array[index];
 
-        public Span<T> AsSpan() => array.AsSpan(0, Count);
+        public Span<T> AsSpan() => (array ?? Array.Empty<T>()).AsSpan(0, Count);
     }
 }
