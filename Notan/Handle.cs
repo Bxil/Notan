@@ -52,7 +52,7 @@ namespace Notan
 
         public void AddObserver(Client client) => GetStorage().AddObserver(Index, Generation, client);
 
-        public void RemoveObserver(int index, int generation, Client client) => GetStorage().RemoveObserver(index, generation, client);
+        public void RemoveObserver(Client client) => GetStorage().RemoveObserver(Index, Generation, client);
 
         public void UpdateObservers() => GetStorage().UpdateObservers(Index, Generation);
 
