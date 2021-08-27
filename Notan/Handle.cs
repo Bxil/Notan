@@ -56,9 +56,11 @@ namespace Notan
 
         public void UpdateObservers() => GetStorage().UpdateObservers(Index, Generation);
 
-        public void MakeAuthority(Client? client) => GetStorage().MakeAuthority(Index, Generation, client);
-
-        public Client? GetAuthority() => GetStorage().GetAuthority(Index, Generation);
+        public Client? Authority
+        {
+            get => GetStorage().GetAuthority(Index, Generation);
+            set => GetStorage().SetAuthority(Index, Generation, value);
+        }
 
         public Storage<T> GetStorage() => Unsafe.As<Storage<T>>(storage);
 

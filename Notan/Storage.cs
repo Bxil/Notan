@@ -209,7 +209,7 @@ namespace Notan
         {
             Debug.Assert(Alive(index, generation));
             ref var entity = ref Get(index, generation);
-            var list = entityToObservers[indexToEntity[index]];
+            ref var list = ref entityToObservers[indexToEntity[index]];
             var span = list.AsSpan();
             int i = span.Length;
             while (i > 0)
@@ -227,10 +227,14 @@ namespace Notan
             }
         }
 
-        internal void MakeAuthority(int index, int generation, Client? client)
+        internal void SetAuthority(int index, int generation, Client? client)
         {
             Debug.Assert(Alive(index, generation));
             entityToAuthority[indexToEntity[index]] = client;
+            if (client != null)
+            {
+                AddObserver(index, generation, client);
+            }
         }
 
         internal Client? GetAuthority(int index, int generation)
@@ -272,8 +276,7 @@ namespace Notan
                     {
                         ref var entity = ref Create();
                         client.ReadIntoEntity(ref entity);
-                        MakeAuthority(entity.Handle.Index, entity.Handle.Generation, client);
-                        AddObserver(entity.Handle.Index, entity.Handle.Generation, client);
+                        SetAuthority(entity.Handle.Index, entity.Handle.Generation, client);
                     }
                     else
                     {
