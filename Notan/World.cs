@@ -75,6 +75,7 @@ namespace Notan
         private readonly TcpListener listener;
 
         private FastList<Client> clients = new();
+        public Span<Client> Clients => clients.AsSpan();
 
         private int nextClientId = 0;
         private readonly Stack<int> clientIds = new();
@@ -93,24 +94,6 @@ namespace Notan
             IdToStorage.Add(newstorage);
         }
 
-        public bool TryDequeueClient(out Client client)
-        {
-            client = null!;
-            if (listener.Pending())
-            {
-                if (!clientIds.TryPop(out int id))
-                {
-                    id = nextClientId;
-                    nextClientId++;
-                }
-
-                client = new(this, listener.AcceptTcpClient(), id);
-                clients.Add(client);
-                return true;
-            }
-            return false;
-        }
-
         public Storage<T> GetStorage<T>() where T : struct, IEntity
         {
             return Unsafe.As<Storage<T>>(GetStorageBase<T>());
@@ -127,6 +110,16 @@ namespace Notan
             {
                 listener.Stop();
                 return false;
+            }
+
+            while (listener.Pending())
+            {
+                if (!clientIds.TryPop(out int id))
+                {
+                    id = nextClientId;
+                    nextClientId++;
+                }
+                clients.Add(new(this, listener.AcceptTcpClient(), id));
             }
 
             int i = clients.Count;
