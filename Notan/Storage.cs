@@ -240,6 +240,7 @@ namespace Notan
             while (i > 0)
             {
                 i--;
+                list[i].Send(Id, MessageType.Destroy, index, generation, ref Unsafe.NullRef<T>());
                 list.RemoveAt(i);
             }
         }
