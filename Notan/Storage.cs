@@ -199,8 +199,8 @@ namespace Notan
             if (list.IndexOf(client) == -1)
             {
                 list.Add(client);
+                client.Send(Id, MessageType.Create, index, generation, ref Get(index, generation));
             }
-            client.Send(Id, MessageType.Create, index, generation, ref Get(index, generation));
         }
 
         internal void RemoveObserver(int index, int generation, Client client)
@@ -366,6 +366,7 @@ namespace Notan
                     int entid = entityToIndex.Count;
                     entityToIndex.Add(index);
                     T entity = default;
+                    entity.Handle = new Handle(this, index, generation);
                     client.ReadIntoEntity(ref entity);
                     entities.Add(entity);
                     indexToEntity.EnsureSize(index + 1);

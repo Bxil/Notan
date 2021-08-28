@@ -129,8 +129,6 @@ namespace Notan
                 var client = clients[i];
                 try
                 {
-                    client.Flush();
-
                     const int messageReadMaximum = 10;
                     int messagesRead = 0;
                     while (messagesRead < messageReadMaximum && client.CanRead())
@@ -147,15 +145,35 @@ namespace Notan
                 }
                 catch (IOException)
                 {
-                    clientIds.Push(client.Id);
-                    client.Disconnect();
-                    clients.Remove(client);
+                    DeleteClient(client);
+                }
+            }
+
+            i = clients.Count;
+            while (i > 0)
+            {
+                i--;
+                var client = clients[i];
+                try
+                {
+                    client.Flush();
+                }
+                catch (IOException)
+                {
+                    DeleteClient(client);
                 }
             }
 
             Sleep();
 
             return true;
+        }
+
+        private void DeleteClient(Client client)
+        {
+            clientIds.Push(client.Id);
+            client.Disconnect();
+            clients.Remove(client);
         }
     }
 

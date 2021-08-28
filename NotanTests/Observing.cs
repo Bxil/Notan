@@ -22,9 +22,10 @@ namespace Notan.Testing
             serverWorld.AddStorages(Assembly.GetExecutingAssembly());
 
             clientWorld = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).Result;
+            clientWorld.Timestep = TimeSpan.Zero;
             clientWorld.AddStorages(Assembly.GetExecutingAssembly());
 
-            while (serverWorld.TryDequeueClient(out var _)) { }
+            serverWorld.Loop();
         }
 
         [TestCleanup]
@@ -36,20 +37,17 @@ namespace Notan.Testing
 
         //TODO: make this test a lot more precise
         [TestMethod]
-        public async Task AddAndDisconnect()
+        public void AddAndDisconnect()
         {
             clientWorld.GetStorageView<ByteEntity>().RequestCreate(new ByteEntity());
             clientWorld.Loop();
-            await Task.Delay(100);
             serverWorld.Loop();
             var system = new ByteSystem();
             serverWorld.GetStorage<ByteEntity>().Run(ref system);
             clientWorld.Exit();
             clientWorld.Loop();
-            await Task.Delay(100);
             serverWorld.Loop();
             serverWorld.GetStorage<ByteEntity>().Run(ref system);
-            await Task.Delay(100);
             serverWorld.Loop();
             serverWorld.GetStorage<ByteEntity>().Run(ref system);
         }
