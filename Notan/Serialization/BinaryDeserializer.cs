@@ -26,6 +26,8 @@ namespace Notan.Serialization
 
         public int ReadInt32() => reader.ReadInt32();
 
+        public long ReadInt64() => reader.ReadInt64();
+
         public string ReadString() => reader.ReadString();
     }
 }

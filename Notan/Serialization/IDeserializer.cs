@@ -12,6 +12,7 @@ namespace Notan.Serialization
         bool ReadBool();
         byte ReadByte();
         int ReadInt32();
+        long ReadInt64();
         string ReadString();
     }
 

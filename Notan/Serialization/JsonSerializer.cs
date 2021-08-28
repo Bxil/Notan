@@ -24,6 +24,8 @@ namespace Notan.Serialization
 
         public void Write(string name, int value) => writer.WriteNumber(name, value);
 
+        public void Write(string name, long value) => writer.WriteNumber(name, value);
+
         public void WriteEntry(string name) => writer.WritePropertyName(name);
     }
 }
