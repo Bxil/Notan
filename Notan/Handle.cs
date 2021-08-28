@@ -17,7 +17,7 @@ namespace Notan
             Generation = generation;
         }
 
-        public StrongHandle<T> Strong<T>() where T : struct, IEntity => new(Unsafe.As<StorageBase<T>>(Storage), Index, Generation);
+        public StrongHandle<T> Strong<T>() where T : struct, IEntity => new((StorageBase<T>)Storage, Index, Generation);
 
         public static bool operator ==(Handle a, Handle b)
         {
@@ -64,7 +64,7 @@ namespace Notan
             set => GetStorage().SetAuthority(Index, Generation, value);
         }
 
-        public Storage<T> GetStorage() => Unsafe.As<Storage<T>>(storage);
+        public Storage<T> GetStorage() => (Storage<T>)storage;
 
         public Handle Weak() => new(storage, Index, Generation);
 
