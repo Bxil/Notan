@@ -1,4 +1,5 @@
-﻿using Notan.Serialization;
+﻿using Notan.Reflection;
+using Notan.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -48,22 +49,7 @@ namespace Notan
         private protected volatile bool exit = false;
         public void Exit() => exit = true;
 
-        public abstract void AddStorage<T>(StorageOptions options = default) where T : struct, IEntity;
-
-        /// <summary>
-        /// Adds a Storage for every IEntity implementor in the given assembly.
-        /// </summary>
-        public void AddStorages(Assembly assembly)
-        {
-            var arr = new object[1];
-            foreach (var type in assembly.GetTypes())
-            {
-                if (typeof(IEntity).IsAssignableFrom(type))
-                {
-                    GetType().GetMethod(nameof(AddStorage))!.MakeGenericMethod(type).Invoke(this, arr);
-                }
-            }
-        }
+        public abstract void AddStorage<T>(StorageOptionsAttribute? options = default) where T : struct, IEntity;
 
         public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer
         {
@@ -101,7 +87,7 @@ namespace Notan
             EndPoint = (IPEndPoint)listener.LocalEndpoint;
         }
 
-        public override void AddStorage<T>(StorageOptions options = default)
+        public override void AddStorage<T>(StorageOptionsAttribute? options = default)
         {
             Storage newstorage = new Storage<T>(IdToStorage.Count, options);
             TypeNameToStorage.Add(typeof(T).ToString(), newstorage);
@@ -195,11 +181,10 @@ namespace Notan
         {
             var client = new TcpClient();
             await client.ConnectAsync(host, port);
-            var world = new ClientWorld(client);
-            return world;
+            return new ClientWorld(client);
         }
 
-        public override void AddStorage<T>(StorageOptions options = default)
+        public override void AddStorage<T>(StorageOptionsAttribute? options = default)
         {
             Storage newstorage = new StorageView<T>(IdToStorage.Count, options, server);
             TypeNameToStorage.Add(typeof(T).ToString(), newstorage);

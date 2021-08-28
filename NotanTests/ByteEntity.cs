@@ -1,19 +1,20 @@
-﻿using Notan.Serialization;
+﻿using Notan.Reflection;
 
 namespace Notan.Testing
 {
+    [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
     struct ByteEntity : IEntity
     {
         public Handle Handle { get; set; }
 
         public byte Value;
 
-        public void Deserialize<T>(T deserializer) where T : IDeserializer<T>
+        void IEntity.Deserialize<T>(T deserializer)
         {
             Value = deserializer.GetEntry(nameof(Value)).ReadByte();
         }
 
-        public void Serialize<T>(T serializer) where T : ISerializer
+        void IEntity.Serialize<T>(T serializer)
         {
             serializer.Write(nameof(Value), Value);
         }

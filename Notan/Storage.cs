@@ -1,4 +1,5 @@
-﻿using Notan.Serialization;
+﻿using Notan.Reflection;
+using Notan.Serialization;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -132,9 +133,9 @@ namespace Notan
 
         private readonly ClientAuthority authority;
 
-        internal Storage(int id, StorageOptions options) : base(id, options.NoSerialization)
+        internal Storage(int id, StorageOptionsAttribute? options) : base(id, options != null && options.NoSerialization)
         {
-            authority = options.ClientAuthority;
+            authority = options == null ? ClientAuthority.None : options.ClientAuthority;
         }
 
         public ref T Create()
@@ -314,7 +315,7 @@ namespace Notan
     {
         private readonly Client server;
 
-        internal StorageView(int id, StorageOptions options, Client server) : base(id, options.NoSerialization)
+        internal StorageView(int id, StorageOptionsAttribute? options, Client server) : base(id, options != null && options.NoSerialization)
         {
             this.server = server;
         }
