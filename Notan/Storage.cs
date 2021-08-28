@@ -306,6 +306,11 @@ namespace Notan
                     {
                         client.ReadIntoEntity(ref Get(index, generation));
                     }
+                    else
+                    {
+                        Unsafe.SkipInit(out T entity);
+                        client.ReadIntoEntity(ref entity);
+                    }
                     break;
                 case MessageType.Destroy:
                     if (Alive(index, generation) && entityToAuthority[indexToEntity[index]] == client)
