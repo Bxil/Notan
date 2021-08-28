@@ -195,7 +195,11 @@ namespace Notan
         internal void AddObserver(int index, int generation, Client client)
         {
             Debug.Assert(Alive(index, generation));
-            entityToObservers[indexToEntity[index]].Add(client);
+            ref var list = ref entityToObservers[indexToEntity[index]];
+            if (list.IndexOf(client) == -1)
+            {
+                list.Add(client);
+            }
             client.Send(Id, MessageType.Create, index, generation, ref Get(index, generation));
         }
 
