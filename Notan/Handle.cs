@@ -56,6 +56,8 @@ namespace Notan
 
         public void UpdateObservers() => GetStorage().UpdateObservers(Index, Generation);
 
+        public void WipeObservers() => GetStorage().WipeObservers(Index, Generation);
+
         public Client? Authority
         {
             get => GetStorage().GetAuthority(Index, Generation);

@@ -228,6 +228,18 @@ namespace Notan
             }
         }
 
+        internal void WipeObservers(int index, int generation)
+        {
+            Debug.Assert(Alive(index, generation));
+            ref var list = ref entityToObservers[indexToEntity[index]];
+            int i = list.Count;
+            while (i > 0)
+            {
+                i--;
+                list.RemoveAt(i);
+            }
+        }
+
         internal void SetAuthority(int index, int generation, Client? client)
         {
             Debug.Assert(Alive(index, generation));
