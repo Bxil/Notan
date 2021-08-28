@@ -29,7 +29,7 @@ namespace Notan
 
         public StorageBase<T> GetStorageBase<T>() where T : struct, IEntity
         {
-            return Unsafe.As<StorageBase<T>>(TypeNameToStorage[typeof(T).FullName!]);
+            return Unsafe.As<StorageBase<T>>(TypeNameToStorage[typeof(T).ToString()]);
         }
 
         private TimeSpan lastEnded = TimeSpan.Zero;
@@ -214,10 +214,11 @@ namespace Notan
         {
             if (exit)
             {
+                server.Disconnect();
                 return false;
             }
 
-            server.Flush();
+            server.Flush(); //TODO: make this not crash the client
             while (server.CanRead())
             {
                 IdToStorage[server.ReadHeader(out var type, out int index, out var generation)].HandleMessage(server, type, index, generation);

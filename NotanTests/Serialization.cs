@@ -12,7 +12,7 @@ namespace Notan.Testing
         private ServerWorld world;
 
         private Storage<ByteEntity> bytestorage;
-        private Storage<ListEntity> liststorage;
+        private Storage<ListEntity<ByteEntity>> liststorage;
 
         [TestInitialize]
         public void Init()
@@ -22,9 +22,9 @@ namespace Notan.Testing
                 Timestep = TimeSpan.Zero
             };
             world.AddStorage<ByteEntity>();
-            world.AddStorage<ListEntity>();
+            world.AddStorage<ListEntity<ByteEntity>>();
             bytestorage = world.GetStorage<ByteEntity>();
-            liststorage = world.GetStorage<ListEntity>();
+            liststorage = world.GetStorage<ListEntity<ByteEntity>>();
         }
 
         [TestCleanup]
@@ -64,7 +64,7 @@ namespace Notan.Testing
             ""_alive"": false
         }
     ],
-    ""Notan.ListEntity"": [
+    ""Notan.ListEntity`1[Notan.Testing.ByteEntity]"": [
     ]
 }
 ";

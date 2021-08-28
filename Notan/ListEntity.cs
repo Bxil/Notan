@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Notan
 {
-    public struct ListEntity : IEntity
+    public struct ListEntity<T> : IEntity where T : IEntity
     {
         public Handle Handle { get; set; }
 
@@ -12,7 +12,7 @@ namespace Notan
 
         public void Add(Handle item)
         {
-            ref var listEntity = ref Unsafe.As<Storage<ListEntity>>(Handle.Storage).Create();
+            ref var listEntity = ref Unsafe.As<Storage<ListEntity<T>>>(Handle.Storage).Create();
             listEntity.item = item;
             listEntity.next = next;
 
@@ -38,11 +38,11 @@ namespace Notan
             item = deserializer.GetEntry(nameof(item)).ReadHandle();
         }
 
-        public void OnDestroy()
+        void IEntity.OnDestroy()
         {
             if (next.HasValue)
             {
-                next.Value.Strong<ListEntity>().Destroy();
+                next.Value.Strong<ListEntity<T>>().Destroy();
             }
         }
 
@@ -70,7 +70,7 @@ namespace Notan
                 }
                 var last = this.current;
                 this.current = next.Value;
-                ref var current = ref this.current.Strong<ListEntity>().Get();
+                ref var current = ref this.current.Strong<ListEntity<T>>().Get();
                 next = current.next;
 
                 Current = new Holder(last, this.current, current.item);
@@ -93,8 +93,8 @@ namespace Notan
 
                 public void Remove()
                 {
-                    var currentStrong = this.current.Strong<ListEntity>();
-                    ref var last = ref this.last.Strong<ListEntity>().Get();
+                    var currentStrong = this.current.Strong<ListEntity<T>>();
+                    ref var last = ref this.last.Strong<ListEntity<T>>().Get();
                     ref var current = ref currentStrong.Get();
                     last.next = current.next;
                     current.next = null;
