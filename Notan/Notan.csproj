@@ -5,8 +5,14 @@
     <Nullable>Enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>Notan</RootNamespace>
-    <Version>0.6.1</Version>
+    <Version>0.6.2</Version>
     <Authors>Bxil</Authors>
+    <Description>Not an ECS: a simple and fast library designed for real-time applications, persistence, and networking.</Description>
+    <PackageProjectUrl>https://github.com/Bxil/Notan</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Bxil/Notan.git</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>ecs entity-component-system networking</PackageTags>
   </PropertyGroup>
 
 </Project>
