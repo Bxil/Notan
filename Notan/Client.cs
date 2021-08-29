@@ -25,12 +25,13 @@ namespace Notan
         public bool Connected => tcpClient.Connected;
         public DateTimeOffset LastCommunicated { get; private set; }
         public DateTimeOffset LoginTime { get; }
-        public IPEndPoint IPEndPoint => (IPEndPoint)tcpClient.Client.RemoteEndPoint!;
+        public IPEndPoint IPEndPoint { get; }
 
         internal Client(World world, TcpClient tcpClient, int id)
         {
             this.world = world;
             this.tcpClient = tcpClient;
+            IPEndPoint = (IPEndPoint)tcpClient.Client.RemoteEndPoint!;
             Id = id;
 
             outgoing = new MemoryStream();
