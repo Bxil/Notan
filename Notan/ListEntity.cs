@@ -1,22 +1,15 @@
 ﻿using Notan.Serialization;
-using System.Runtime.CompilerServices;
 
 namespace Notan
 {
-    public struct ListEntity<T> : IEntity where T : IEntity
+    public struct ListEntity<T> : IEntity where T : struct, IEntity
     {
-        public Handle Handle { get; set; }
-
         private Handle? next;
         private Handle item; //The head has no item!
 
-        public void Add(Handle item)
+        internal void Add(Storage<ListEntity<T>> storage, StrongHandle<T> item)
         {
-            ref var listEntity = ref Unsafe.As<Storage<ListEntity<T>>>(Handle.Storage).Create();
-            listEntity.item = item;
-            listEntity.next = next;
-
-            next = listEntity.Handle;
+            next = storage.Create(new ListEntity<T> { item = item, next = next });
         }
 
         public void Serialize<TSer>(TSer serializer) where TSer : ISerializer
@@ -46,16 +39,18 @@ namespace Notan
             }
         }
 
-        public Enumerator GetEnumerator() => new(Handle, next);
+        internal StrongEnumerator GetEnumerator(StrongHandle<ListEntity<T>> handle) => new(handle, next);
 
-        public struct Enumerator
+        internal ViewEnumerator GetEnumerator(ViewHandle<ListEntity<T>> handle) => new(handle, next);
+
+        public struct StrongEnumerator
         {
             private Handle current;
             private Handle? next;
 
             public Holder Current { get; private set; }
 
-            internal Enumerator(Handle head, Handle? next)
+            internal StrongEnumerator(Handle head, Handle? next)
             {
                 current = head;
                 this.next = next;
@@ -101,6 +96,54 @@ namespace Notan
                     currentStrong.Destroy();
                 }
             }
+        }
+
+        public struct ViewEnumerator
+        {
+            private Handle current;
+            private Handle? next;
+
+            public Handle Current { get; private set; }
+
+            internal ViewEnumerator(Handle head, Handle? next)
+            {
+                current = head;
+                this.next = next;
+                Current = new();
+            }
+
+            public bool MoveNext()
+            {
+                if (!next.HasValue)
+                {
+                    return false;
+                }
+                this.current = next.Value;
+                ref var current = ref this.current.Strong<ListEntity<T>>().Get();
+                next = current.next;
+
+                Current = current.item;
+
+                return true;
+            }
+        }
+    }
+
+    public static class ListEntityExtensions
+    {
+        public static ListEntity<T>.StrongEnumerator GetEnumerator<T>(this StrongHandle<ListEntity<T>> handle) where T : struct, IEntity
+        {
+            return handle.Get().GetEnumerator(handle);
+        }
+
+        public static ListEntity<T>.ViewEnumerator GetEnumerator<T>(this ViewHandle<ListEntity<T>> handle) where T : struct, IEntity
+        {
+            return handle.Get().GetEnumerator(handle);
+        }
+
+        public static void Add<T>(this StrongHandle<ListEntity<T>> handle, StrongHandle<T> item) where T : struct, IEntity
+        {
+            handle.Get().Add(handle.Storage, item);
         }
     }
 }

@@ -41,11 +41,9 @@ namespace Notan.Testing
             world.AddStorages(Assembly.GetExecutingAssembly());
             bytestorage = world.GetStorage<ByteEntity>();
 
-            for (int i = 0; i < byte.MaxValue; i++)
+            for (byte i = 0; i < byte.MaxValue; i++)
             {
-                ref var byteent = ref bytestorage.Create();
-                byteent.Value = (byte)i;
-                bytehandles[i] = byteent.Handle;
+                bytehandles[i] = bytestorage.Create(new ByteEntity { Value = i });
             }
 
             system = new();
@@ -95,23 +93,21 @@ namespace Notan.Testing
 
             world.Loop();
 
-            for (int i = 0; i < bytehandles.Length / 2; i++)
+            for (byte i = 0; i < bytehandles.Length / 2; i++)
             {
-                ref var byteent = ref bytestorage.Create();
-                byteent.Value = (byte)i;
-                bytehandles[i * 2 + 1] = byteent.Handle;
+                bytehandles[i * 2 + 1] = bytestorage.Create(new ByteEntity { Value = i });
             }
 
             for (int i = 0; i < bytehandles.Length; i++)
             {
-                ref var byteent = ref bytehandles[i].Strong<ByteEntity>().Get();
+                var bytehandle = bytehandles[i].Strong<ByteEntity>();
                 if (i % 2 == 1)
                 {
-                    Assert.AreEqual(1, byteent.Handle.Generation);
+                    Assert.AreEqual(1, bytehandle.Generation);
                 }
                 else
                 {
-                    Assert.AreEqual(0, byteent.Handle.Generation);
+                    Assert.AreEqual(0, bytehandle.Generation);
                 }
             }
 
@@ -141,7 +137,7 @@ namespace Notan.Testing
 
             public int Count;
 
-            public void Work(ref ByteEntity entity)
+            public void Work(StrongHandle<ByteEntity> handle, ref ByteEntity entity)
             {
                 Sum += entity.Value;
                 Count += 1;

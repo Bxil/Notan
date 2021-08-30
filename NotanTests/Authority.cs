@@ -78,9 +78,9 @@ namespace Notan.Testing
         {
             public StorageView<ByteEntity> Storage;
 
-            void IViewSystem<ByteEntity>.Work(ref ByteEntity entity)
+            void IViewSystem<ByteEntity>.Work(ViewHandle<ByteEntity> handle, ref ByteEntity entity)
             {
-                Storage.RequestUpdate(entity.Handle, new ByteEntity { Value = (byte)(entity.Value + 1) });
+                Storage.RequestUpdate(handle, new ByteEntity { Value = (byte)(entity.Value + 1) });
             }
         }
 
@@ -88,7 +88,7 @@ namespace Notan.Testing
         {
             public int Sum;
 
-            void ISystem<ByteEntity>.Work(ref ByteEntity entity)
+            void ISystem<ByteEntity>.Work(StrongHandle<ByteEntity> handle, ref ByteEntity entity)
             {
                 Sum += entity.Value;
             }

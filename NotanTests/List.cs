@@ -30,19 +30,17 @@ namespace Notan.Testing
             bytestorage = world.GetStorage<ByteEntity>();
             liststorage = world.GetStorage<ListEntity<ByteEntity>>();
 
-            for (int i = 0; i < bytehandles.Length; i++)
+            for (byte i = 0; i < bytehandles.Length; i++)
             {
-                ref var byteent = ref bytestorage.Create();
-                byteent.Value = (byte)i;
-                bytehandles[i] = byteent.Handle;
+                bytehandles[i] = bytestorage.Create(new ByteEntity { Value = i });
             }
 
 
-            ref var head = ref liststorage.Create();
-            head.Add(bytehandles[0]);
-            head.Add(bytehandles[1]);
-            head.Add(bytehandles[2]);
-            this.head = head.Handle;
+            var head = liststorage.Create();
+            head.Add(bytehandles[0].Strong<ByteEntity>());
+            head.Add(bytehandles[1].Strong<ByteEntity>());
+            head.Add(bytehandles[2].Strong<ByteEntity>());
+            this.head = head;
 
             int sum = 0;
             foreach (var item in head)
@@ -62,7 +60,7 @@ namespace Notan.Testing
         [TestMethod]
         public void Append()
         {
-            ref var head = ref this.head.Strong<ListEntity<ByteEntity>>().Get();
+            var head = this.head.Strong<ListEntity<ByteEntity>>();
             int sum = 0;
             foreach (var item in head)
             {
@@ -70,7 +68,7 @@ namespace Notan.Testing
             }
             Assert.AreEqual(3, sum);
 
-            head.Add(bytehandles[3]);
+            head.Add(bytehandles[3].Strong<ByteEntity>());
 
             sum = 0;
             foreach (var item in head)
@@ -79,7 +77,7 @@ namespace Notan.Testing
             }
             Assert.AreEqual(6, sum);
 
-            head.Add(bytehandles[4]);
+            head.Add(bytehandles[4].Strong<ByteEntity>());
 
             sum = 0;
             foreach (var item in head)
@@ -92,7 +90,7 @@ namespace Notan.Testing
         [TestMethod]
         public void RemoveFirst()
         {
-            ref var head = ref this.head.Strong<ListEntity<ByteEntity>>().Get();
+            var head = this.head.Strong<ListEntity<ByteEntity>>();
             int i = 0;
             foreach (var item in head)
             {
@@ -114,7 +112,7 @@ namespace Notan.Testing
         [TestMethod]
         public void RemoveMiddle()
         {
-            ref var head = ref this.head.Strong<ListEntity<ByteEntity>>().Get();
+            var head = this.head.Strong<ListEntity<ByteEntity>>();
             int i = 0;
             foreach (var item in head)
             {
@@ -136,7 +134,7 @@ namespace Notan.Testing
         [TestMethod]
         public void RemoveLast()
         {
-            ref var head = ref this.head.Strong<ListEntity<ByteEntity>>().Get();
+            var head = this.head.Strong<ListEntity<ByteEntity>>();
             int i = 0;
             foreach (var item in head)
             {
@@ -159,9 +157,9 @@ namespace Notan.Testing
         public void DestroyHead()
         {
             //We create a new list to ensure destruction doesn't interfere with other lists.
-            ref var newlist = ref liststorage.Create();
-            newlist.Add(bytehandles[4]);
-            newlist.Add(bytehandles[1]);
+            var newlist = liststorage.Create();
+            newlist.Add(bytehandles[4].Strong<ByteEntity>());
+            newlist.Add(bytehandles[1].Strong<ByteEntity>());
 
             head.Strong<ListEntity<ByteEntity>>().Destroy();
 
@@ -182,7 +180,7 @@ namespace Notan.Testing
         {
             public int Count;
 
-            public void Work(ref ListEntity<ByteEntity> entity)
+            public void Work(StrongHandle<ListEntity<ByteEntity>> handle, ref ListEntity<ByteEntity> entity)
             {
                 Count += 1;
             }

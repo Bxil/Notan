@@ -5,8 +5,6 @@ namespace Notan.Testing
     [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
     struct ByteEntity : IEntity
     {
-        public Handle Handle { get; set; }
-
         public byte Value;
 
         void IEntity.Deserialize<T>(T deserializer)

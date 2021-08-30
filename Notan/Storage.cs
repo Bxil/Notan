@@ -138,7 +138,7 @@ namespace Notan
             authority = options == null ? ClientAuthority.None : options.ClientAuthority;
         }
 
-        public ref T Create()
+        public StrongHandle<T> Create(T entity = default)
         {
             int entind = entities.Count;
             entityToObservers.Add(new());
@@ -160,10 +160,10 @@ namespace Notan
             }
 
             Log($"Creating {hndind}|{generations[hndind]}");
-            entities.Add(new T { Handle = new(this, hndind, generations[hndind]) });
+            entities.Add(entity);
             entityToIndex.Add(hndind);
 
-            return ref entities[entind];
+            return new(this, hndind, generations[hndind]);
         }
 
         internal void Destroy(int index, int generation)
@@ -267,10 +267,10 @@ namespace Notan
             while (i > 0)
             {
                 i--;
-                ref var entity = ref entities[i];
                 if (!entityIsDead[i])
                 {
-                    system.Work(ref entity);
+                    var index = entityToIndex[i];
+                    system.Work(new(this, index, generations[index]), ref entities[i]);
                 }
             }
         }
@@ -292,9 +292,9 @@ namespace Notan
                 case MessageType.Create:
                     if (authority == ClientAuthority.Unauthenticated || (authority == ClientAuthority.Authenticated && client.Authenticated))
                     {
-                        ref var entity = ref Create();
-                        client.ReadIntoEntity(ref entity);
-                        SetAuthority(entity.Handle.Index, entity.Handle.Generation, client);
+                        var handle = Create();
+                        client.ReadIntoEntity(ref handle.Get());
+                        SetAuthority(handle.Index, handle.Generation, client);
                     }
                     else
                     {
@@ -347,12 +347,12 @@ namespace Notan
             server.Send(Id, MessageType.Create, 0, 0, ref entity);
         }
 
-        public void RequestUpdate(Handle handle, T entity)
+        public void RequestUpdate(ViewHandle<T> handle, T entity)
         {
             server.Send(Id, MessageType.Update, handle.Index, handle.Generation, ref entity);
         }
 
-        public void RequestDestroy(Handle handle)
+        public void RequestDestroy(ViewHandle<T> handle)
         {
             server.Send(Id, MessageType.Destroy, handle.Index, handle.Generation, ref Unsafe.NullRef<T>());
         }
@@ -366,7 +366,6 @@ namespace Notan
                     int entid = entityToIndex.Count;
                     entityToIndex.Add(index);
                     T entity = default;
-                    entity.Handle = new Handle(this, index, generation);
                     client.ReadIntoEntity(ref entity);
                     entities.Add(entity);
                     indexToEntity.EnsureSize(index + 1);
@@ -394,7 +393,8 @@ namespace Notan
             while (i > 0)
             {
                 i--;
-                system.Work(ref entities[i]);
+                var index = entityToIndex[i];
+                system.Work(new(this, index, generations[index]), ref entities[i]);
             }
         }
 
