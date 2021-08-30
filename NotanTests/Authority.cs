@@ -80,7 +80,7 @@ namespace Notan.Testing
 
             void IViewSystem<ByteEntity>.Work(ViewHandle<ByteEntity> handle, ref ByteEntity entity)
             {
-                Storage.RequestUpdate(handle, new ByteEntity { Value = (byte)(entity.Value + 1) });
+                handle.RequestUpdate(new ByteEntity { Value = (byte)(entity.Value + 1) });
             }
         }
 
