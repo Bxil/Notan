@@ -347,12 +347,12 @@ namespace Notan
             server.Send(Id, MessageType.Create, 0, 0, ref entity);
         }
 
-        public void RequestUpdate(ViewHandle<T> handle, T entity)
+        internal void RequestUpdate(ViewHandle<T> handle, T entity)
         {
             server.Send(Id, MessageType.Update, handle.Index, handle.Generation, ref entity);
         }
 
-        public void RequestDestroy(ViewHandle<T> handle)
+        internal void RequestDestroy(ViewHandle<T> handle)
         {
             server.Send(Id, MessageType.Destroy, handle.Index, handle.Generation, ref Unsafe.NullRef<T>());
         }
