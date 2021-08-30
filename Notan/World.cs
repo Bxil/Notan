@@ -158,7 +158,7 @@ namespace Notan
                 {
                     client.Flush();
                 }
-                catch (IOException)
+                catch
                 {
                     DeleteClient(client);
                 }
