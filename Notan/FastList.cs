@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Notan
 {
@@ -70,7 +72,7 @@ namespace Notan
 
         public int IndexOf(T item) => Array.IndexOf(array ?? Array.Empty<T>(), item, 0, Count);
 
-        public ref T this[int index] => ref array[index];
+        public ref T this[int index] => ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(array), index);
 
         public Span<T> AsSpan() => (array ?? Array.Empty<T>()).AsSpan(0, Count);
     }
