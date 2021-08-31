@@ -34,10 +34,16 @@ namespace Notan.Serialization
 
         public byte ReadByte() => element.GetByte();
 
+        public short ReadInt16() => element.GetInt16();
+
         public int ReadInt32() => element.GetInt32();
 
         public long ReadInt64() => element.GetInt64();
 
         public string ReadString() => element.GetString()!;
+
+        public float ReadSingle() => element.GetSingle();
+
+        public double ReadDouble() => element.GetDouble();
     }
 }

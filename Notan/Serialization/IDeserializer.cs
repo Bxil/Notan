@@ -11,8 +11,11 @@ namespace Notan.Serialization
         T GetEntry(string name);
         bool ReadBool();
         byte ReadByte();
+        short ReadInt16();
         int ReadInt32();
         long ReadInt64();
+        float ReadSingle();
+        double ReadDouble();
         string ReadString();
     }
 

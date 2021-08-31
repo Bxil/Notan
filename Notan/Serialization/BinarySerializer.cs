@@ -22,10 +22,16 @@ namespace Notan.Serialization
 
         public void Write(string name, bool value) => writer.Write(value);
 
+        public void Write(string name, short value) => writer.Write(value);
+
         public void Write(string name, int value) => writer.Write(value);
 
         public void Write(string name, long value) => writer.Write(value);
 
         public void WriteEntry(string name) { }
+
+        public void Write(string name, float value) => writer.Write(value);
+
+        public void Write(string name, double value) => writer.Write(value);
     }
 }

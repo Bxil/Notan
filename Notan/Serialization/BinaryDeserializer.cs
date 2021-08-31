@@ -24,10 +24,16 @@ namespace Notan.Serialization
 
         public byte ReadByte() => reader.ReadByte();
 
+        public short ReadInt16() => reader.ReadInt16();
+
         public int ReadInt32() => reader.ReadInt32();
 
         public long ReadInt64() => reader.ReadInt64();
 
         public string ReadString() => reader.ReadString();
+
+        public float ReadSingle() => reader.ReadSingle();
+
+        public double ReadDouble() => ReadDouble();
     }
 }

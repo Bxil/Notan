@@ -12,8 +12,11 @@
 
         void Write(string name, bool value);
         void Write(string name, byte value);
+        void Write(string name, short value);
         void Write(string name, int value);
         void Write(string name, long value);
+        void Write(string name, float value);
+        void Write(string name, double value);
         void Write(string name, string value);
     }
 
