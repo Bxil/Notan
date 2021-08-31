@@ -1,4 +1,6 @@
-﻿namespace Notan
+﻿using System.Runtime.CompilerServices;
+
+namespace Notan
 {
     //TODO: Make this a generic when https://github.com/dotnet/runtime/issues/6924 is finally fixed.
     public readonly struct Handle
@@ -16,8 +18,10 @@
         }
 
         public StrongHandle<T> Strong<T>() where T : struct, IEntity => new((Storage<T>)Storage, Index, Generation);
+        public StrongHandle<T> StrongUnsafe<T>() where T : struct, IEntity => new(Unsafe.As<Storage<T>>(Storage), Index, Generation);
 
         public ViewHandle<T> View<T>() where T : struct, IEntity => new((StorageView<T>)Storage, Index, Generation);
+        public ViewHandle<T> ViewUnsafe<T>() where T : struct, IEntity => new(Unsafe.As<StorageView<T>>(Storage), Index, Generation);
 
         public static bool operator ==(Handle a, Handle b)
         {
