@@ -6,6 +6,6 @@ namespace Notan.Reflection
     public sealed class StorageOptionsAttribute : Attribute
     {
         public ClientAuthority ClientAuthority;
-        public bool NoSerialization;
+        public bool NoPersistence;
     }
 }

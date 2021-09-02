@@ -12,14 +12,14 @@ namespace Notan
         //TODO: delete me once Handle became generic
         internal readonly Type InnerType;
 
-        internal readonly bool NoSerialization;
+        internal readonly bool NoPersistence;
 
         public int Id { get; }
 
-        private protected Storage(int id, bool noSerialization, Type innerType)
+        private protected Storage(int id, bool noPersistence, Type innerType)
         {
             Id = id;
-            NoSerialization = noSerialization;
+            NoPersistence = noPersistence;
             InnerType = innerType;
         }
 
@@ -45,7 +45,7 @@ namespace Notan
         private protected int nextIndex;
         private protected int remaniningHandles = 0;
 
-        internal StorageBase(int id, bool noSerialization) : base(id, noSerialization, typeof(T)) { }
+        internal StorageBase(int id, bool noPersistence) : base(id, noPersistence, typeof(T)) { }
 
         internal ref T Get(int index, int generation)
         {
@@ -143,7 +143,7 @@ namespace Notan
 
         private readonly ClientAuthority authority;
 
-        internal Storage(int id, StorageOptionsAttribute? options) : base(id, options != null && options.NoSerialization)
+        internal Storage(int id, StorageOptionsAttribute? options) : base(id, options != null && options.NoPersistence)
         {
             authority = options == null ? ClientAuthority.None : options.ClientAuthority;
         }
@@ -348,7 +348,7 @@ namespace Notan
     {
         private readonly Client server;
 
-        internal StorageView(int id, StorageOptionsAttribute? options, Client server) : base(id, options != null && options.NoSerialization)
+        internal StorageView(int id, StorageOptionsAttribute? options, Client server) : base(id, options != null && options.NoPersistence)
         {
             this.server = server;
         }

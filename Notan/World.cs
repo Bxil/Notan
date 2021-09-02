@@ -53,7 +53,7 @@ namespace Notan
         public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer
         {
             serializer.BeginObject();
-            foreach (var pair in TypeNameToStorage.Where(x => !x.Value.NoSerialization).OrderBy(x => x.Key))
+            foreach (var pair in TypeNameToStorage.Where(x => !x.Value.NoPersistence).OrderBy(x => x.Key))
             {
                 serializer.WriteEntry(pair.Key);
                 pair.Value.Serialize(serializer);
