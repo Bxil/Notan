@@ -38,6 +38,7 @@ namespace Notan
     public abstract class StorageBase<T> : Storage where T : struct, IEntity
     {
         private protected FastList<int> entityToIndex = new();
+        private protected FastList<bool> entityIsDead = new();
         private protected FastList<T> entities = new();
         private protected FastList<int> indexToEntity = new();
         private protected FastList<int> generations = new();
@@ -108,6 +109,7 @@ namespace Notan
                     t.Deserialize(element);
                     entities.Add(t);
                     entityToIndex.Add(i);
+                    entityIsDead.Add(false);
                     indexToEntity.Add(entities.Count - 1);
                 }
                 else
@@ -135,8 +137,6 @@ namespace Notan
     {
         private FastList<FastList<Client>> entityToObservers = new();
         private FastList<Client?> entityToAuthority = new();
-
-        private FastList<bool> entityIsDead = new();
 
         private FastList<int> destroyedEntityIndices = new();
 
