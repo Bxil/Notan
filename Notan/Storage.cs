@@ -78,12 +78,11 @@ namespace Notan
                 serializer.Write("$gen", generations[i]);
                 if (entityToIndex[index] == i)
                 {
-                    serializer.Write("$alive", true);
                     entities[index].Serialize(serializer);
                 }
                 else
                 {
-                    serializer.Write("$alive", false);
+                    serializer.Write("$dead", "");
                 }
                 serializer.EndObject();
                 i++;
@@ -102,8 +101,8 @@ namespace Notan
             for (int i = 0; i < count; i++)
             {
                 var element = deserializer.NextArrayElement();
-                generations.Add(element.GetEntry("_gen").ReadInt32());
-                if (element.GetEntry("_alive").ReadBool())
+                generations.Add(element.GetEntry("$gen").ReadInt32());
+                if (!element.TryGetEntry("$dead", out _))
                 {
                     T t = default;
                     t.Deserialize(element);

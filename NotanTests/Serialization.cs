@@ -40,30 +40,27 @@ namespace Notan.Testing
 {
     ""Notan.Testing.ByteEntity"": [
         {
-            ""_gen"": 0,
-            ""_alive"": true,
+            ""$gen"": 0,
             ""Value"": 2
         },
         {
-            ""_gen"": 42,
-            ""_alive"": false
+            ""$gen"": 42,
+            ""$dead"": """"
         },
         {
-            ""_gen"": 12,
-            ""_alive"": true,
+            ""$gen"": 12,
             ""Value"": 3
         },
         {
-            ""_gen"": 12,
-            ""_alive"": true,
+            ""$gen"": 12,
             ""Value"": 5
         },
         {
-            ""_gen"": 12,
-            ""_alive"": false
+            ""$gen"": 12,
+            ""$dead"": """"
         }
     ],
-    ""Notan.ListEntity`1[Notan.Testing.ByteEntity]"": [
+    ""NoSuchStorageLikeMe"": [
     ]
 }
 ";
