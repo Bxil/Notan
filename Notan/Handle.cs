@@ -34,7 +34,7 @@ namespace Notan
         }
     }
 
-    public readonly ref struct StrongHandle<T> where T : struct, IEntity
+    public readonly struct StrongHandle<T> where T : struct, IEntity
     {
         public readonly Storage<T> Storage;
 
@@ -75,7 +75,7 @@ namespace Notan
         public static bool operator !=(StrongHandle<T> a, StrongHandle<T> b) => (Handle)a != b;
     }
 
-    public readonly ref struct ViewHandle<T> where T : struct, IEntity
+    public readonly struct ViewHandle<T> where T : struct, IEntity
     {
         public readonly StorageView<T> Storage;
 
