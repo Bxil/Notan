@@ -1,7 +1,9 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Notan.Reflection;
 using Notan.Serialization;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Text.Json;
 
 namespace Notan.Testing
@@ -12,7 +14,6 @@ namespace Notan.Testing
         private ServerWorld world;
 
         private Storage<ByteEntity> bytestorage;
-        private Storage<ListEntity<ByteEntity>> liststorage;
 
         [TestInitialize]
         public void Init()
@@ -21,10 +22,8 @@ namespace Notan.Testing
             {
                 Timestep = TimeSpan.Zero
             };
-            world.AddStorage<ByteEntity>();
-            world.AddStorage<ListEntity<ByteEntity>>();
+            world.AddStorages(Assembly.GetExecutingAssembly());
             bytestorage = world.GetStorage<ByteEntity>();
-            liststorage = world.GetStorage<ListEntity<ByteEntity>>();
         }
 
         [TestCleanup]

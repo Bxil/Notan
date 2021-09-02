@@ -37,7 +37,6 @@ namespace Notan.Testing
             {
                 Timestep = TimeSpan.Zero
             };
-            world.AddStorage<ListEntity<ByteEntity>>();
             world.AddStorages(Assembly.GetExecutingAssembly());
             bytestorage = world.GetStorage<ByteEntity>();
 

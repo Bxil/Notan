@@ -27,6 +27,8 @@ namespace Notan
 
         internal abstract void Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>;
 
+        internal abstract void LateDeserialize();
+
         internal abstract void HandleMessage(Client client, MessageType type, int index, int generation);
 
         internal abstract void FinalizeFrame();
@@ -117,6 +119,14 @@ namespace Notan
             }
         }
 
+        internal override void LateDeserialize()
+        {
+            foreach (ref var entity in entities.AsSpan())
+            {
+                entity.LateDeserialize();
+            }
+        }
+
         [Conditional("DEBUG")]
         private protected static void Log(string log) => Console.WriteLine($"<{typeof(T)}> {log}");
     }
@@ -138,7 +148,7 @@ namespace Notan
             authority = options == null ? ClientAuthority.None : options.ClientAuthority;
         }
 
-        public StrongHandle<T> Create(T entity = default)
+        public StrongHandle<T> Create(T entity)
         {
             int entind = entities.Count;
             entityToObservers.Add(new());
@@ -292,8 +302,9 @@ namespace Notan
                 case MessageType.Create:
                     if (authority == ClientAuthority.Unauthenticated || (authority == ClientAuthority.Authenticated && client.Authenticated))
                     {
-                        var handle = Create();
-                        client.ReadIntoEntity(ref handle.Get());
+                        T entity = default;
+                        client.ReadIntoEntity(ref entity);
+                        var handle = Create(entity);
                         SetAuthority(handle.Index, handle.Generation, client);
                     }
                     else

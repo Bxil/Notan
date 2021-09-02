@@ -127,6 +127,7 @@ namespace Notan
         internal void ReadIntoEntity<T>(ref T entity) where T : struct, IEntity
         {
             entity.Deserialize(new BinaryDeserializer(world, reader));
+            entity.LateDeserialize();
         }
 
         [Conditional("DEBUG")]
