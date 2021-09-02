@@ -4,7 +4,7 @@ namespace Notan.Serialization
 {
     public struct JsonDeserializer : IDeserializer<JsonDeserializer>
     {
-        public World World { get; set; }
+        public World World { get; }
 
         private readonly JsonElement element;
         private JsonElement.ArrayEnumerator arrayEnumerator;
@@ -29,6 +29,17 @@ namespace Notan.Serialization
         }
 
         public JsonDeserializer GetEntry(string name) => new(World, element.GetProperty(name));
+
+        public bool TryGetEntry(string name, out JsonDeserializer entry)
+        {
+            if (element.TryGetProperty(name, out var nextElement))
+            {
+                entry = new(World, nextElement);
+                return true;
+            }
+            entry = default;
+            return false;
+        }
 
         public bool ReadBool() => element.GetBoolean();
 

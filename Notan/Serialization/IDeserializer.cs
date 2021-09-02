@@ -2,13 +2,14 @@
 
 namespace Notan.Serialization
 {
-    public interface IDeserializer<out T> where T : IDeserializer<T>
+    public interface IDeserializer<T> where T : IDeserializer<T>
     {
         public World World { get; }
 
         int BeginArray();
         T NextArrayElement();
         T GetEntry(string name);
+        bool TryGetEntry(string name, out T entry);
         bool ReadBool();
         byte ReadByte();
         short ReadInt16();

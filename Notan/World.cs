@@ -65,7 +65,10 @@ namespace Notan
         {
             foreach (var pair in TypeNameToStorage.OrderBy(x => x.Key))
             {
-                pair.Value.Deserialize(deserializer.GetEntry(pair.Key));
+                if (deserializer.TryGetEntry(pair.Key, out var entry))
+                {
+                    pair.Value.Deserialize(entry);
+                }
             }
             foreach (var pair in TypeNameToStorage.OrderBy(x => x.Key))
             {
