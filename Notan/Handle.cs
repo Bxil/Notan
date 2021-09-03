@@ -1,9 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Notan
 {
     //TODO: Make this a generic when https://github.com/dotnet/runtime/issues/6924 is finally fixed.
-    public readonly struct Handle
+    public readonly struct Handle : IEquatable<Handle>
     {
         internal readonly Storage Storage;
 
@@ -32,9 +33,12 @@ namespace Notan
         {
             return a.Storage != b.Storage || a.Index != b.Index || a.Generation != b.Generation;
         }
+
+        public bool Equals(Handle other) => this == other;
+        public override int GetHashCode() => Index;
     }
 
-    public readonly struct StrongHandle<T> where T : struct, IEntity
+    public readonly struct StrongHandle<T> : IEquatable<StrongHandle<T>> where T : struct, IEntity
     {
         public readonly Storage<T> Storage;
 
@@ -73,9 +77,12 @@ namespace Notan
         public static bool operator ==(StrongHandle<T> a, StrongHandle<T> b) => (Handle)a == b;
 
         public static bool operator !=(StrongHandle<T> a, StrongHandle<T> b) => (Handle)a != b;
+
+        public bool Equals(StrongHandle<T> other) => this == other;
+        public override int GetHashCode() => Index;
     }
 
-    public readonly struct ViewHandle<T> where T : struct, IEntity
+    public readonly struct ViewHandle<T> : IEquatable<ViewHandle<T>> where T : struct, IEntity
     {
         public readonly StorageView<T> Storage;
 
@@ -104,5 +111,8 @@ namespace Notan
         public static bool operator ==(ViewHandle<T> a, ViewHandle<T> b) => (Handle)a == b;
 
         public static bool operator !=(ViewHandle<T> a, ViewHandle<T> b) => (Handle)a != b;
+
+        public bool Equals(ViewHandle<T> other) => this == other;
+        public override int GetHashCode() => Index;
     }
 }

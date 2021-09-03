@@ -1,7 +1,7 @@
 ﻿[*.cs]
 
-# CS0661: Type defines operator == or operator != but does not override Object.GetHashCode()
-dotnet_diagnostic.CS0661.severity = none
-
 # CS0660: Type defines operator == or operator != but does not override Object.Equals(object o)
 dotnet_diagnostic.CS0660.severity = none
+
+# CA1067: Override Object.Equals(object) when implementing IEquatable<T>
+dotnet_diagnostic.CA1067.severity = none
