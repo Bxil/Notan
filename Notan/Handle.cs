@@ -50,7 +50,7 @@ namespace Notan
 
         public ref T Get() => ref Storage.Get(Index, Generation);
 
-        public bool Alive() => Storage.Alive(Index, Generation);
+        public bool Alive() => Storage?.Alive(Index, Generation) ?? false;
 
         public void Destroy() => Storage.Destroy(Index, Generation);
 
@@ -91,7 +91,7 @@ namespace Notan
 
         public ref T Get() => ref Storage.Get(Index, Generation);
 
-        public bool Alive() => Storage.Alive(Index, Generation);
+        public bool Alive() => Storage?.Alive(Index, Generation) ?? false;
 
         public void RequestDestroy() => Storage.RequestDestroy(this);
 
