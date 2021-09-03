@@ -1,4 +1,6 @@
-﻿namespace Notan.Serialization
+﻿using System.Diagnostics;
+
+namespace Notan.Serialization
 {
     public interface IDeserializer<T> where T : IDeserializer<T>
     {
@@ -16,14 +18,11 @@
         float ReadSingle();
         double ReadDouble();
         string ReadString();
-    }
 
-    public static class DeserializerExtensions
-    {
-        public static Handle ReadHandle<TDeser, TEntity>(this TDeser deserializer) where TDeser : IDeserializer<TDeser> where TEntity : struct, IEntity
+        public Handle ReadHandle<TEntity>() where TEntity : struct, IEntity
         {
-            deserializer.BeginArray();
-            return new Handle(deserializer.World.GetStorageBase<TEntity>(), deserializer.NextArrayElement().ReadInt32(), deserializer.NextArrayElement().ReadInt32());
+            Debug.Assert(2 == BeginArray());
+            return new Handle(World.GetStorageBase<TEntity>(), NextArrayElement().ReadInt32(), NextArrayElement().ReadInt32());
         }
     }
 }

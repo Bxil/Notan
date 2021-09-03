@@ -18,16 +18,13 @@
         void Write(float value);
         void Write(double value);
         void Write(string value);
-    }
 
-    public static class SerializerExtensions
-    {
-        public static void Write<T>(this T serializer, Handle handle) where T : ISerializer<T>
+        public void Write(Handle handle)
         {
-            serializer.BeginArray(2);
-            serializer.Write(handle.Index);
-            serializer.Write(handle.Generation);
-            serializer.EndArray();
+            BeginArray(2);
+            Write(handle.Index);
+            Write(handle.Generation);
+            EndArray();
         }
     }
 }
