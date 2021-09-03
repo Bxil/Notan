@@ -50,12 +50,12 @@ namespace Notan
 
         public abstract void AddStorage<T>(StorageOptionsAttribute? options = default) where T : struct, IEntity;
 
-        public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer
+        public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
         {
             serializer.BeginObject();
             foreach (var pair in TypeNameToStorage.Where(x => !x.Value.NoPersistence).OrderBy(x => x.Key))
             {
-                serializer.WriteEntry(pair.Key);
+                serializer.Entry(pair.Key);
                 pair.Value.Serialize(serializer);
             }
             serializer.EndObject();

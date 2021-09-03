@@ -1,6 +1,6 @@
 ﻿namespace Notan.Serialization
 {
-    public interface ISerializer
+    public interface ISerializer<T> where T : ISerializer<T>
     {
         void BeginArray(int length);
         void EndArray();
@@ -8,28 +8,26 @@
         void BeginObject();
         void EndObject();
 
-        void WriteEntry(string name);
+        T Entry(string name);
 
-        void Write(string name, bool value);
-        void Write(string name, byte value);
-        void Write(string name, short value);
-        void Write(string name, int value);
-        void Write(string name, long value);
-        void Write(string name, float value);
-        void Write(string name, double value);
-        void Write(string name, string value);
+        void Write(bool value);
+        void Write(byte value);
+        void Write(short value);
+        void Write(int value);
+        void Write(long value);
+        void Write(float value);
+        void Write(double value);
+        void Write(string value);
     }
 
     public static class SerializerExtensions
     {
-        public static void Write<T>(this T serializer, string name, Handle handle) where T : ISerializer
+        public static void Write<T>(this T serializer, Handle handle) where T : ISerializer<T>
         {
-            serializer.WriteEntry(name);
-            serializer.BeginObject();
-            serializer.Write("storage", handle.Storage.Id);
-            serializer.Write("index", handle.Index);
-            serializer.Write("gen", handle.Generation);
-            serializer.EndObject();
+            serializer.BeginArray(2);
+            serializer.Write(handle.Index);
+            serializer.Write(handle.Generation);
+            serializer.EndArray();
         }
     }
 }

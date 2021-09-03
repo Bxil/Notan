@@ -2,7 +2,7 @@
 
 namespace Notan.Serialization
 {
-    public struct JsonSerializer : ISerializer
+    public struct JsonSerializer : ISerializer<JsonSerializer>
     {
         private readonly Utf8JsonWriter writer;
 
@@ -16,22 +16,26 @@ namespace Notan.Serialization
 
         public void EndObject() => writer.WriteEndObject();
 
-        public void Write(string name, byte value) => writer.WriteNumber(name, value);
+        public JsonSerializer Entry(string name)
+        {
+            writer.WritePropertyName(name);
+            return this;
+        }
 
-        public void Write(string name, string value) => writer.WriteString(name, value);
+        public void Write(byte value) => writer.WriteNumberValue(value);
 
-        public void Write(string name, bool value) => writer.WriteBoolean(name, value);
+        public void Write(string value) => writer.WriteStringValue(value);
 
-        public void Write(string name, short value) => writer.WriteNumber(name, value);
+        public void Write(bool value) => writer.WriteBooleanValue(value);
 
-        public void Write(string name, int value) => writer.WriteNumber(name, value);
+        public void Write(short value) => writer.WriteNumberValue(value);
 
-        public void Write(string name, long value) => writer.WriteNumber(name, value);
+        public void Write(int value) => writer.WriteNumberValue(value);
 
-        public void WriteEntry(string name) => writer.WritePropertyName(name);
+        public void Write(long value) => writer.WriteNumberValue(value);
 
-        public void Write(string name, float value) => writer.WriteNumber(name, value);
+        public void Write(float value) => writer.WriteNumberValue(value);
 
-        public void Write(string name, double value) => writer.WriteNumber(name, value);
+        public void Write(double value) => writer.WriteNumberValue(value);
     }
 }

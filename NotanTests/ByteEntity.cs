@@ -9,12 +9,12 @@ namespace Notan.Testing
 
         void IEntity.Deserialize<T>(T deserializer)
         {
-            Value = deserializer.GetEntry(nameof(Value)).ReadByte();
+            Value = deserializer.Entry(nameof(Value)).ReadByte();
         }
 
         void IEntity.Serialize<T>(T serializer)
         {
-            serializer.Write(nameof(Value), Value);
+            serializer.Entry(nameof(Value)).Write(Value);
         }
     }
 }

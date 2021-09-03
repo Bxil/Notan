@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace Notan.Serialization
 {
@@ -19,11 +18,11 @@ namespace Notan.Serialization
 
         public BinaryDeserializer NextArrayElement() => this;
 
-        public BinaryDeserializer GetEntry(string name) => this;
+        public BinaryDeserializer Entry(string name) => this;
 
         public bool TryGetEntry(string name, out BinaryDeserializer entry)
         {
-            entry = GetEntry(name);
+            entry = Entry(name);
             return true;
         }
 

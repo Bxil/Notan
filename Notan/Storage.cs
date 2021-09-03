@@ -23,7 +23,7 @@ namespace Notan
             InnerType = innerType;
         }
 
-        internal abstract void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer;
+        internal abstract void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>;
 
         internal abstract void Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>;
 
@@ -76,14 +76,14 @@ namespace Notan
             foreach (var index in indexToEntity.AsSpan())
             {
                 serializer.BeginObject();
-                serializer.Write("$gen", generations[i]);
+                serializer.Entry("$gen").Write(generations[i]);
                 if (entityToIndex[index] == i)
                 {
                     entities[index].Serialize(serializer);
                 }
                 else
                 {
-                    serializer.Write("$dead", "");
+                    serializer.Entry("$dead").Write("");
                 }
                 serializer.EndObject();
                 i++;
@@ -102,7 +102,7 @@ namespace Notan
             for (int i = 0; i < count; i++)
             {
                 var element = deserializer.NextArrayElement();
-                generations.Add(element.GetEntry("$gen").ReadInt32());
+                generations.Add(element.Entry("$gen").ReadInt32());
                 if (!element.TryGetEntry("$dead", out _))
                 {
                     T t = default;

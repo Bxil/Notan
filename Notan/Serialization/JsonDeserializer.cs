@@ -28,7 +28,7 @@ namespace Notan.Serialization
             return new JsonDeserializer(World, arrayEnumerator.Current);
         }
 
-        public JsonDeserializer GetEntry(string name) => new(World, element.GetProperty(name));
+        public JsonDeserializer Entry(string name) => new(World, element.GetProperty(name));
 
         public bool TryGetEntry(string name, out JsonDeserializer entry)
         {

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Notan.Serialization
+﻿namespace Notan.Serialization
 {
     public interface IDeserializer<T> where T : IDeserializer<T>
     {
@@ -8,7 +6,7 @@ namespace Notan.Serialization
 
         int BeginArray();
         T NextArrayElement();
-        T GetEntry(string name);
+        T Entry(string name);
         bool TryGetEntry(string name, out T entry);
         bool ReadBool();
         byte ReadByte();
@@ -22,10 +20,10 @@ namespace Notan.Serialization
 
     public static class DeserializerExtensions
     {
-        public static Handle ReadHandle<TDeser>(this TDeser deserializer) where TDeser : IDeserializer<TDeser>
+        public static Handle ReadHandle<TDeser, TEntity>(this TDeser deserializer) where TDeser : IDeserializer<TDeser> where TEntity : struct, IEntity
         {
-            int storageid = Math.Clamp(deserializer.ReadInt32(), 0, deserializer.World.IdToStorage.Count - 1);
-            return new Handle(deserializer.World.IdToStorage[storageid], deserializer.GetEntry("index").ReadInt32(), deserializer.GetEntry("gen").ReadInt32());
+            deserializer.BeginArray();
+            return new Handle(deserializer.World.GetStorageBase<TEntity>(), deserializer.NextArrayElement().ReadInt32(), deserializer.NextArrayElement().ReadInt32());
         }
     }
 }

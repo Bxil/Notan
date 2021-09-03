@@ -2,7 +2,7 @@
 
 namespace Notan.Serialization
 {
-    public struct BinarySerializer : ISerializer
+    public struct BinarySerializer : ISerializer<BinarySerializer>
     {
         private readonly BinaryWriter writer;
 
@@ -16,22 +16,22 @@ namespace Notan.Serialization
 
         public void EndObject() { }
 
-        public void Write(string name, byte value) => writer.Write(value);
+        public BinarySerializer Entry(string name) => this;
 
-        public void Write(string name, string value) => writer.Write(value);
+        public void Write(byte value) => writer.Write(value);
 
-        public void Write(string name, bool value) => writer.Write(value);
+        public void Write(string value) => writer.Write(value);
 
-        public void Write(string name, short value) => writer.Write(value);
+        public void Write(bool value) => writer.Write(value);
 
-        public void Write(string name, int value) => writer.Write(value);
+        public void Write(short value) => writer.Write(value);
 
-        public void Write(string name, long value) => writer.Write(value);
+        public void Write(int value) => writer.Write(value);
 
-        public void WriteEntry(string name) { }
+        public void Write(long value) => writer.Write(value);
 
-        public void Write(string name, float value) => writer.Write(value);
+        public void Write(float value) => writer.Write(value);
 
-        public void Write(string name, double value) => writer.Write(value);
+        public void Write(double value) => writer.Write(value);
     }
 }
