@@ -15,32 +15,27 @@ namespace Notan.Testing
         [TestInitialize]
         public void Init()
         {
-            serverWorld = new ServerWorld(0)
-            {
-                Timestep = TimeSpan.Zero
-            };
+            serverWorld = new ServerWorld(0);
             serverWorld.AddStorages(Assembly.GetExecutingAssembly());
 
             clientWorld1 = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).Result;
-            clientWorld1.Timestep = TimeSpan.Zero;
             clientWorld1.AddStorages(Assembly.GetExecutingAssembly());
 
             clientWorld2 = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).Result;
-            clientWorld2.Timestep = TimeSpan.Zero;
             clientWorld2.AddStorages(Assembly.GetExecutingAssembly());
 
-            serverWorld.Loop();
+            serverWorld.Tick();
         }
 
         [TestCleanup]
         public void End()
         {
             serverWorld.Exit();
-            serverWorld.Loop();
+            serverWorld.Tick();
             clientWorld1.Exit();
-            clientWorld1.Loop();
+            clientWorld1.Tick();
             clientWorld2.Exit();
-            clientWorld2.Loop();
+            clientWorld2.Tick();
         }
 
         [TestMethod]
@@ -52,21 +47,21 @@ namespace Notan.Testing
             system1.Storage.RequestCreate(new ByteEntity { Value = 1 });
             system2.Storage.RequestCreate(new ByteEntity { Value = 3 });
 
-            clientWorld1.Loop();
-            clientWorld2.Loop();
+            clientWorld1.Tick();
+            clientWorld2.Tick();
 
-            serverWorld.Loop();
+            serverWorld.Tick();
 
-            clientWorld1.Loop();
-            clientWorld2.Loop();
+            clientWorld1.Tick();
+            clientWorld2.Tick();
 
             system1.Storage.Run(ref system1);
             system2.Storage.Run(ref system2);
 
-            clientWorld1.Loop();
-            clientWorld2.Loop();
+            clientWorld1.Tick();
+            clientWorld2.Tick();
 
-            serverWorld.Loop();
+            serverWorld.Tick();
 
             var sumSystem = new SumSystem();
             serverWorld.GetStorage<ByteEntity>().Run(ref sumSystem);

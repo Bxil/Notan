@@ -2,13 +2,11 @@
 using Notan.Serialization;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Notan
@@ -17,8 +15,6 @@ namespace Notan
     {
         private protected readonly Dictionary<string, Storage> TypeNameToStorage = new();
         internal FastList<Storage> IdToStorage = new();
-
-        public TimeSpan Timestep { get; set; } = TimeSpan.FromSeconds(1.0 / 60.0);
 
         public IPEndPoint EndPoint { get; protected set; }
 
@@ -30,19 +26,6 @@ namespace Notan
         public StorageBase<T> GetStorageBase<T>() where T : struct, IEntity
         {
             return Unsafe.As<StorageBase<T>>(TypeNameToStorage[typeof(T).ToString()]);
-        }
-
-        private TimeSpan lastEnded = TimeSpan.Zero;
-        private readonly Stopwatch watch = Stopwatch.StartNew();
-        private protected void Sleep()
-        {
-            var ended = watch.Elapsed;
-            var sleepfor = lastEnded - ended + Timestep;
-            lastEnded = ended + sleepfor;
-            if (sleepfor > TimeSpan.Zero)
-            {
-                Thread.Sleep(sleepfor);
-            }
         }
 
         private protected volatile bool exit = false;
@@ -106,7 +89,7 @@ namespace Notan
             return Unsafe.As<Storage<T>>(GetStorageBase<T>());
         }
 
-        public bool Loop()
+        public bool Tick()
         {
             foreach (var storage in IdToStorage.AsSpan())
             {
@@ -171,8 +154,6 @@ namespace Notan
                 }
             }
 
-            Sleep();
-
             return true;
         }
 
@@ -212,7 +193,7 @@ namespace Notan
         {
             return Unsafe.As<StorageView<T>>(GetStorageBase<T>());
         }
-        public bool Loop()
+        public bool Tick()
         {
             if (exit)
             {
@@ -225,8 +206,6 @@ namespace Notan
             {
                 IdToStorage[server.ReadHeader(out var type, out int index, out var generation)].HandleMessage(server, type, index, generation);
             }
-
-            Sleep();
 
             return true;
         }

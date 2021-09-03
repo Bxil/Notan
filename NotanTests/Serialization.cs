@@ -18,10 +18,7 @@ namespace Notan.Testing
         [TestInitialize]
         public void Init()
         {
-            world = new ServerWorld(0)
-            {
-                Timestep = TimeSpan.Zero
-            };
+            world = new ServerWorld(0);
             world.AddStorages(Assembly.GetExecutingAssembly());
             bytestorage = world.GetStorage<ByteEntity>();
         }
@@ -30,7 +27,7 @@ namespace Notan.Testing
         public void End()
         {
             world.Exit();
-            world.Loop();
+            world.Tick();
         }
 
         [TestMethod]

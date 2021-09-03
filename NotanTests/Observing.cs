@@ -14,24 +14,20 @@ namespace Notan.Testing
         [TestInitialize]
         public void Init()
         {
-            serverWorld = new ServerWorld(0)
-            {
-                Timestep = TimeSpan.Zero
-            };
+            serverWorld = new ServerWorld(0);
             serverWorld.AddStorages(Assembly.GetExecutingAssembly());
 
             clientWorld = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).Result;
-            clientWorld.Timestep = TimeSpan.Zero;
             clientWorld.AddStorages(Assembly.GetExecutingAssembly());
 
-            serverWorld.Loop();
+            serverWorld.Tick();
         }
 
         [TestCleanup]
         public void End()
         {
             serverWorld.Exit();
-            serverWorld.Loop();
+            serverWorld.Tick();
         }
 
         //TODO: make this test a lot more precise
@@ -39,15 +35,15 @@ namespace Notan.Testing
         public void AddAndDisconnect()
         {
             clientWorld.GetStorageView<ByteEntity>().RequestCreate(new ByteEntity());
-            clientWorld.Loop();
-            serverWorld.Loop();
+            clientWorld.Tick();
+            serverWorld.Tick();
             var system = new ByteSystem();
             serverWorld.GetStorage<ByteEntity>().Run(ref system);
             clientWorld.Exit();
-            clientWorld.Loop();
-            serverWorld.Loop();
+            clientWorld.Tick();
+            serverWorld.Tick();
             serverWorld.GetStorage<ByteEntity>().Run(ref system);
-            serverWorld.Loop();
+            serverWorld.Tick();
             serverWorld.GetStorage<ByteEntity>().Run(ref system);
         }
 

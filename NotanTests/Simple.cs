@@ -33,10 +33,7 @@ namespace Notan.Testing
         [TestInitialize]
         public void Init()
         {
-            world = new ServerWorld(0)
-            {
-                Timestep = TimeSpan.Zero
-            };
+            world = new ServerWorld(0);
             world.AddStorages(Assembly.GetExecutingAssembly());
             bytestorage = world.GetStorage<ByteEntity>();
 
@@ -52,7 +49,7 @@ namespace Notan.Testing
         public void End()
         {
             world.Exit();
-            world.Loop();
+            world.Tick();
         }
 
         [TestMethod]
@@ -90,7 +87,7 @@ namespace Notan.Testing
             bytestorage.Run(ref system);
             Assert.AreEqual(bytehandles.Length / 2 + 1, system.Count);
 
-            world.Loop();
+            world.Tick();
 
             for (byte i = 0; i < bytehandles.Length / 2; i++)
             {
