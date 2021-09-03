@@ -21,7 +21,8 @@ namespace Notan.Serialization
 
         public Handle ReadHandle<TEntity>() where TEntity : struct, IEntity
         {
-            Debug.Assert(2 == BeginArray());
+            int length = BeginArray();
+            Debug.Assert(2 == length);
             return new Handle(World.GetStorageBase<TEntity>(), NextArrayElement().ReadInt32(), NextArrayElement().ReadInt32());
         }
     }
