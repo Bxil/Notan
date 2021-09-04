@@ -77,7 +77,7 @@ namespace Notan
             {
                 serializer.BeginObject();
                 serializer.Entry("$gen").Write(generations[i]);
-                if (entityToIndex[index] == i)
+                if (entityToIndex.Count > index && entityToIndex[index] == i)
                 {
                     entities[index].Serialize(serializer);
                 }
