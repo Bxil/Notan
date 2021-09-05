@@ -58,7 +58,7 @@ namespace Notan
 
         internal bool Alive(int index, int generation)
         {
-            return generations[index] == generation;
+            return generations.Count > index && generations[index] == generation;
         }
 
         private protected void Recycle(int index)
