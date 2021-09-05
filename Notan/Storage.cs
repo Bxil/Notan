@@ -35,13 +35,10 @@ namespace Notan
     }
 
     //Common
-    public abstract class StorageBase<T> : Storage where T : struct, IEntity
+    public abstract class StorageBase<T> : Storage where T : struct, IEntity<T>
     {
         private protected FastList<T> entities = new();
         private protected FastList<int> entityToIndex = new();
-        private protected FastList<bool> entityIsDead = new();
-        private protected FastList<FastList<Client>> entityToObservers = new();
-        private protected FastList<Client?> entityToAuthority = new();
         private protected FastList<int> indexToEntity = new();
         private protected FastList<int> generations = new();
 
@@ -61,88 +58,18 @@ namespace Notan
             return generations.Count > index && generations[index] == generation;
         }
 
-        private protected void Recycle(int index)
-        {
-            if (remaniningHandles > 0)
-            {
-                indexToEntity[index] = nextIndex;
-            }
-            nextIndex = index;
-            remaniningHandles++;
-        }
-
-        internal override void Serialize<TSerializer>(TSerializer serializer)
-        {
-            serializer.BeginArray(indexToEntity.Count);
-            int i = 0;
-            foreach (var index in indexToEntity.AsSpan())
-            {
-                serializer.BeginObject();
-                serializer.Entry("$gen").Write(generations[i]);
-                if (entityToIndex.Count > index && entityToIndex[index] == i)
-                {
-                    entities[index].Serialize(serializer);
-                }
-                else
-                {
-                    serializer.Entry("$dead").Write("");
-                }
-                serializer.EndObject();
-                i++;
-            }
-            serializer.EndArray();
-        }
-
-        internal override void Deserialize<TDeserializer>(TDeserializer deserializer)
-        {
-            entities.Clear();
-            entityToIndex.Clear();
-            entityIsDead.Clear();
-            entityToObservers.Clear();
-            entityToAuthority.Clear();
-            indexToEntity.Clear();
-            generations.Clear();
-
-            var count = deserializer.BeginArray();
-            for (int i = 0; i < count; i++)
-            {
-                var element = deserializer.NextArrayElement();
-                generations.Add(element.Entry("$gen").ReadInt32());
-                if (!element.TryGetEntry("$dead", out _))
-                {
-                    T t = default;
-                    t.Deserialize(element);
-                    entities.Add(t);
-                    entityToIndex.Add(i);
-                    entityIsDead.Add(false);
-                    entityToObservers.Add(new());
-                    entityToAuthority.Add(null);
-                    indexToEntity.Add(entities.Count - 1);
-                }
-                else
-                {
-                    indexToEntity.Add(0);
-                    Recycle(i);
-                }
-            }
-        }
-
-        internal override void LateDeserialize()
-        {
-            foreach (ref var entity in entities.AsSpan())
-            {
-                entity.LateDeserialize();
-            }
-        }
-
         [Conditional("DEBUG")]
         private protected static void Log(string log) => Console.WriteLine($"<{typeof(T)}> {log}");
     }
 
     //For servers
-    public sealed class Storage<T> : StorageBase<T> where T : struct, IEntity
+    public sealed class Storage<T> : StorageBase<T> where T : struct, IEntity<T>
     {
         private FastList<int> destroyedEntityIndices = new();
+
+        private FastList<bool> entityIsDead = new();
+        private FastList<FastList<Client>> entityToObservers = new();
+        private FastList<Client?> entityToAuthority = new();
 
         private readonly ClientAuthority authority;
 
@@ -176,12 +103,14 @@ namespace Notan
             entities.Add(entity);
             entityToIndex.Add(hndind);
 
-            return new(this, hndind, generations[hndind]);
+            var handle = new StrongHandle<T>(this, hndind, generations[hndind]);
+            Get(hndind, generations[hndind]).LateCreate(handle);
+            return handle;
         }
 
         internal void Destroy(int index, int generation)
         {
-            Get(index, generation).OnDestroy();
+            Get(index, generation).OnDestroy(new(this, index, generation));
             entityIsDead[indexToEntity[index]] = true;
             generations[index]++;
             destroyedEntityIndices.Add(index);
@@ -203,6 +132,16 @@ namespace Notan
             indexToEntity[entityToIndex[^1]] = entityIndex;
             entityToIndex.RemoveAt(entityIndex);
             Recycle(index);
+        }
+
+        private void Recycle(int index)
+        {
+            if (remaniningHandles > 0)
+            {
+                indexToEntity[index] = nextIndex;
+            }
+            nextIndex = index;
+            remaniningHandles++;
         }
 
         internal void AddObserver(int index, int generation, Client client)
@@ -290,14 +229,73 @@ namespace Notan
             }
         }
 
-        internal sealed override void Deserialize<TDeserializer>(TDeserializer deserializer)
+        internal override void Serialize<TSerializer>(TSerializer serializer)
         {
-            entityToObservers.Clear();
-            entityToAuthority.Clear();
-            entityIsDead.Clear();
+            serializer.BeginArray(indexToEntity.Count);
+            int i = 0;
+            foreach (var index in indexToEntity.AsSpan())
+            {
+                serializer.BeginObject();
+                serializer.Entry("$gen").Write(generations[i]);
+                if (entityToIndex.Count > index && entityToIndex[index] == i)
+                {
+                    entities[index].Serialize(serializer);
+                }
+                else
+                {
+                    serializer.Entry("$dead").Write("");
+                }
+                serializer.EndObject();
+                i++;
+            }
+            serializer.EndArray();
+        }
+
+        internal override void Deserialize<TDeserializer>(TDeserializer deserializer)
+        {
             destroyedEntityIndices.Clear();
             remaniningHandles = 0;
-            base.Deserialize(deserializer);
+
+            entities.Clear();
+            entityToIndex.Clear();
+            entityIsDead.Clear();
+            entityToObservers.Clear();
+            entityToAuthority.Clear();
+            indexToEntity.Clear();
+            generations.Clear();
+
+            var count = deserializer.BeginArray();
+            for (int i = 0; i < count; i++)
+            {
+                var element = deserializer.NextArrayElement();
+                generations.Add(element.Entry("$gen").ReadInt32());
+                if (!element.TryGetEntry("$dead", out _))
+                {
+                    T t = default;
+                    t.Deserialize(element);
+                    entities.Add(t);
+                    entityToIndex.Add(i);
+                    entityIsDead.Add(false);
+                    entityToObservers.Add(new());
+                    entityToAuthority.Add(null);
+                    indexToEntity.Add(entities.Count - 1);
+                }
+                else
+                {
+                    indexToEntity.Add(0);
+                    Recycle(i);
+                }
+            }
+        }
+
+        internal override void LateDeserialize()
+        {
+            int i = 0;
+            foreach (ref var entity in entities.AsSpan())
+            {
+                entity.LateDeserialize(new(this, entityToIndex[i], generations[entityToIndex[i]]));
+                i++;
+            }
         }
 
         internal sealed override void HandleMessage(Client client, MessageType type, int index, int generation)
@@ -349,7 +347,7 @@ namespace Notan
     }
 
     //For clients
-    public sealed class StorageView<T> : StorageBase<T> where T : struct, IEntity
+    public sealed class StorageView<T> : StorageBase<T> where T : struct, IEntity<T>
     {
         private readonly Client server;
 
@@ -414,6 +412,12 @@ namespace Notan
             }
         }
 
-        internal override void FinalizeFrame() { }
+        internal override void FinalizeFrame() => throw new NotImplementedException();
+
+        internal override void Serialize<TSerializer>(TSerializer serializer) => throw new NotImplementedException();
+
+        internal override void Deserialize<TDeserializer>(TDeserializer deserializer) => throw new NotImplementedException();
+
+        internal override void LateDeserialize() => throw new NotImplementedException();
     }
 }

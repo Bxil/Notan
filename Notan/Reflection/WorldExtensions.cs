@@ -14,13 +14,19 @@ namespace Notan.Reflection
             foreach (var type in assembly.GetTypes())
             {
                 arr[0] = type.GetCustomAttribute<StorageOptionsAttribute>();
-                if (typeof(IEntity).IsAssignableFrom(type))
+                try //this try is here specifically for the MakeGenericType
                 {
-                    world.GetType().GetMethod(nameof(world.AddStorage))!.MakeGenericMethod(type).Invoke(world, arr);
+                    if (typeof(IEntity<>).MakeGenericType(type).IsAssignableFrom(type))
+                    {
+                        world.GetType().GetMethod(nameof(world.AddStorage))!.MakeGenericMethod(type).Invoke(world, arr);
+                    }
                 }
-                else if (arr[0] != null)
+                catch (ArgumentException)
                 {
-                    throw new Exception($"{type} has {nameof(StorageOptionsAttribute)} without implementing {nameof(IEntity)}.");
+                    if (arr[0] != null)
+                    {
+                        throw new Exception($"{type} has {nameof(StorageOptionsAttribute)} without implementing {typeof(IEntity<>).MakeGenericType(type)}.");
+                    }
                 }
             }
         }

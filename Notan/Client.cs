@@ -66,7 +66,7 @@ namespace Notan
             }
         }
 
-        internal void Send<T>(int storageid, MessageType type, int index, int generation, ref T entity) where T : struct, IEntity
+        internal void Send<T>(int storageid, MessageType type, int index, int generation, ref T entity) where T : struct, IEntity<T>
         {
             //Leave space for the length prefix
             int prefixPosition = (int)outgoing.Position;
@@ -124,10 +124,9 @@ namespace Notan
             return storageid;
         }
 
-        internal void ReadIntoEntity<T>(ref T entity) where T : struct, IEntity
+        internal void ReadIntoEntity<T>(ref T entity) where T : struct, IEntity<T>
         {
             entity.Deserialize(new BinaryDeserializer(world, reader));
-            entity.LateDeserialize();
         }
 
         [Conditional("DEBUG")]

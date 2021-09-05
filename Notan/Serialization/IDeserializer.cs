@@ -19,7 +19,7 @@ namespace Notan.Serialization
         double ReadDouble();
         string ReadString();
 
-        public Handle ReadHandle<TEntity>() where TEntity : struct, IEntity
+        public Handle ReadHandle<TEntity>() where TEntity : struct, IEntity<TEntity>
         {
             int length = BeginArray();
             Debug.Assert(2 == length);

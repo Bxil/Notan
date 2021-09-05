@@ -18,11 +18,11 @@ namespace Notan
             Generation = generation;
         }
 
-        public StrongHandle<T> Strong<T>() where T : struct, IEntity => new((Storage<T>)Storage, Index, Generation);
-        public StrongHandle<T> StrongUnsafe<T>() where T : struct, IEntity => new(Unsafe.As<Storage<T>>(Storage), Index, Generation);
+        public StrongHandle<T> Strong<T>() where T : struct, IEntity<T> => new((Storage<T>)Storage, Index, Generation);
+        public StrongHandle<T> StrongUnsafe<T>() where T : struct, IEntity<T> => new(Unsafe.As<Storage<T>>(Storage), Index, Generation);
 
-        public ViewHandle<T> View<T>() where T : struct, IEntity => new((StorageView<T>)Storage, Index, Generation);
-        public ViewHandle<T> ViewUnsafe<T>() where T : struct, IEntity => new(Unsafe.As<StorageView<T>>(Storage), Index, Generation);
+        public ViewHandle<T> View<T>() where T : struct, IEntity<T> => new((StorageView<T>)Storage, Index, Generation);
+        public ViewHandle<T> ViewUnsafe<T>() where T : struct, IEntity<T> => new(Unsafe.As<StorageView<T>>(Storage), Index, Generation);
 
         public static bool operator ==(Handle a, Handle b)
         {
@@ -38,7 +38,7 @@ namespace Notan
         public override int GetHashCode() => Index;
     }
 
-    public readonly struct StrongHandle<T> : IEquatable<StrongHandle<T>> where T : struct, IEntity
+    public readonly struct StrongHandle<T> : IEquatable<StrongHandle<T>> where T : struct, IEntity<T>
     {
         public readonly Storage<T> Storage;
 
@@ -82,7 +82,7 @@ namespace Notan
         public override int GetHashCode() => Index;
     }
 
-    public readonly struct ViewHandle<T> : IEquatable<ViewHandle<T>> where T : struct, IEntity
+    public readonly struct ViewHandle<T> : IEquatable<ViewHandle<T>> where T : struct, IEntity<T>
     {
         public readonly StorageView<T> Storage;
 

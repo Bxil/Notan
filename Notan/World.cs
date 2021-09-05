@@ -23,7 +23,7 @@ namespace Notan
             EndPoint = null!;
         }
 
-        public StorageBase<T> GetStorageBase<T>() where T : struct, IEntity
+        public StorageBase<T> GetStorageBase<T>() where T : struct, IEntity<T>
         {
             return Unsafe.As<StorageBase<T>>(TypeNameToStorage[typeof(T).ToString()]);
         }
@@ -31,7 +31,7 @@ namespace Notan
         private protected volatile bool exit = false;
         public void Exit() => exit = true;
 
-        public abstract void AddStorage<T>(StorageOptionsAttribute? options = default) where T : struct, IEntity;
+        public abstract void AddStorage<T>(StorageOptionsAttribute? options = default) where T : struct, IEntity<T>;
 
         public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
         {
@@ -84,7 +84,7 @@ namespace Notan
             IdToStorage.Add(newstorage);
         }
 
-        public Storage<T> GetStorage<T>() where T : struct, IEntity
+        public Storage<T> GetStorage<T>() where T : struct, IEntity<T>
         {
             return Unsafe.As<Storage<T>>(GetStorageBase<T>());
         }
@@ -189,7 +189,7 @@ namespace Notan
             IdToStorage.Add(newstorage);
         }
 
-        public StorageView<T> GetStorageView<T>() where T : struct, IEntity
+        public StorageView<T> GetStorageView<T>() where T : struct, IEntity<T>
         {
             return Unsafe.As<StorageView<T>>(GetStorageBase<T>());
         }
