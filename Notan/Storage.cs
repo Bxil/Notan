@@ -37,9 +37,11 @@ namespace Notan
     //Common
     public abstract class StorageBase<T> : Storage where T : struct, IEntity
     {
+        private protected FastList<T> entities = new();
         private protected FastList<int> entityToIndex = new();
         private protected FastList<bool> entityIsDead = new();
-        private protected FastList<T> entities = new();
+        private protected FastList<FastList<Client>> entityToObservers = new();
+        private protected FastList<Client?> entityToAuthority = new();
         private protected FastList<int> indexToEntity = new();
         private protected FastList<int> generations = new();
 
@@ -93,8 +95,11 @@ namespace Notan
 
         internal override void Deserialize<TDeserializer>(TDeserializer deserializer)
         {
-            entityToIndex.Clear();
             entities.Clear();
+            entityToIndex.Clear();
+            entityIsDead.Clear();
+            entityToObservers.Clear();
+            entityToAuthority.Clear();
             indexToEntity.Clear();
             generations.Clear();
 
@@ -110,6 +115,8 @@ namespace Notan
                     entities.Add(t);
                     entityToIndex.Add(i);
                     entityIsDead.Add(false);
+                    entityToObservers.Add(new());
+                    entityToAuthority.Add(null);
                     indexToEntity.Add(entities.Count - 1);
                 }
                 else
@@ -135,9 +142,6 @@ namespace Notan
     //For servers
     public sealed class Storage<T> : StorageBase<T> where T : struct, IEntity
     {
-        private FastList<FastList<Client>> entityToObservers = new();
-        private FastList<Client?> entityToAuthority = new();
-
         private FastList<int> destroyedEntityIndices = new();
 
         private readonly ClientAuthority authority;
