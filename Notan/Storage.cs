@@ -219,8 +219,10 @@ namespace Notan
         internal void RemoveObserver(int index, int generation, Client client)
         {
             Debug.Assert(Alive(index, generation));
-            client.Send(Id, MessageType.Destroy, index, generation, ref Unsafe.NullRef<T>());
-            entityToObservers[indexToEntity[index]].Remove(client);
+            if (entityToObservers[indexToEntity[index]].Remove(client))
+            {
+                client.Send(Id, MessageType.Destroy, index, generation, ref Unsafe.NullRef<T>());
+            }
         }
 
         internal void UpdateObservers(int index, int generation)
