@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Notan.Reflection;
 using Notan.Serialization;
-using System;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;

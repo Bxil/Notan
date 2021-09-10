@@ -1,6 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Notan.Reflection;
-using System;
 using System.Reflection;
 
 namespace Notan.Testing

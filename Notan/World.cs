@@ -175,7 +175,7 @@ namespace Notan
             EndPoint = (IPEndPoint)server.Client.LocalEndPoint!;
         }
 
-        public static async Task<ClientWorld> StartAsync(string host, int port)
+        public static async ValueTask<ClientWorld> StartAsync(string host, int port)
         {
             var client = new TcpClient();
             await client.ConnectAsync(host, port);
