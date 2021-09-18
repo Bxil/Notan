@@ -1,4 +1,5 @@
 ﻿using Notan.Reflection;
+using System;
 
 namespace Notan.Testing
 {
@@ -7,14 +8,18 @@ namespace Notan.Testing
     {
         public byte Value;
 
-        void IEntity<ByteEntity>.Deserialize<T>(T deserializer)
+        void IEntity<ByteEntity>.Deserialize<TEntry, TArray, TObject>(string key, TEntry entry)
         {
-            Value = deserializer.Entry(nameof(Value)).ReadByte();
+            Value = key switch
+            {
+                nameof(Value) => entry.GetByte(),
+                _ => throw new Exception(),
+            };
         }
 
-        void IEntity<ByteEntity>.Serialize<T>(T serializer)
+        void IEntity<ByteEntity>.Serialize<TEntry, TArray, TObject>(TObject serializer)
         {
-            serializer.Entry(nameof(Value)).Write(Value);
+            serializer.Next(nameof(Value)).Write(Value);
         }
     }
 }

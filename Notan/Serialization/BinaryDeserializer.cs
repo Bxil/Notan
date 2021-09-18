@@ -2,44 +2,86 @@
 
 namespace Notan.Serialization
 {
-    public struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
+    public struct BinaryDeserializerEntry : IDeserializerEntry<BinaryDeserializerEntry, BinaryDeserializerArray, BinaryDeserializerObject>
     {
-        public World World { get; set; }
+        public World World { get; }
 
         private readonly BinaryReader reader;
 
-        public BinaryDeserializer(World world, BinaryReader reader)
+        public BinaryDeserializerEntry(World world, BinaryReader reader)
         {
             World = world;
             this.reader = reader;
         }
 
-        public int BeginArray() => reader.Read7BitEncodedInt();
+        public bool GetBool() => reader.ReadBoolean();
 
-        public BinaryDeserializer NextArrayElement() => this;
+        public byte GetByte() => reader.ReadByte();
 
-        public BinaryDeserializer Entry(string name) => this;
+        public short GetInt16() => reader.ReadInt16();
 
-        public bool TryGetEntry(string name, out BinaryDeserializer entry)
+        public int GetInt32() => reader.ReadInt32();
+
+        public long GetInt64() => reader.ReadInt64();
+
+        public float GetSingle() => reader.ReadSingle();
+
+        public double GetDouble() => reader.ReadDouble();
+
+        public string GetString() => reader.ReadString();
+
+        public BinaryDeserializerArray GetArray() => new(World, reader);
+
+        public BinaryDeserializerObject GetObject() => new(World, reader);
+    }
+
+    public struct BinaryDeserializerArray : IDeserializerArray<BinaryDeserializerEntry, BinaryDeserializerArray, BinaryDeserializerObject>
+    {
+        private readonly World world;
+
+        private readonly BinaryReader reader;
+
+        public BinaryDeserializerArray(World world, BinaryReader reader)
         {
-            entry = Entry(name);
-            return true;
+            this.world = world;
+            this.reader = reader;
         }
 
-        public bool ReadBool() => reader.ReadBoolean();
+        public bool NextEntry(out BinaryDeserializerEntry entry)
+        {
+            if (!reader.ReadBoolean())
+            {
+                entry = default;
+                return false;
+            }
+            entry = new(world, reader);
+            return true;
+        }
+    }
 
-        public byte ReadByte() => reader.ReadByte();
+    public struct BinaryDeserializerObject : IDeserializerObject<BinaryDeserializerEntry, BinaryDeserializerArray, BinaryDeserializerObject>
+    {
+        private readonly World world;
 
-        public short ReadInt16() => reader.ReadInt16();
+        private readonly BinaryReader reader;
 
-        public int ReadInt32() => reader.ReadInt32();
+        public BinaryDeserializerObject(World world, BinaryReader reader)
+        {
+            this.world = world;
+            this.reader = reader;
+        }
 
-        public long ReadInt64() => reader.ReadInt64();
-
-        public string ReadString() => reader.ReadString();
-
-        public float ReadSingle() => reader.ReadSingle();
-
-        public double ReadDouble() => ReadDouble();
+        public bool NextEntry(out string key, out BinaryDeserializerEntry value)
+        {
+            if (!reader.ReadBoolean())
+            {
+                key = null!;
+                value = default;
+                return false;
+            }
+            key = reader.ReadString();
+            value = new(world, reader);
+            return true;
+        }
     }
 }

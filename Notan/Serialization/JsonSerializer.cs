@@ -2,25 +2,11 @@
 
 namespace Notan.Serialization
 {
-    public struct JsonSerializer : ISerializer<JsonSerializer>
+    public struct JsonSerializerEntry : ISerializerEntry<JsonSerializerEntry, JsonSerializerArray, JsonSerializerObject>
     {
         private readonly Utf8JsonWriter writer;
 
-        public JsonSerializer(Utf8JsonWriter writer) => this.writer = writer;
-
-        public void BeginArray(int length) => writer.WriteStartArray();
-
-        public void EndArray() => writer.WriteEndArray();
-
-        public void BeginObject() => writer.WriteStartObject();
-
-        public void EndObject() => writer.WriteEndObject();
-
-        public JsonSerializer Entry(string name)
-        {
-            writer.WritePropertyName(name);
-            return this;
-        }
+        public JsonSerializerEntry(Utf8JsonWriter writer) => this.writer = writer;
 
         public void Write(byte value) => writer.WriteNumberValue(value);
 
@@ -37,5 +23,43 @@ namespace Notan.Serialization
         public void Write(float value) => writer.WriteNumberValue(value);
 
         public void Write(double value) => writer.WriteNumberValue(value);
+
+        public JsonSerializerArray WriteArray() => new(writer);
+
+        public JsonSerializerObject WriteObject() => new(writer);
+    }
+
+    public struct JsonSerializerArray : ISerializerArray<JsonSerializerEntry, JsonSerializerArray, JsonSerializerObject>
+    {
+        private readonly Utf8JsonWriter writer;
+
+        public JsonSerializerArray(Utf8JsonWriter writer)
+        {
+            this.writer = writer;
+            writer.WriteStartArray();
+        }
+
+        public JsonSerializerEntry Next() => new(writer);
+
+        public void End() => writer.WriteEndArray();
+    }
+
+    public struct JsonSerializerObject : ISerializerObject<JsonSerializerEntry, JsonSerializerArray, JsonSerializerObject>
+    {
+        private readonly Utf8JsonWriter writer;
+
+        public JsonSerializerObject(Utf8JsonWriter writer)
+        {
+            this.writer = writer;
+            writer.WriteStartObject();
+        }
+
+        public JsonSerializerEntry Next(string key)
+        {
+            writer.WritePropertyName(key);
+            return new(writer);
+        }
+
+        public void End() => writer.WriteEndObject();
     }
 }

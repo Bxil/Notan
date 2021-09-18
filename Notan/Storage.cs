@@ -23,9 +23,15 @@ namespace Notan
             InnerType = innerType;
         }
 
-        internal abstract void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>;
+        internal abstract void Serialize<TEntry, TArray, TObject>(TEntry serializer)
+            where TEntry : ISerializerEntry<TEntry, TArray, TObject>
+            where TArray : ISerializerArray<TEntry, TArray, TObject>
+            where TObject : ISerializerObject<TEntry, TArray, TObject>;
 
-        internal abstract void Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>;
+        internal abstract void Deserialize<TEntry, TArray, TObject>(TEntry deserializer)
+            where TEntry : IDeserializerEntry<TEntry, TArray, TObject>
+            where TArray : IDeserializerArray<TEntry, TArray, TObject>
+            where TObject : IDeserializerObject<TEntry, TArray, TObject>;
 
         internal abstract void LateDeserialize();
 
@@ -229,29 +235,35 @@ namespace Notan
             }
         }
 
-        internal override void Serialize<TSerializer>(TSerializer serializer)
+        public TSystem Run<TSystem>(TSystem system) where TSystem : ISystem<T>
         {
-            serializer.BeginArray(indexToEntity.Count);
+            Run(ref system);
+            return system;
+        }
+
+        internal override void Serialize<TEntry, TArray, TObject>(TEntry serializer)
+        {
+            var arr = serializer.WriteArray();
             int i = 0;
             foreach (var index in indexToEntity.AsSpan())
             {
-                serializer.BeginObject();
-                serializer.Entry("$gen").Write(generations[i]);
+                var obj = arr.Next().WriteObject();
+                obj.Next("$gen").Write(generations[i]);
                 if (entityToIndex.Count > index && entityToIndex[index] == i)
                 {
-                    entities[index].Serialize(serializer);
+                    entities[index].Serialize<TEntry, TArray, TObject>(obj);
                 }
                 else
                 {
-                    serializer.Entry("$dead").Write("");
+                    obj.Next("$dead").Write("");
                 }
-                serializer.EndObject();
+                obj.End();
                 i++;
             }
-            serializer.EndArray();
+            arr.End();
         }
 
-        internal override void Deserialize<TDeserializer>(TDeserializer deserializer)
+        internal override void Deserialize<TEntry, TArray, TObject>(TEntry deserializer)
         {
             destroyedEntityIndices.Clear();
             remaniningHandles = 0;
@@ -264,15 +276,36 @@ namespace Notan
             indexToEntity.Clear();
             generations.Clear();
 
-            var count = deserializer.BeginArray();
-            for (int i = 0; i < count; i++)
+            var arr = deserializer.GetArray();
+            int i = 0;
+            while (arr.NextEntry(out var entry))
             {
-                var element = deserializer.NextArrayElement();
-                generations.Add(element.Entry("$gen").ReadInt32());
-                if (!element.TryGetEntry("$dead", out _))
+                var obj = entry.GetObject();
+
+                bool dead = false;
+                T t = default;
+                int gen = -1;
+                while (obj.NextEntry(out var key, out var value))
                 {
-                    T t = default;
-                    t.Deserialize(element);
+                    switch (key)
+                    {
+                        case "$gen":
+                            gen = value.GetInt32();
+                            break;
+                        case "$dead":
+                            value.GetString();
+                            dead = true;
+                            break;
+                        default:
+                            t.Deserialize<TEntry, TArray, TObject>(key, value);
+                            break;
+                    }
+                }
+
+                generations.Add(gen);
+
+                if (!dead)
+                {
                     entities.Add(t);
                     entityToIndex.Add(i);
                     entityIsDead.Add(false);
@@ -285,6 +318,7 @@ namespace Notan
                     indexToEntity.Add(0);
                     Recycle(i);
                 }
+                i++;
             }
         }
 
@@ -414,10 +448,10 @@ namespace Notan
 
         internal override void FinalizeFrame() => throw new NotImplementedException();
 
-        internal override void Serialize<TSerializer>(TSerializer serializer) => throw new NotImplementedException();
-
-        internal override void Deserialize<TDeserializer>(TDeserializer deserializer) => throw new NotImplementedException();
-
         internal override void LateDeserialize() => throw new NotImplementedException();
+
+        internal override void Serialize<TEntry, TArray, TObject>(TEntry serializer) => throw new NotImplementedException();
+
+        internal override void Deserialize<TEntry, TArray, TObject>(TEntry deserializer) => throw new NotImplementedException();
     }
 }

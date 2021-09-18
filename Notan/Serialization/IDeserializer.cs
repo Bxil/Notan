@@ -2,28 +2,52 @@
 
 namespace Notan.Serialization
 {
-    public interface IDeserializer<T> where T : IDeserializer<T>
+    public interface IDeserializerEntry<TEntry, TArray, TObject>
+        where TEntry : IDeserializerEntry<TEntry, TArray, TObject>
+        where TArray : IDeserializerArray<TEntry, TArray, TObject>
+        where TObject : IDeserializerObject<TEntry, TArray, TObject>
     {
         public World World { get; }
 
-        int BeginArray();
-        T NextArrayElement();
-        T Entry(string name);
-        bool TryGetEntry(string name, out T entry);
-        bool ReadBool();
-        byte ReadByte();
-        short ReadInt16();
-        int ReadInt32();
-        long ReadInt64();
-        float ReadSingle();
-        double ReadDouble();
-        string ReadString();
+        bool GetBool();
+        byte GetByte();
+        short GetInt16();
+        int GetInt32();
+        long GetInt64();
+        float GetSingle();
+        double GetDouble();
+        string GetString();
 
-        public Handle ReadHandle<TEntity>() where TEntity : struct, IEntity<TEntity>
+        TArray GetArray();
+        TObject GetObject();
+
+        public Handle GetHandle<TEntity>() where TEntity : struct, IEntity<TEntity>
         {
-            int length = BeginArray();
-            Debug.Assert(2 == length);
-            return new Handle(World.GetStorageBase<TEntity>(), NextArrayElement().ReadInt32(), NextArrayElement().ReadInt32());
+            var array = GetArray();
+            bool success = array.NextEntry(out var indexEntry);
+            Debug.Assert(success);
+            int index = indexEntry.GetInt32();
+            success = array.NextEntry(out var genEntry);
+            Debug.Assert(success);
+            int gen = genEntry.GetInt32();
+            Debug.Assert(!array.NextEntry(out _));
+            return new Handle(World.GetStorageBase<TEntity>(), index, gen);
         }
+    }
+
+    public interface IDeserializerArray<TEntry, TArray, TObject>
+        where TEntry : IDeserializerEntry<TEntry, TArray, TObject>
+        where TArray : IDeserializerArray<TEntry, TArray, TObject>
+        where TObject : IDeserializerObject<TEntry, TArray, TObject>
+    {
+        bool NextEntry(out TEntry entry);
+    }
+
+    public interface IDeserializerObject<TEntry, TArray, TObject>
+        where TEntry : IDeserializerEntry<TEntry, TArray, TObject>
+        where TArray : IDeserializerArray<TEntry, TArray, TObject>
+        where TObject : IDeserializerObject<TEntry, TArray, TObject>
+    {
+        bool NextEntry(out string key, out TEntry value);
     }
 }

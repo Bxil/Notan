@@ -80,10 +80,10 @@ namespace Notan
             switch (type)
             {
                 case MessageType.Create:
-                    entity.Serialize(new BinarySerializer(writer));
-                    break;
                 case MessageType.Update:
-                    entity.Serialize(new BinarySerializer(writer));
+                    var obj = new BinarySerializerEntry(writer).WriteObject();
+                    entity.Serialize<BinarySerializerEntry, BinarySerializerArray, BinarySerializerObject>(obj);
+                    obj.End();
                     break;
                 case MessageType.Destroy:
                     break;
@@ -126,7 +126,11 @@ namespace Notan
 
         internal void ReadIntoEntity<T>(ref T entity) where T : struct, IEntity<T>
         {
-            entity.Deserialize(new BinaryDeserializer(world, reader));
+            var obj = new BinaryDeserializerEntry(world, reader).GetObject();
+            while (obj.NextEntry(out var key, out var entry))
+            {
+                entity.Deserialize<BinaryDeserializerEntry, BinaryDeserializerArray, BinaryDeserializerObject>(key, entry);
+            }
         }
 
         [Conditional("DEBUG")]

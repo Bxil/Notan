@@ -3,7 +3,6 @@ using Notan.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -32,32 +31,6 @@ namespace Notan
         public void Exit() => exit = true;
 
         public abstract void AddStorage<T>(StorageOptionsAttribute? options = default) where T : struct, IEntity<T>;
-
-        public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
-        {
-            serializer.BeginObject();
-            foreach (var pair in TypeNameToStorage.Where(x => !x.Value.NoPersistence).OrderBy(x => x.Key))
-            {
-                serializer.Entry(pair.Key);
-                pair.Value.Serialize(serializer);
-            }
-            serializer.EndObject();
-        }
-
-        public void Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
-        {
-            foreach (var pair in TypeNameToStorage.OrderBy(x => x.Key))
-            {
-                if (deserializer.TryGetEntry(pair.Key, out var entry))
-                {
-                    pair.Value.Deserialize(entry);
-                }
-            }
-            foreach (var pair in TypeNameToStorage.OrderBy(x => x.Key))
-            {
-                pair.Value.LateDeserialize();
-            }
-        }
     }
 
     public sealed class ServerWorld : World
@@ -162,6 +135,39 @@ namespace Notan
             clientIds.Push(client.Id);
             client.Disconnect();
             clients.Remove(client);
+        }
+
+        public void Serialize<TEntry, TArray, TObject>(TEntry serializer)
+            where TEntry : ISerializerEntry<TEntry, TArray, TObject>
+            where TArray : ISerializerArray<TEntry, TArray, TObject>
+            where TObject : ISerializerObject<TEntry, TArray, TObject>
+        {
+            var obj = serializer.WriteObject();
+            foreach (var pair in TypeNameToStorage)
+            {
+                if (pair.Value.NoPersistence)
+                {
+                    continue;
+                }
+                pair.Value.Serialize<TEntry, TArray, TObject>(obj.Next(pair.Key));
+            }
+            obj.End();
+        }
+
+        public void Deserialize<TEntry, TArray, TObject>(TEntry deserializer)
+            where TEntry : IDeserializerEntry<TEntry, TArray, TObject>
+            where TArray : IDeserializerArray<TEntry, TArray, TObject>
+            where TObject : IDeserializerObject<TEntry, TArray, TObject>
+        {
+            var obj = deserializer.GetObject();
+            while (obj.NextEntry(out var key, out var entry))
+            {
+                TypeNameToStorage[key].Deserialize<TEntry, TArray, TObject>(entry);
+            }
+            foreach (var pair in TypeNameToStorage)
+            {
+                pair.Value.LateDeserialize();
+            }
         }
     }
 

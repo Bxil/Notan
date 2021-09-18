@@ -12,14 +12,11 @@ namespace Notan.Testing
     {
         private ServerWorld world;
 
-        private Storage<ByteEntity> bytestorage;
-
         [TestInitialize]
         public void Init()
         {
             world = new ServerWorld(0);
             world.AddStorages(Assembly.GetExecutingAssembly());
-            bytestorage = world.GetStorage<ByteEntity>();
         }
 
         [TestCleanup]
@@ -55,13 +52,16 @@ namespace Notan.Testing
             ""$gen"": 12,
             ""$dead"": """"
         }
-    ],
-    ""NoSuchStorageLikeMe"": [
     ]
 }
 ";
 
-            world.Deserialize(new JsonDeserializer(world, JsonDocument.Parse(jsonsave).RootElement));
+            var mem = new MemoryStream();
+            var writer = new StreamWriter(mem);
+            writer.Write(jsonsave);
+            writer.Flush();
+            mem.Position = 0;
+            world.Deserialize(new JsonDeserializerEntry(world, mem));
 
             //TODO
         }
@@ -72,7 +72,7 @@ namespace Notan.Testing
             var mem = new MemoryStream();
             {
                 using var writer = new Utf8JsonWriter(mem, new JsonWriterOptions { Indented = true });
-                world.Serialize(new Notan.Serialization.JsonSerializer(writer));
+                world.Serialize(new JsonSerializerEntry(writer));
             }
             mem.Position = 0;
             new StreamReader(mem).ReadToEnd();
