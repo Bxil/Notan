@@ -86,6 +86,10 @@ namespace Notan.Testing
             {
                 world.GetStorage<ByteEntity>().Create(new ByteEntity { Value = (byte)(i % 100) });
             }
+            for (int i = 0; i < 100; i++)
+            {
+                world.GetStorage<HandleEntity>().Create(new HandleEntity { Value = new() });
+            }
             var mem = new MemoryStream();
             using (var writer = new Utf8JsonWriter(mem))
             {

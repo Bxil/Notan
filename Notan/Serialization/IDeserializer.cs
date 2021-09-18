@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Numerics;
 
 namespace Notan.Serialization
 {
@@ -24,8 +24,31 @@ namespace Notan.Serialization
 
         public Handle GetHandle<TEntity>() where TEntity : struct, IEntity<TEntity>
         {
-            var array = GetArray();
-            return new Handle(World.GetStorageBase<TEntity>(), array.Next().GetInt32(), array.Next().GetInt32());
+            var arr = GetArray();
+            var handle = new Handle(World.GetStorageBase<TEntity>(), arr.Next().GetInt32(), arr.Next().GetInt32());
+            arr.Next(out _); //consume the closing bracket
+            return handle;
+        }
+
+        public Vector3 GetVector3()
+        {
+            var arr = GetArray();
+            var vec = new Vector3(arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle());
+            arr.Next(out _); //consume the closing bracket
+            return vec;
+        }
+
+        public Matrix4x4 GetMatrix4x4()
+        {
+            var arr = GetArray();
+            var mat = new Matrix4x4(
+                arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(),
+                arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(),
+                arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(),
+                arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle()
+                );
+            arr.Next(out _); //consume the closing bracket
+            return mat;
         }
     }
 
