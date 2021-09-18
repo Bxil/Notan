@@ -148,7 +148,7 @@ namespace Notan.Serialization
         //After this call get a token, and do nothing else with the reader
         public Utf8JsonReader Read(bool consume = true)
         {
-            buffer.AsSpan(this.consume, len).CopyTo(buffer);
+            buffer.AsSpan(this.consume, len - this.consume).CopyTo(buffer);
             len -= this.consume;
 
             var reader = new Utf8JsonReader(buffer.AsSpan(0, len), false, state);

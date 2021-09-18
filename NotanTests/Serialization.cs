@@ -78,5 +78,21 @@ namespace Notan.Testing
             new StreamReader(mem).ReadToEnd();
             //TODO
         }
+
+        [TestMethod]
+        public void LargeJson()
+        {
+            for (int i = 0; i < 1000; i++)
+            {
+                world.GetStorage<ByteEntity>().Create(new ByteEntity { Value = (byte)(i % 100) });
+            }
+            var mem = new MemoryStream();
+            using (var writer = new Utf8JsonWriter(mem))
+            {
+                world.Serialize(new JsonSerializerEntry(writer));
+            }
+            mem.Position = 0;
+            world.Deserialize(new JsonDeserializerEntry(world, mem));
+        }
     }
 }
