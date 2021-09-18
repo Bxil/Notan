@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 
 namespace Notan.Serialization
 {
@@ -24,14 +25,7 @@ namespace Notan.Serialization
         public Handle GetHandle<TEntity>() where TEntity : struct, IEntity<TEntity>
         {
             var array = GetArray();
-            bool success = array.NextEntry(out var indexEntry);
-            Debug.Assert(success);
-            int index = indexEntry.GetInt32();
-            success = array.NextEntry(out var genEntry);
-            Debug.Assert(success);
-            int gen = genEntry.GetInt32();
-            Debug.Assert(!array.NextEntry(out _));
-            return new Handle(World.GetStorageBase<TEntity>(), index, gen);
+            return new Handle(World.GetStorageBase<TEntity>(), array.Next().GetInt32(), array.Next().GetInt32());
         }
     }
 
@@ -40,7 +34,15 @@ namespace Notan.Serialization
         where TArray : IDeserializerArray<TEntry, TArray, TObject>
         where TObject : IDeserializerObject<TEntry, TArray, TObject>
     {
-        bool NextEntry(out TEntry entry);
+        bool Next(out TEntry entry);
+        public TEntry Next()
+        {
+            if (Next(out var entry))
+            {
+                return entry;
+            }
+            throw new Exception("Array had no more elements.");
+        }
     }
 
     public interface IDeserializerObject<TEntry, TArray, TObject>
@@ -48,6 +50,14 @@ namespace Notan.Serialization
         where TArray : IDeserializerArray<TEntry, TArray, TObject>
         where TObject : IDeserializerObject<TEntry, TArray, TObject>
     {
-        bool NextEntry(out string key, out TEntry value);
+        bool Next(out string key, out TEntry value);
+        public TEntry Next(out string key)
+        {
+            if (Next(out key, out var entry))
+            {
+                return entry;
+            }
+            throw new Exception("Array had no more elements.");
+        }
     }
 }

@@ -47,7 +47,7 @@ namespace Notan.Serialization
             this.reader = reader;
         }
 
-        public bool NextEntry(out BinaryDeserializerEntry entry)
+        public bool Next(out BinaryDeserializerEntry entry)
         {
             if (!reader.ReadBoolean())
             {
@@ -71,7 +71,7 @@ namespace Notan.Serialization
             this.reader = reader;
         }
 
-        public bool NextEntry(out string key, out BinaryDeserializerEntry value)
+        public bool Next(out string key, out BinaryDeserializerEntry value)
         {
             if (!reader.ReadBoolean())
             {

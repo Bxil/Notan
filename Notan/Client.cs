@@ -127,7 +127,7 @@ namespace Notan
         internal void ReadIntoEntity<T>(ref T entity) where T : struct, IEntity<T>
         {
             var obj = new BinaryDeserializerEntry(world, reader).GetObject();
-            while (obj.NextEntry(out var key, out var entry))
+            while (obj.Next(out var key, out var entry))
             {
                 entity.Deserialize<BinaryDeserializerEntry, BinaryDeserializerArray, BinaryDeserializerObject>(key, entry);
             }

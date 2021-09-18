@@ -278,14 +278,14 @@ namespace Notan
 
             var arr = deserializer.GetArray();
             int i = 0;
-            while (arr.NextEntry(out var entry))
+            while (arr.Next(out var entry))
             {
                 var obj = entry.GetObject();
 
                 bool dead = false;
                 T t = default;
                 int gen = -1;
-                while (obj.NextEntry(out var key, out var value))
+                while (obj.Next(out var key, out var value))
                 {
                     switch (key)
                     {

@@ -160,7 +160,7 @@ namespace Notan
             where TObject : IDeserializerObject<TEntry, TArray, TObject>
         {
             var obj = deserializer.GetObject();
-            while (obj.NextEntry(out var key, out var entry))
+            while (obj.Next(out var key, out var entry))
             {
                 TypeNameToStorage[key].Deserialize<TEntry, TArray, TObject>(entry);
             }

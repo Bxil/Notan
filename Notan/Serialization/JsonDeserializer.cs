@@ -73,7 +73,7 @@ namespace Notan.Serialization
             }
         }
 
-        public bool NextEntry(out JsonDeserializerEntry entry)
+        public bool Next(out JsonDeserializerEntry entry)
         {
             var reader = stream.Read(false);
             if (reader.TokenType == JsonTokenType.EndArray)
@@ -115,7 +115,7 @@ namespace Notan.Serialization
             }
         }
 
-        public bool NextEntry(out string key, out JsonDeserializerEntry value)
+        public bool Next(out string key, out JsonDeserializerEntry value)
         {
             var reader = stream.Read();
             if (reader.TokenType == JsonTokenType.EndObject)
