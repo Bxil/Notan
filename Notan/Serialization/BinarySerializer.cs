@@ -46,7 +46,7 @@ namespace Notan.Serialization
 
         public void End()
         {
-            throw new System.NotImplementedException();
+            writer.Write(false);
         }
     }
 
