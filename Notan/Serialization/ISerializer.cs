@@ -1,11 +1,6 @@
-﻿using System.Numerics;
-
-namespace Notan.Serialization
+﻿namespace Notan.Serialization
 {
-    public interface ISerializerEntry<TEntry, TArray, TObject>
-        where TEntry : ISerializerEntry<TEntry, TArray, TObject>
-        where TArray : ISerializerArray<TEntry, TArray, TObject>
-        where TObject : ISerializerObject<TEntry, TArray, TObject>
+    public interface ISerializer<T> where T : ISerializer<T>
     {
         void Write(bool value);
         void Write(byte value);
@@ -15,63 +10,22 @@ namespace Notan.Serialization
         void Write(float value);
         void Write(double value);
         void Write(string value);
-        TArray WriteArray();
-        TObject WriteObject();
-
-        public void Write(Handle handle)
-        {
-            var arr = WriteArray();
-            arr.Next().Write(handle.Index);
-            arr.Next().Write(handle.Generation);
-            arr.End();
-        }
-        public void Write(Matrix4x4 matrix)
-        {
-            var arr = WriteArray();
-            arr.Next().Write(matrix.M11);
-            arr.Next().Write(matrix.M12);
-            arr.Next().Write(matrix.M13);
-            arr.Next().Write(matrix.M14);
-            arr.Next().Write(matrix.M21);
-            arr.Next().Write(matrix.M22);
-            arr.Next().Write(matrix.M23);
-            arr.Next().Write(matrix.M24);
-            arr.Next().Write(matrix.M31);
-            arr.Next().Write(matrix.M32);
-            arr.Next().Write(matrix.M33);
-            arr.Next().Write(matrix.M34);
-            arr.Next().Write(matrix.M41);
-            arr.Next().Write(matrix.M42);
-            arr.Next().Write(matrix.M43);
-            arr.Next().Write(matrix.M44);
-            arr.End();
-        }
-
-        public void Write(Vector3 vector3)
-        {
-            var arr = WriteArray();
-            arr.Next().Write(vector3.X);
-            arr.Next().Write(vector3.Y);
-            arr.Next().Write(vector3.Z);
-            arr.End();
-        }
+        void ArrayBegin();
+        T ArrayNext();
+        void ArrayEnd();
+        void ObjectBegin();
+        T ObjectNext(string key);
+        void ObjectEnd();
     }
 
-    public interface ISerializerArray<TEntry, TArray, TObject>
-        where TEntry : ISerializerEntry<TEntry, TArray, TObject>
-        where TArray : ISerializerArray<TEntry, TArray, TObject>
-        where TObject : ISerializerObject<TEntry, TArray, TObject>
+    public static class SerializerExtensions
     {
-        TEntry Next();
-        void End();
-    }
-
-    public interface ISerializerObject<TEntry, TArray, TObject>
-        where TEntry : ISerializerEntry<TEntry, TArray, TObject>
-        where TArray : ISerializerArray<TEntry, TArray, TObject>
-        where TObject : ISerializerObject<TEntry, TArray, TObject>
-    {
-        TEntry Next(string key);
-        void End();
+        public static void Write<T>(this ISerializer<T> serializer, Handle handle) where T : ISerializer<T>
+        {
+            serializer.ArrayBegin();
+            serializer.ArrayNext().Write(handle.Index);
+            serializer.ArrayNext().Write(handle.Generation);
+            serializer.ArrayEnd();
+        }
     }
 }

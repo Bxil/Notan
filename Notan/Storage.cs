@@ -23,15 +23,9 @@ namespace Notan
             InnerType = innerType;
         }
 
-        internal abstract void Serialize<TEntry, TArray, TObject>(TEntry serializer)
-            where TEntry : ISerializerEntry<TEntry, TArray, TObject>
-            where TArray : ISerializerArray<TEntry, TArray, TObject>
-            where TObject : ISerializerObject<TEntry, TArray, TObject>;
+        internal abstract void Serialize<T>(T serializer) where T : ISerializer<T>;
 
-        internal abstract void Deserialize<TEntry, TArray, TObject>(TEntry deserializer)
-            where TEntry : IDeserializerEntry<TEntry, TArray, TObject>
-            where TArray : IDeserializerArray<TEntry, TArray, TObject>
-            where TObject : IDeserializerObject<TEntry, TArray, TObject>;
+        internal abstract void Deserialize<T>(T deserializer) where T : IDeserializer<T>;
 
         internal abstract void LateDeserialize();
 
@@ -241,29 +235,29 @@ namespace Notan
             return system;
         }
 
-        internal override void Serialize<TEntry, TArray, TObject>(TEntry serializer)
+        internal override void Serialize<TSer>(TSer serializer)
         {
-            var arr = serializer.WriteArray();
+            serializer.ArrayBegin();
             int i = 0;
             foreach (var index in indexToEntity.AsSpan())
             {
-                var obj = arr.Next().WriteObject();
-                obj.Next("$gen").Write(generations[i]);
+                serializer.ArrayNext().ObjectBegin();
+                serializer.ObjectNext("$gen").Write(generations[i]);
                 if (entityToIndex.Count > index && entityToIndex[index] == i)
                 {
-                    entities[index].Serialize<TEntry, TArray, TObject>(obj);
+                    entities[index].Serialize(serializer);
                 }
                 else
                 {
-                    obj.Next("$dead").Write("");
+                    serializer.ObjectNext("$dead").Write("");
                 }
-                obj.End();
+                serializer.ObjectEnd();
                 i++;
             }
-            arr.End();
+            serializer.ArrayEnd();
         }
 
-        internal override void Deserialize<TEntry, TArray, TObject>(TEntry deserializer)
+        internal override void Deserialize<TDeser>(TDeser deserializer)
         {
             destroyedEntityIndices.Clear();
             remaniningHandles = 0;
@@ -276,29 +270,29 @@ namespace Notan
             indexToEntity.Clear();
             generations.Clear();
 
-            var arr = deserializer.GetArray();
+            deserializer.ArrayBegin();
             int i = 0;
-            while (arr.Next(out var entry))
+            while (deserializer.ArrayTryNext())
             {
-                var obj = entry.GetObject();
+                deserializer.ObjectBegin();
 
                 bool dead = false;
                 T t = default;
                 int gen = -1;
-                while (obj.Next(out var key, out var value))
+                while (deserializer.ObjectTryNext(out var key))
                 {
                     if (key == "$gen")
                     {
-                        gen = value.GetInt32();
+                        gen = deserializer.GetInt32();
                     }
                     else if (key == "$dead")
                     {
-                        value.GetString();
+                        deserializer.GetString();
                         dead = true;
                     }
                     else
                     {
-                        t.Deserialize<TEntry, TArray, TObject>(key, value);
+                        t.Deserialize(key, deserializer);
                     }
                 }
 
@@ -450,8 +444,8 @@ namespace Notan
 
         internal override void LateDeserialize() => throw new NotImplementedException();
 
-        internal override void Serialize<TEntry, TArray, TObject>(TEntry serializer) => throw new NotImplementedException();
+        internal override void Serialize<TSer>(TSer serializer) => throw new NotImplementedException();
 
-        internal override void Deserialize<TEntry, TArray, TObject>(TEntry deserializer) => throw new NotImplementedException();
+        internal override void Deserialize<TDeser>(TDeser deserializer) => throw new NotImplementedException();
     }
 }

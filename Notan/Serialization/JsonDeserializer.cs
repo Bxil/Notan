@@ -4,27 +4,17 @@ using System.Text.Json;
 
 namespace Notan.Serialization
 {
-
-
-    public struct JsonDeserializerEntry : IDeserializerEntry<JsonDeserializerEntry, JsonDeserializerArray, JsonDeserializerObject>
+    public struct JsonDeserializer : IDeserializer<JsonDeserializer>
     {
         public World World { get; }
 
         private readonly JsonStream stream;
 
-        public JsonDeserializerEntry(World world, Stream stream)
+        public JsonDeserializer(World world, Stream stream)
         {
             World = world;
             this.stream = new(stream);
         }
-
-        internal JsonDeserializerEntry(World world, JsonStream stream)
-        {
-            World = world;
-            this.stream = stream;
-        }
-
-        public JsonDeserializerArray GetArray() => new(World, stream);
 
         public bool GetBool() => stream.Read().GetBoolean();
 
@@ -38,34 +28,11 @@ namespace Notan.Serialization
 
         public long GetInt64() => stream.Read().GetInt64();
 
-        public JsonDeserializerObject GetObject() => new(World, stream);
-
         public float GetSingle() => stream.Read().GetSingle();
 
         public string GetString() => stream.Read().GetString()!;
-    }
 
-    public struct JsonDeserializerArray : IDeserializerArray<JsonDeserializerEntry, JsonDeserializerArray, JsonDeserializerObject>
-    {
-        private readonly World world;
-
-        private readonly JsonStream stream;
-
-        public JsonDeserializerArray(World world, Stream stream)
-        {
-            this.world = world;
-            this.stream = new(stream);
-            Init();
-        }
-
-        internal JsonDeserializerArray(World world, JsonStream stream)
-        {
-            this.world = world;
-            this.stream = stream;
-            Init();
-        }
-
-        private void Init()
+        public void ArrayBegin()
         {
             if (stream.Read().TokenType != JsonTokenType.StartArray)
             {
@@ -73,41 +40,27 @@ namespace Notan.Serialization
             }
         }
 
-        public bool Next(out JsonDeserializerEntry entry)
+        public bool ArrayTryNext()
         {
             var reader = stream.Read(false);
             if (reader.TokenType == JsonTokenType.EndArray)
             {
                 stream.Read();
-                entry = default;
                 return false;
             }
-            entry = new(world, stream);
             return true;
         }
-    }
 
-    public struct JsonDeserializerObject : IDeserializerObject<JsonDeserializerEntry, JsonDeserializerArray, JsonDeserializerObject>
-    {
-        private readonly World world;
-
-        private readonly JsonStream stream;
-
-        public JsonDeserializerObject(World world, Stream stream)
+        public JsonDeserializer ArrayNext()
         {
-            this.world = world;
-            this.stream = new(stream);
-            Init();
+            if (ArrayTryNext())
+            {
+                return this;
+            }
+            throw new IOException("Array has no more elements.");
         }
 
-        internal JsonDeserializerObject(World world, JsonStream stream)
-        {
-            this.world = world;
-            this.stream = stream;
-            Init();
-        }
-
-        private void Init()
+        public void ObjectBegin()
         {
             if (stream.Read().TokenType != JsonTokenType.StartObject)
             {
@@ -115,18 +68,25 @@ namespace Notan.Serialization
             }
         }
 
-        public bool Next(out Key key, out JsonDeserializerEntry value)
+        public bool ObjectTryNext(out Key key)
         {
             var reader = stream.Read();
             if (reader.TokenType == JsonTokenType.EndObject)
             {
                 key = default;
-                value = default;
                 return false;
             }
             key = new(stream.Span((int)reader.TokenStartIndex + 1, (int)(reader.BytesConsumed - reader.TokenStartIndex - 3)));
-            value = new(world, stream);
             return true;
+        }
+
+        public JsonDeserializer ObjectNext(out Key key)
+        {
+            if (ObjectTryNext(out key))
+            {
+                return this;
+            }
+            throw new IOException("Array has no more elements.");
         }
     }
 

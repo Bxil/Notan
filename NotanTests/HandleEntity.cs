@@ -9,11 +9,11 @@ namespace Notan.Testing
     {
         public Handle Value;
 
-        void IEntity<HandleEntity>.Deserialize<TEntry, TArray, TObject>(Key key, TEntry entry)
+        void IEntity<HandleEntity>.Deserialize<T>(Key key, T deser)
         {
             if (key == nameof(Value))
             {
-                Value = entry.GetHandle<ByteEntity>();
+                Value = deser.GetHandle<T, ByteEntity>();
             }
             else
             {
@@ -21,9 +21,9 @@ namespace Notan.Testing
             }
         }
 
-        void IEntity<HandleEntity>.Serialize<TEntry, TArray, TObject>(TObject serializer)
+        void IEntity<HandleEntity>.Serialize<T>(T serializer)
         {
-            serializer.Next(nameof(Value)).Write(Value);
+            serializer.ObjectNext(nameof(Value)).Write(Value);
         }
     }
 }

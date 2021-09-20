@@ -61,7 +61,7 @@ namespace Notan.Testing
             writer.Write(jsonsave);
             writer.Flush();
             mem.Position = 0;
-            world.Deserialize(new JsonDeserializerEntry(world, mem));
+            world.Deserialize(new JsonDeserializer(world, mem));
 
             //TODO
         }
@@ -72,7 +72,7 @@ namespace Notan.Testing
             var mem = new MemoryStream();
             {
                 using var writer = new Utf8JsonWriter(mem, new JsonWriterOptions { Indented = true });
-                world.Serialize(new JsonSerializerEntry(writer));
+                world.Serialize(new Notan.Serialization.JsonSerializer(writer));
             }
             mem.Position = 0;
             new StreamReader(mem).ReadToEnd();
@@ -93,10 +93,10 @@ namespace Notan.Testing
             var mem = new MemoryStream();
             using (var writer = new Utf8JsonWriter(mem))
             {
-                world.Serialize(new JsonSerializerEntry(writer));
+                world.Serialize(new Notan.Serialization.JsonSerializer(writer));
             }
             mem.Position = 0;
-            world.Deserialize(new JsonDeserializerEntry(world, mem));
+            world.Deserialize(new JsonDeserializer(world, mem));
         }
     }
 }

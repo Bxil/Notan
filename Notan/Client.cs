@@ -81,9 +81,10 @@ namespace Notan
             {
                 case MessageType.Create:
                 case MessageType.Update:
-                    var obj = new BinarySerializerEntry(writer).WriteObject();
-                    entity.Serialize<BinarySerializerEntry, BinarySerializerArray, BinarySerializerObject>(obj);
-                    obj.End();
+                    var ser = new BinarySerializer(writer);
+                    ser.ObjectBegin();
+                    entity.Serialize(ser);
+                    ser.ObjectEnd();
                     break;
                 case MessageType.Destroy:
                     break;
@@ -126,10 +127,11 @@ namespace Notan
 
         internal void ReadIntoEntity<T>(ref T entity) where T : struct, IEntity<T>
         {
-            var obj = new BinaryDeserializerEntry(world, reader).GetObject();
-            while (obj.Next(out var key, out var entry))
+            var deser = new BinaryDeserializer(world, reader);
+            deser.ObjectBegin();
+            while (deser.ObjectTryNext(out var key))
             {
-                entity.Deserialize<BinaryDeserializerEntry, BinaryDeserializerArray, BinaryDeserializerObject>(key, entry);
+                entity.Deserialize(key, deser);
             }
         }
 

@@ -2,11 +2,11 @@
 
 namespace Notan.Serialization
 {
-    public struct JsonSerializerEntry : ISerializerEntry<JsonSerializerEntry, JsonSerializerArray, JsonSerializerObject>
+    public struct JsonSerializer : ISerializer<JsonSerializer>
     {
         private readonly Utf8JsonWriter writer;
 
-        public JsonSerializerEntry(Utf8JsonWriter writer) => this.writer = writer;
+        public JsonSerializer(Utf8JsonWriter writer) => this.writer = writer;
 
         public void Write(byte value) => writer.WriteNumberValue(value);
 
@@ -24,42 +24,20 @@ namespace Notan.Serialization
 
         public void Write(double value) => writer.WriteNumberValue(value);
 
-        public JsonSerializerArray WriteArray() => new(writer);
+        public void ArrayBegin() => writer.WriteStartArray();
 
-        public JsonSerializerObject WriteObject() => new(writer);
-    }
+        public JsonSerializer ArrayNext() => this;
 
-    public struct JsonSerializerArray : ISerializerArray<JsonSerializerEntry, JsonSerializerArray, JsonSerializerObject>
-    {
-        private readonly Utf8JsonWriter writer;
+        public void ArrayEnd() => writer.WriteEndArray();
 
-        public JsonSerializerArray(Utf8JsonWriter writer)
-        {
-            this.writer = writer;
-            writer.WriteStartArray();
-        }
+        public void ObjectBegin() => writer.WriteStartObject();
 
-        public JsonSerializerEntry Next() => new(writer);
-
-        public void End() => writer.WriteEndArray();
-    }
-
-    public struct JsonSerializerObject : ISerializerObject<JsonSerializerEntry, JsonSerializerArray, JsonSerializerObject>
-    {
-        private readonly Utf8JsonWriter writer;
-
-        public JsonSerializerObject(Utf8JsonWriter writer)
-        {
-            this.writer = writer;
-            writer.WriteStartObject();
-        }
-
-        public JsonSerializerEntry Next(string key)
+        public JsonSerializer ObjectNext(string key)
         {
             writer.WritePropertyName(key);
-            return new(writer);
+            return this;
         }
 
-        public void End() => writer.WriteEndObject();
+        public void ObjectEnd() => writer.WriteEndObject();
     }
 }

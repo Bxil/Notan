@@ -9,7 +9,7 @@ namespace Notan.Testing
     {
         public byte Value;
 
-        void IEntity<ByteEntity>.Deserialize<TEntry, TArray, TObject>(Key key, TEntry entry)
+        void IEntity<ByteEntity>.Deserialize<T>(Key key, T entry)
         {
             if (key == nameof(Value))
             {
@@ -21,9 +21,9 @@ namespace Notan.Testing
             }
         }
 
-        void IEntity<ByteEntity>.Serialize<TEntry, TArray, TObject>(TObject serializer)
+        void IEntity<ByteEntity>.Serialize<T>(T serializer)
         {
-            serializer.Next(nameof(Value)).Write(Value);
+            serializer.ObjectNext(nameof(Value)).Write(Value);
         }
     }
 }

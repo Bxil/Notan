@@ -2,11 +2,11 @@
 
 namespace Notan.Serialization
 {
-    public struct BinarySerializerEntry : ISerializerEntry<BinarySerializerEntry, BinarySerializerArray, BinarySerializerObject>
+    public struct BinarySerializer : ISerializer<BinarySerializer>
     {
         private readonly BinaryWriter writer;
 
-        public BinarySerializerEntry(BinaryWriter writer) => this.writer = writer;
+        public BinarySerializer(BinaryWriter writer) => this.writer = writer;
 
         public void Write(bool value) => writer.Write(value);
 
@@ -24,49 +24,29 @@ namespace Notan.Serialization
 
         public void Write(string value) => writer.Write(value);
 
-        public BinarySerializerArray WriteArray() => new(writer);
+        public void ArrayBegin() { }
 
-        public BinarySerializerObject WriteObject() => new(writer);
-    }
-
-    public struct BinarySerializerArray : ISerializerArray<BinarySerializerEntry, BinarySerializerArray, BinarySerializerObject>
-    {
-        private readonly BinaryWriter writer;
-
-        public BinarySerializerArray(BinaryWriter writer)
-        {
-            this.writer = writer;
-        }
-
-        public BinarySerializerEntry Next()
+        public BinarySerializer ArrayNext()
         {
             writer.Write(true);
-            return new(writer);
+            return this;
         }
 
-        public void End()
+        public void ArrayEnd()
         {
             writer.Write(false);
         }
-    }
 
-    public struct BinarySerializerObject : ISerializerObject<BinarySerializerEntry, BinarySerializerArray, BinarySerializerObject>
-    {
-        private readonly BinaryWriter writer;
+        public void ObjectBegin() { }
 
-        public BinarySerializerObject(BinaryWriter writer)
-        {
-            this.writer = writer;
-        }
-
-        public BinarySerializerEntry Next(string key)
+        public BinarySerializer ObjectNext(string key)
         {
             writer.Write(true);
             writer.Write(key);
-            return new(writer);
+            return this;
         }
 
-        public void End()
+        public void ObjectEnd()
         {
             writer.Write(false);
         }

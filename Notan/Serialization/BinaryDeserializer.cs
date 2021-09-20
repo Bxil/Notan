@@ -3,26 +3,19 @@ using System.IO;
 
 namespace Notan.Serialization
 {
-    public struct BinaryDeserializerEntry : IDeserializerEntry<BinaryDeserializerEntry, BinaryDeserializerArray, BinaryDeserializerObject>
+    public struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
     {
         public World World { get; }
 
         private readonly BinaryReader reader;
 
-        private readonly byte[] buffer;
+        private byte[] buffer;
 
-        public BinaryDeserializerEntry(World world, BinaryReader reader)
+        public BinaryDeserializer(World world, BinaryReader reader)
         {
             World = world;
             this.reader = reader;
             buffer = new byte[64];
-        }
-
-        internal BinaryDeserializerEntry(World world, BinaryReader reader, byte[] buffer)
-        {
-            World = world;
-            this.reader = reader;
-            this.buffer = buffer;
         }
 
         public bool GetBool() => reader.ReadBoolean();
@@ -41,73 +34,26 @@ namespace Notan.Serialization
 
         public string GetString() => reader.ReadString();
 
-        public BinaryDeserializerArray GetArray() => new(World, reader, buffer);
+        public void ArrayBegin() { }
 
-        public BinaryDeserializerObject GetObject() => new(World, reader, buffer);
-    }
+        public bool ArrayTryNext() => reader.ReadBoolean();
 
-    public struct BinaryDeserializerArray : IDeserializerArray<BinaryDeserializerEntry, BinaryDeserializerArray, BinaryDeserializerObject>
-    {
-        private readonly World world;
-
-        private readonly BinaryReader reader;
-
-        private readonly byte[] buffer;
-
-        public BinaryDeserializerArray(World world, BinaryReader reader)
+        public BinaryDeserializer ArrayNext()
         {
-            this.world = world;
-            this.reader = reader;
-            buffer = new byte[64];
-        }
-
-        internal BinaryDeserializerArray(World world, BinaryReader reader, byte[] buffer)
-        {
-            this.world = world;
-            this.reader = reader;
-            this.buffer = buffer;
-        }
-
-        public bool Next(out BinaryDeserializerEntry entry)
-        {
-            if (!reader.ReadBoolean())
+            if (ArrayTryNext())
             {
-                entry = default;
-                return false;
+                return this;
             }
-            entry = new(world, reader, buffer);
-            return true;
-        }
-    }
-
-    public struct BinaryDeserializerObject : IDeserializerObject<BinaryDeserializerEntry, BinaryDeserializerArray, BinaryDeserializerObject>
-    {
-        private readonly World world;
-
-        private readonly BinaryReader reader;
-
-        private byte[] buffer;
-
-        public BinaryDeserializerObject(World world, BinaryReader reader)
-        {
-            this.world = world;
-            this.reader = reader;
-            buffer = new byte[64];
+            throw new IOException("Array has no more elements.");
         }
 
-        internal BinaryDeserializerObject(World world, BinaryReader reader, byte[] buffer)
-        {
-            this.world = world;
-            this.reader = reader;
-            this.buffer = buffer;
-        }
+        public void ObjectBegin() { }
 
-        public bool Next(out Key key, out BinaryDeserializerEntry value)
+        public bool ObjectTryNext(out Key key)
         {
             if (!reader.ReadBoolean())
             {
                 key = default;
-                value = default;
                 return false;
             }
             //TODO: support more than ASCII
@@ -118,8 +64,16 @@ namespace Notan.Serialization
             }
             reader.Read(buffer.AsSpan(0, keylength));
             key = new(buffer.AsSpan(0, keylength));
-            value = new(world, reader);
             return true;
+        }
+
+        public BinaryDeserializer ObjectNext(out Key key)
+        {
+            if (ObjectTryNext(out key))
+            {
+                return this;
+            }
+            throw new IOException("Array has no more elements.");
         }
     }
 }

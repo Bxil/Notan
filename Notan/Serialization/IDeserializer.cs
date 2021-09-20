@@ -1,12 +1,6 @@
-﻿using System;
-using System.Numerics;
-
-namespace Notan.Serialization
+﻿namespace Notan.Serialization
 {
-    public interface IDeserializerEntry<TEntry, TArray, TObject>
-        where TEntry : IDeserializerEntry<TEntry, TArray, TObject>
-        where TArray : IDeserializerArray<TEntry, TArray, TObject>
-        where TObject : IDeserializerObject<TEntry, TArray, TObject>
+    public interface IDeserializer<T> where T : IDeserializer<T>
     {
         public World World { get; }
 
@@ -19,68 +13,25 @@ namespace Notan.Serialization
         double GetDouble();
         string GetString();
 
-        TArray GetArray();
-        TObject GetObject();
+        void ArrayBegin();
+        bool ArrayTryNext();
+        T ArrayNext();
 
-        public Handle GetHandle<TEntity>() where TEntity : struct, IEntity<TEntity>
+        void ObjectBegin();
+        bool ObjectTryNext(out Key key);
+        T ObjectNext(out Key key);
+    }
+
+    public static class DeserializerExtensions
+    {
+        public static Handle GetHandle<T, TEntity>(this T deserializer)
+            where T : IDeserializer<T>
+            where TEntity : struct, IEntity<TEntity>
         {
-            var arr = GetArray();
-            var handle = new Handle(World.GetStorageBase<TEntity>(), arr.Next().GetInt32(), arr.Next().GetInt32());
-            arr.Next(out _); //consume the closing bracket
+            deserializer.ArrayBegin();
+            var handle = new Handle(deserializer.World.GetStorageBase<TEntity>(), deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
+            deserializer.ArrayTryNext(); //consume the end marker
             return handle;
-        }
-
-        public Vector3 GetVector3()
-        {
-            var arr = GetArray();
-            var vec = new Vector3(arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle());
-            arr.Next(out _); //consume the closing bracket
-            return vec;
-        }
-
-        public Matrix4x4 GetMatrix4x4()
-        {
-            var arr = GetArray();
-            var mat = new Matrix4x4(
-                arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(),
-                arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(),
-                arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(),
-                arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle(), arr.Next().GetSingle()
-                );
-            arr.Next(out _); //consume the closing bracket
-            return mat;
-        }
-    }
-
-    public interface IDeserializerArray<TEntry, TArray, TObject>
-        where TEntry : IDeserializerEntry<TEntry, TArray, TObject>
-        where TArray : IDeserializerArray<TEntry, TArray, TObject>
-        where TObject : IDeserializerObject<TEntry, TArray, TObject>
-    {
-        bool Next(out TEntry entry);
-        public TEntry Next()
-        {
-            if (Next(out var entry))
-            {
-                return entry;
-            }
-            throw new Exception("Array had no more elements.");
-        }
-    }
-
-    public interface IDeserializerObject<TEntry, TArray, TObject>
-        where TEntry : IDeserializerEntry<TEntry, TArray, TObject>
-        where TArray : IDeserializerArray<TEntry, TArray, TObject>
-        where TObject : IDeserializerObject<TEntry, TArray, TObject>
-    {
-        bool Next(out Key key, out TEntry value);
-        public TEntry Next(out Key key)
-        {
-            if (Next(out key, out var entry))
-            {
-                return entry;
-            }
-            throw new Exception("Array had no more elements.");
         }
     }
 }
