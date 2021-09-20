@@ -73,8 +73,8 @@ namespace Notan.Serialization
         where TArray : IDeserializerArray<TEntry, TArray, TObject>
         where TObject : IDeserializerObject<TEntry, TArray, TObject>
     {
-        bool Next(out KeyComparison key, out TEntry value);
-        public TEntry Next(out KeyComparison key)
+        bool Next(out Key key, out TEntry value);
+        public TEntry Next(out Key key)
         {
             if (Next(out key, out var entry))
             {

@@ -4,17 +4,17 @@ using System.Text;
 namespace Notan.Serialization
 {
 #pragma warning disable CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
-    public readonly ref struct KeyComparison
+    public readonly ref struct Key
 #pragma warning restore CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
     {
         private readonly ReadOnlySpan<byte> utf8;
 
-        public KeyComparison(ReadOnlySpan<byte> utf8)
+        public Key(ReadOnlySpan<byte> utf8)
         {
             this.utf8 = utf8;
         }
 
-        public static bool operator ==(KeyComparison left, string right)
+        public static bool operator ==(Key left, string right)
         {
             //TODO: Implement for more than just ascii
             if (left.utf8.Length != right.Length)
@@ -32,10 +32,10 @@ namespace Notan.Serialization
             return true;
         }
 
-        public static bool operator !=(KeyComparison left, string right) => !(left == right);
+        public static bool operator !=(Key left, string right) => !(left == right);
 
-        public static bool operator ==(string left, KeyComparison right) => left == right;
-        public static bool operator !=(string left, KeyComparison right) => !(left == right);
+        public static bool operator ==(string left, Key right) => left == right;
+        public static bool operator !=(string left, Key right) => !(left == right);
 
         public override string ToString()
         {

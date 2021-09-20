@@ -102,7 +102,7 @@ namespace Notan.Serialization
             this.buffer = buffer;
         }
 
-        public bool Next(out KeyComparison key, out BinaryDeserializerEntry value)
+        public bool Next(out Key key, out BinaryDeserializerEntry value)
         {
             if (!reader.ReadBoolean())
             {

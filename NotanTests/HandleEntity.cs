@@ -9,7 +9,7 @@ namespace Notan.Testing
     {
         public Handle Value;
 
-        void IEntity<HandleEntity>.Deserialize<TEntry, TArray, TObject>(KeyComparison key, TEntry entry)
+        void IEntity<HandleEntity>.Deserialize<TEntry, TArray, TObject>(Key key, TEntry entry)
         {
             if (key == nameof(Value))
             {

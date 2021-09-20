@@ -115,7 +115,7 @@ namespace Notan.Serialization
             }
         }
 
-        public bool Next(out KeyComparison key, out JsonDeserializerEntry value)
+        public bool Next(out Key key, out JsonDeserializerEntry value)
         {
             var reader = stream.Read();
             if (reader.TokenType == JsonTokenType.EndObject)

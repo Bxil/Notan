@@ -9,7 +9,7 @@ namespace Notan.Testing
     {
         public byte Value;
 
-        void IEntity<ByteEntity>.Deserialize<TEntry, TArray, TObject>(KeyComparison key, TEntry entry)
+        void IEntity<ByteEntity>.Deserialize<TEntry, TArray, TObject>(Key key, TEntry entry)
         {
             if (key == nameof(Value))
             {
