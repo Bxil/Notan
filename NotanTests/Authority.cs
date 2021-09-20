@@ -17,10 +17,10 @@ namespace Notan.Testing
             serverWorld = new ServerWorld(0);
             serverWorld.AddStorages(Assembly.GetExecutingAssembly());
 
-            clientWorld1 = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).Result;
+            clientWorld1 = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).AsTask().Result;
             clientWorld1.AddStorages(Assembly.GetExecutingAssembly());
 
-            clientWorld2 = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).Result;
+            clientWorld2 = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).AsTask().Result;
             clientWorld2.AddStorages(Assembly.GetExecutingAssembly());
 
             serverWorld.Tick();

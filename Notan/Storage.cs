@@ -287,18 +287,18 @@ namespace Notan
                 int gen = -1;
                 while (obj.Next(out var key, out var value))
                 {
-                    switch (key)
+                    if (key == "$gen")
                     {
-                        case "$gen":
-                            gen = value.GetInt32();
-                            break;
-                        case "$dead":
-                            value.GetString();
-                            dead = true;
-                            break;
-                        default:
-                            t.Deserialize<TEntry, TArray, TObject>(key, value);
-                            break;
+                        gen = value.GetInt32();
+                    }
+                    else if (key == "$dead")
+                    {
+                        value.GetString();
+                        dead = true;
+                    }
+                    else
+                    {
+                        t.Deserialize<TEntry, TArray, TObject>(key, value);
                     }
                 }
 

@@ -8,7 +8,7 @@ namespace Notan
             where TEntry : ISerializerEntry<TEntry, TArray, TObject>
             where TArray : ISerializerArray<TEntry, TArray, TObject>
             where TObject : ISerializerObject<TEntry, TArray, TObject>;
-        void Deserialize<TEntry, TArray, TObject>(string key, TEntry entry)
+        void Deserialize<TEntry, TArray, TObject>(KeyComparison comparison, TEntry entry)
             where TEntry : IDeserializerEntry<TEntry, TArray, TObject>
             where TArray : IDeserializerArray<TEntry, TArray, TObject>
             where TObject : IDeserializerObject<TEntry, TArray, TObject>;

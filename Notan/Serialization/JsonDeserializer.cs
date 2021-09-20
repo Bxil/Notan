@@ -115,16 +115,16 @@ namespace Notan.Serialization
             }
         }
 
-        public bool Next(out string key, out JsonDeserializerEntry value)
+        public bool Next(out KeyComparison key, out JsonDeserializerEntry value)
         {
             var reader = stream.Read();
             if (reader.TokenType == JsonTokenType.EndObject)
             {
-                key = null!;
+                key = default;
                 value = default;
                 return false;
             }
-            key = reader.GetString()!;
+            key = new(stream.Span((int)reader.TokenStartIndex + 1, (int)(reader.BytesConsumed - reader.TokenStartIndex - 3)));
             value = new(world, stream);
             return true;
         }
@@ -165,5 +165,7 @@ namespace Notan.Serialization
             state = consume ? reader.CurrentState : state;
             return reader;
         }
+
+        public Span<byte> Span(int from, int length) => buffer.AsSpan(from, length);
     }
 }

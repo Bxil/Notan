@@ -162,7 +162,7 @@ namespace Notan
             var obj = deserializer.GetObject();
             while (obj.Next(out var key, out var entry))
             {
-                TypeNameToStorage[key].Deserialize<TEntry, TArray, TObject>(entry);
+                TypeNameToStorage[key.ToString()!].Deserialize<TEntry, TArray, TObject>(entry);
             }
             foreach (var pair in TypeNameToStorage)
             {
