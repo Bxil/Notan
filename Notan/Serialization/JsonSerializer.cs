@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 
 namespace Notan.Serialization
 {
@@ -26,7 +27,14 @@ namespace Notan.Serialization
 
         public void ArrayBegin() => writer.WriteStartArray();
 
-        public JsonSerializer ArrayNext() => this;
+        public JsonSerializer ArrayNext()
+        {
+            if (writer.BytesPending >= Environment.SystemPageSize)
+            {
+                writer.Flush();
+            }
+            return this;
+        }
 
         public void ArrayEnd() => writer.WriteEndArray();
 
@@ -34,6 +42,10 @@ namespace Notan.Serialization
 
         public JsonSerializer ObjectNext(string key)
         {
+            if (writer.BytesPending >= Environment.SystemPageSize)
+            {
+                writer.Flush();
+            }
             writer.WritePropertyName(key);
             return this;
         }
