@@ -111,27 +111,28 @@ namespace Notan
         internal void Destroy(int index, int generation)
         {
             Get(index, generation).OnDestroy(new(this, index, generation));
-            entityIsDead[indexToEntity[index]] = true;
-            generations[index]++;
-            destroyedEntityIndices.Add(index);
-        }
 
-        private void DestroyImmediate(int index)
-        {
+            DestroyInternal(index);
+
             foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
             {
                 observer.Send(Id, MessageType.Destroy, index, generations[index], ref Unsafe.NullRef<T>());
             }
+        }
 
-            var entityIndex = indexToEntity[index];
+        //Destroy an entity without notifying anyone and running its OnDestroy.
+        internal void Forget(int index, int generation)
+        {
+            Debug.Assert(Alive(index, generation));
 
-            entityToObservers.RemoveAt(entityIndex);
-            entityToAuthority.RemoveAt(entityIndex);
-            entityIsDead.RemoveAt(entityIndex);
-            entities.RemoveAt(entityIndex);
-            indexToEntity[entityToIndex[^1]] = entityIndex;
-            entityToIndex.RemoveAt(entityIndex);
-            Recycle(index);
+            DestroyInternal(index);
+        }
+
+        private void DestroyInternal(int index)
+        {
+            entityIsDead[indexToEntity[index]] = true;
+            generations[index]++;
+            destroyedEntityIndices.Add(index);
         }
 
         private void Recycle(int index)
@@ -358,7 +359,7 @@ namespace Notan
                 case MessageType.Destroy:
                     if (Alive(index, generation) && entityToAuthority[indexToEntity[index]] == client)
                     {
-                        DestroyImmediate(index);
+                        Destroy(index, generation);
                     }
                     break;
             }
@@ -368,7 +369,14 @@ namespace Notan
         {
             foreach (var index in destroyedEntityIndices.AsSpan())
             {
-                DestroyImmediate(index);
+                var entityIndex = indexToEntity[index];
+                entityToObservers.RemoveAt(entityIndex);
+                entityToAuthority.RemoveAt(entityIndex);
+                entityIsDead.RemoveAt(entityIndex);
+                entities.RemoveAt(entityIndex);
+                indexToEntity[entityToIndex[^1]] = entityIndex;
+                entityToIndex.RemoveAt(entityIndex);
+                Recycle(index);
             }
             destroyedEntityIndices.Clear();
         }
@@ -389,14 +397,20 @@ namespace Notan
             server.Send(Id, MessageType.Create, 0, 0, ref entity);
         }
 
-        internal void RequestUpdate(ViewHandle<T> handle, T entity)
+        internal void RequestUpdate(int index, int generation, T entity)
         {
-            server.Send(Id, MessageType.Update, handle.Index, handle.Generation, ref entity);
+            server.Send(Id, MessageType.Update, index, generation, ref entity);
         }
 
-        internal void RequestDestroy(ViewHandle<T> handle)
+        internal void RequestDestroy(int index, int generation)
         {
-            server.Send(Id, MessageType.Destroy, handle.Index, handle.Generation, ref Unsafe.NullRef<T>());
+            server.Send(Id, MessageType.Destroy, index, generation, ref Unsafe.NullRef<T>());
+        }
+
+        internal void Forget(int index, int generation)
+        {
+            Debug.Assert(Alive(index, generation));
+            DestroyInternal(index);
         }
 
         internal override void HandleMessage(Client client, MessageType type, int index, int generation)
@@ -405,28 +419,46 @@ namespace Notan
             {
                 case MessageType.Create:
                     Log($"Creating {index}|{generation}");
-                    int entid = entityToIndex.Count;
-                    entityToIndex.Add(index);
-                    T entity = default;
-                    client.ReadIntoEntity(ref entity);
-                    entities.Add(entity);
-                    indexToEntity.EnsureSize(index + 1);
-                    indexToEntity[index] = entid;
-                    generations.EnsureSize(index + 1);
-                    generations[index] = generation;
+                    {
+                        int entid = entityToIndex.Count;
+                        entityToIndex.Add(index);
+                        T entity = default;
+                        client.ReadIntoEntity(ref entity);
+                        entities.Add(entity);
+                        indexToEntity.EnsureSize(index + 1);
+                        indexToEntity[index] = entid;
+                        generations.EnsureSize(index + 1);
+                        generations[index] = generation;
+                    }
                     break;
                 case MessageType.Update:
                     Log($"Updating {index}|{generation}");
-                    client.ReadIntoEntity(ref entities[indexToEntity[index]]);
+                    if (Alive(index, generation))
+                    {
+                        client.ReadIntoEntity(ref entities[indexToEntity[index]]);
+                    }
+                    else
+                    {
+                        Unsafe.SkipInit(out T entity);
+                        client.ReadIntoEntity(ref entity);
+                    }
                     break;
                 case MessageType.Destroy:
                     Log($"Destroying {index}|{generation}");
-                    var entityIndex = indexToEntity[index];
-                    entities.RemoveAt(entityIndex);
-                    indexToEntity[entityToIndex[^1]] = entityIndex;
-                    entityToIndex.RemoveAt(entityIndex);
+                    if (Alive(index, generation))
+                    {
+                        DestroyInternal(index);
+                    }
                     break;
             }
+        }
+
+        private void DestroyInternal(int index)
+        {
+            var entityIndex = indexToEntity[index];
+            entities.RemoveAt(entityIndex);
+            indexToEntity[entityToIndex[^1]] = entityIndex;
+            entityToIndex.RemoveAt(entityIndex);
         }
 
         public void Run<TSystem>(ref TSystem system) where TSystem : IViewSystem<T>

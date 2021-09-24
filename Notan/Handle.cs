@@ -58,6 +58,8 @@ namespace Notan
 
         public void Destroy() => Storage.Destroy(Index, Generation);
 
+        public void Forget() => Storage.Forget(Index, Generation);
+
         public void AddObserver(Client client) => Storage.AddObserver(Index, Generation, client);
 
         public void RemoveObserver(Client client) => Storage.RemoveObserver(Index, Generation, client);
@@ -100,11 +102,13 @@ namespace Notan
 
         public bool Alive() => Storage?.Alive(Index, Generation) ?? false;
 
-        public void RequestDestroy() => Storage.RequestDestroy(this);
+        public void Forget() => Storage.Forget(Index, Generation);
 
-        public void RequestUpdate() => Storage.RequestUpdate(this, Get());
+        public void RequestDestroy() => Storage.RequestDestroy(Index, Generation);
 
-        public void RequestUpdate(T entity) => Storage.RequestUpdate(this, entity);
+        public void RequestUpdate() => Storage.RequestUpdate(Index, Generation, Get());
+
+        public void RequestUpdate(T entity) => Storage.RequestUpdate(Index, Generation, entity);
 
         public static implicit operator Handle(ViewHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 

@@ -61,10 +61,42 @@ namespace Notan.Testing
         [TestMethod]
         public void Destroy()
         {
+            const int delindex = 50;
+
             int sumBeforeDelete = SumBytes();
 
-            int delindex = 50;
+            Assert.IsTrue(bytehandles[delindex].Strong<ByteEntity>().Alive());
+
+            ref var entity = ref bytehandles[delindex].Strong<ByteEntity>().Get();
+
             bytehandles[delindex].Strong<ByteEntity>().Destroy();
+
+            Assert.AreEqual(49, entity.Value);
+
+            Assert.IsFalse(bytehandles[delindex].Strong<ByteEntity>().Alive());
+
+            bytestorage.Run(ref system);
+
+            Assert.AreEqual(sumBeforeDelete - 50, system.Sum);
+            Assert.AreEqual(system.Count, bytehandles.Length - 1);
+        }
+
+        [TestMethod]
+        public void Forget()
+        {
+            const int forindex = 50;
+
+            int sumBeforeDelete = SumBytes();
+
+            Assert.IsTrue(bytehandles[forindex].Strong<ByteEntity>().Alive());
+
+            ref var entity = ref bytehandles[forindex].Strong<ByteEntity>().Get();
+
+            bytehandles[forindex].Strong<ByteEntity>().Forget();
+
+            Assert.AreEqual(50, entity.Value);
+
+            Assert.IsFalse(bytehandles[forindex].Strong<ByteEntity>().Alive());
 
             bytestorage.Run(ref system);
 

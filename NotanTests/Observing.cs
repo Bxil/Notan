@@ -16,7 +16,7 @@ namespace Notan.Testing
             serverWorld = new ServerWorld(0);
             serverWorld.AddStorages(Assembly.GetExecutingAssembly());
 
-            clientWorld = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).Result;
+            clientWorld = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).AsTask().Result;
             clientWorld.AddStorages(Assembly.GetExecutingAssembly());
 
             serverWorld.Tick();

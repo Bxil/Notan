@@ -25,5 +25,10 @@ namespace Notan.Testing
         {
             serializer.ObjectNext(nameof(Value)).Write(Value);
         }
+
+        void IEntity<ByteEntity>.OnDestroy(StrongHandle<ByteEntity> handle)
+        {
+            Value -= 1;
+        }
     }
 }
