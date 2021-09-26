@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Notan
@@ -18,11 +19,17 @@ namespace Notan
             Generation = generation;
         }
 
-        public StrongHandle<T> Strong<T>() where T : struct, IEntity<T> => new((Storage<T>)Storage, Index, Generation);
-        public StrongHandle<T> StrongUnsafe<T>() where T : struct, IEntity<T> => new(Unsafe.As<Storage<T>>(Storage), Index, Generation);
+        public StrongHandle<T> Strong<T>() where T : struct, IEntity<T>
+        {
+            Debug.Assert(Storage is Storage<T>);
+            return new(Unsafe.As<Storage<T>>(Storage), Index, Generation);
+        }
 
-        public ViewHandle<T> View<T>() where T : struct, IEntity<T> => new((StorageView<T>)Storage, Index, Generation);
-        public ViewHandle<T> ViewUnsafe<T>() where T : struct, IEntity<T> => new(Unsafe.As<StorageView<T>>(Storage), Index, Generation);
+        public ViewHandle<T> View<T>() where T : struct, IEntity<T>
+        {
+            Debug.Assert(Storage is StorageView<T>);
+            return new(Unsafe.As<StorageView<T>>(Storage), Index, Generation);
+        }
 
         public static bool operator ==(Handle a, Handle b)
         {
