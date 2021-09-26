@@ -57,9 +57,6 @@ namespace Notan
         {
             return generations.Count > index && generations[index] == generation;
         }
-
-        [Conditional("DEBUG")]
-        private protected static void Log(string log) => Console.WriteLine($"<{typeof(T)}> {log}");
     }
 
     //For servers
@@ -99,7 +96,6 @@ namespace Notan
                 generations.Add(0);
             }
 
-            Log($"Creating {hndind}|{generations[hndind]}");
             entities.Add(entity);
             entityToIndex.Add(hndind);
 
@@ -418,7 +414,6 @@ namespace Notan
             switch (type)
             {
                 case MessageType.Create:
-                    Log($"Creating {index}|{generation}");
                     {
                         int entid = entityToIndex.Count;
                         entityToIndex.Add(index);
@@ -432,7 +427,6 @@ namespace Notan
                     }
                     break;
                 case MessageType.Update:
-                    Log($"Updating {index}|{generation}");
                     if (Alive(index, generation))
                     {
                         client.ReadIntoEntity(ref entities[indexToEntity[index]]);
@@ -444,7 +438,6 @@ namespace Notan
                     }
                     break;
                 case MessageType.Destroy:
-                    Log($"Destroying {index}|{generation}");
                     if (Alive(index, generation))
                     {
                         DestroyInternal(index);
