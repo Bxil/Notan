@@ -46,13 +46,10 @@ namespace Notan
             reader = new BinaryReader(stream, encoding);
 
             lengthPrefix = 0;
-
-            Log("Connected.");
         }
 
         public void Disconnect()
         {
-            Log("Disconnecting.");
             tcpClient.Close();
         }
 
@@ -134,8 +131,5 @@ namespace Notan
                 entity.Deserialize(key, deser);
             }
         }
-
-        [Conditional("DEBUG")]
-        private protected void Log(string log) => Console.WriteLine($"{IPEndPoint} ({Id}) - {log}");
     }
 }
