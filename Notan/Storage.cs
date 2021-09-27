@@ -9,18 +9,14 @@ namespace Notan
     //For storing in collections
     public abstract class Storage
     {
-        //TODO: delete me once Handle became generic
-        internal readonly Type InnerType;
-
         internal readonly bool NoPersistence;
 
         public int Id { get; }
 
-        private protected Storage(int id, bool noPersistence, Type innerType)
+        private protected Storage(int id, bool noPersistence)
         {
             Id = id;
             NoPersistence = noPersistence;
-            InnerType = innerType;
         }
 
         internal abstract void Serialize<T>(T serializer) where T : ISerializer<T>;
@@ -45,7 +41,7 @@ namespace Notan
         private protected int nextIndex;
         private protected int remaniningHandles = 0;
 
-        internal StorageBase(int id, bool noPersistence) : base(id, noPersistence, typeof(T)) { }
+        internal StorageBase(int id, bool noPersistence) : base(id, noPersistence) { }
 
         internal ref T Get(int index, int generation)
         {
