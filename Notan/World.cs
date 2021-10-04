@@ -22,9 +22,9 @@ namespace Notan
             EndPoint = null!;
         }
 
-        public StorageBase<T> GetStorageBase<T>() where T : struct, IEntity<T>
+        public Storage<T> GetStorageBase<T>() where T : struct, IEntity<T>
         {
-            return Unsafe.As<StorageBase<T>>(TypeNameToStorage[typeof(T).ToString()]);
+            return Unsafe.As<Storage<T>>(TypeNameToStorage[typeof(T).ToString()]);
         }
 
         private protected volatile bool exit = false;
@@ -52,14 +52,14 @@ namespace Notan
 
         public override void AddStorage<T>(StorageOptionsAttribute? options = default)
         {
-            Storage newstorage = new Storage<T>(IdToStorage.Count, options);
+            Storage newstorage = new ServerStorage<T>(IdToStorage.Count, options);
             TypeNameToStorage.Add(typeof(T).ToString(), newstorage);
             IdToStorage.Add(newstorage);
         }
 
-        public Storage<T> GetStorage<T>() where T : struct, IEntity<T>
+        public ServerStorage<T> GetStorage<T>() where T : struct, IEntity<T>
         {
-            return Unsafe.As<Storage<T>>(GetStorageBase<T>());
+            return Unsafe.As<ServerStorage<T>>(GetStorageBase<T>());
         }
 
         public bool Tick()
@@ -184,14 +184,14 @@ namespace Notan
 
         public override void AddStorage<T>(StorageOptionsAttribute? options = default)
         {
-            Storage newstorage = new StorageView<T>(IdToStorage.Count, options, server);
+            Storage newstorage = new ClientStorage<T>(IdToStorage.Count, options, server);
             TypeNameToStorage.Add(typeof(T).ToString(), newstorage);
             IdToStorage.Add(newstorage);
         }
 
-        public StorageView<T> GetStorageView<T>() where T : struct, IEntity<T>
+        public ClientStorage<T> GetStorageView<T>() where T : struct, IEntity<T>
         {
-            return Unsafe.As<StorageView<T>>(GetStorageBase<T>());
+            return Unsafe.As<ClientStorage<T>>(GetStorageBase<T>());
         }
         public bool Tick()
         {

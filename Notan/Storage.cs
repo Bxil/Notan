@@ -31,7 +31,7 @@ namespace Notan
     }
 
     //Common
-    public abstract class StorageBase<T> : Storage where T : struct, IEntity<T>
+    public abstract class Storage<T> : Storage where T : struct, IEntity<T>
     {
         private protected FastList<T> entities = new();
         private protected FastList<int> entityToIndex = new();
@@ -41,7 +41,7 @@ namespace Notan
         private protected int nextIndex;
         private protected int remaniningHandles = 0;
 
-        internal StorageBase(int id, bool noPersistence) : base(id, noPersistence) { }
+        internal Storage(int id, bool noPersistence) : base(id, noPersistence) { }
 
         internal ref T Get(int index, int generation)
         {
@@ -56,7 +56,7 @@ namespace Notan
     }
 
     //For servers
-    public sealed class Storage<T> : StorageBase<T> where T : struct, IEntity<T>
+    public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
     {
         private FastList<int> destroyedEntityIndices = new();
 
@@ -66,12 +66,12 @@ namespace Notan
 
         private readonly ClientAuthority authority;
 
-        internal Storage(int id, StorageOptionsAttribute? options) : base(id, options != null && options.NoPersistence)
+        internal ServerStorage(int id, StorageOptionsAttribute? options) : base(id, options != null && options.NoPersistence)
         {
             authority = options == null ? ClientAuthority.None : options.ClientAuthority;
         }
 
-        public StrongHandle<T> Create(T entity)
+        public ServerHandle<T> Create(T entity)
         {
             int entind = entities.Count;
             entityToObservers.Add(new());
@@ -95,7 +95,7 @@ namespace Notan
             entities.Add(entity);
             entityToIndex.Add(hndind);
 
-            var handle = new StrongHandle<T>(this, hndind, generations[hndind]);
+            var handle = new ServerHandle<T>(this, hndind, generations[hndind]);
             Get(hndind, generations[hndind]).LateCreate(handle);
             return handle;
         }
@@ -375,11 +375,11 @@ namespace Notan
     }
 
     //For clients
-    public sealed class StorageView<T> : StorageBase<T> where T : struct, IEntity<T>
+    public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
     {
         private readonly Client server;
 
-        internal StorageView(int id, StorageOptionsAttribute? options, Client server) : base(id, options != null && options.NoPersistence)
+        internal ClientStorage(int id, StorageOptionsAttribute? options, Client server) : base(id, options != null && options.NoPersistence)
         {
             this.server = server;
         }

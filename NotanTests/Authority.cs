@@ -69,9 +69,9 @@ namespace Notan.Testing
 
         struct IncSystem : IViewSystem<ByteEntity>
         {
-            public StorageView<ByteEntity> Storage;
+            public ClientStorage<ByteEntity> Storage;
 
-            void IViewSystem<ByteEntity>.Work(ViewHandle<ByteEntity> handle, ref ByteEntity entity)
+            void IViewSystem<ByteEntity>.Work(ClientHandle<ByteEntity> handle, ref ByteEntity entity)
             {
                 handle.RequestUpdate(new ByteEntity { Value = (byte)(entity.Value + 1) });
             }
@@ -81,7 +81,7 @@ namespace Notan.Testing
         {
             public int Sum;
 
-            void ISystem<ByteEntity>.Work(StrongHandle<ByteEntity> handle, ref ByteEntity entity)
+            void ISystem<ByteEntity>.Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
             {
                 Sum += entity.Value;
             }

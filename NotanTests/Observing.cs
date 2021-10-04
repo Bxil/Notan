@@ -48,7 +48,7 @@ namespace Notan.Testing
 
         struct ByteSystem : ISystem<ByteEntity>
         {
-            public void Work(StrongHandle<ByteEntity> handle, ref ByteEntity entity)
+            public void Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
             {
                 handle.UpdateObservers();
             }

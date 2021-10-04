@@ -9,7 +9,7 @@ namespace Notan.Testing
     {
         private ServerWorld world;
 
-        private Storage<ByteEntity> bytestorage;
+        private ServerStorage<ByteEntity> bytestorage;
 
         private ByteSystem system;
 
@@ -20,7 +20,7 @@ namespace Notan.Testing
             int sum = 0;
             for (int i = 0; i < bytehandles.Length; i++)
             {
-                var strong = bytehandles[i].Strong<ByteEntity>();
+                var strong = bytehandles[i].Server<ByteEntity>();
                 if (strong.Alive())
                 {
                     sum += strong.Get().Value;
@@ -65,15 +65,15 @@ namespace Notan.Testing
 
             int sumBeforeDelete = SumBytes();
 
-            Assert.IsTrue(bytehandles[delindex].Strong<ByteEntity>().Alive());
+            Assert.IsTrue(bytehandles[delindex].Server<ByteEntity>().Alive());
 
-            ref var entity = ref bytehandles[delindex].Strong<ByteEntity>().Get();
+            ref var entity = ref bytehandles[delindex].Server<ByteEntity>().Get();
 
-            bytehandles[delindex].Strong<ByteEntity>().Destroy();
+            bytehandles[delindex].Server<ByteEntity>().Destroy();
 
             Assert.AreEqual(49, entity.Value);
 
-            Assert.IsFalse(bytehandles[delindex].Strong<ByteEntity>().Alive());
+            Assert.IsFalse(bytehandles[delindex].Server<ByteEntity>().Alive());
 
             bytestorage.Run(ref system);
 
@@ -88,15 +88,15 @@ namespace Notan.Testing
 
             int sumBeforeDelete = SumBytes();
 
-            Assert.IsTrue(bytehandles[forindex].Strong<ByteEntity>().Alive());
+            Assert.IsTrue(bytehandles[forindex].Server<ByteEntity>().Alive());
 
-            ref var entity = ref bytehandles[forindex].Strong<ByteEntity>().Get();
+            ref var entity = ref bytehandles[forindex].Server<ByteEntity>().Get();
 
-            bytehandles[forindex].Strong<ByteEntity>().Forget();
+            bytehandles[forindex].Server<ByteEntity>().Forget();
 
             Assert.AreEqual(50, entity.Value);
 
-            Assert.IsFalse(bytehandles[forindex].Strong<ByteEntity>().Alive());
+            Assert.IsFalse(bytehandles[forindex].Server<ByteEntity>().Alive());
 
             bytestorage.Run(ref system);
 
@@ -111,7 +111,7 @@ namespace Notan.Testing
             {
                 if (i % 2 == 1)
                 {
-                    bytehandles[i].Strong<ByteEntity>().Destroy();
+                    bytehandles[i].Server<ByteEntity>().Destroy();
                 }
             }
 
@@ -127,7 +127,7 @@ namespace Notan.Testing
 
             for (int i = 0; i < bytehandles.Length; i++)
             {
-                var bytehandle = bytehandles[i].Strong<ByteEntity>();
+                var bytehandle = bytehandles[i].Server<ByteEntity>();
                 if (i % 2 == 1)
                 {
                     Assert.AreEqual(1, bytehandle.Generation);
@@ -164,7 +164,7 @@ namespace Notan.Testing
 
             public int Count;
 
-            public void Work(StrongHandle<ByteEntity> handle, ref ByteEntity entity)
+            public void Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
             {
                 Sum += entity.Value;
                 Count += 1;

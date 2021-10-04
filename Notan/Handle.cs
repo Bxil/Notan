@@ -19,16 +19,16 @@ namespace Notan
             Generation = generation;
         }
 
-        public StrongHandle<T> Strong<T>() where T : struct, IEntity<T>
+        public ServerHandle<T> Server<T>() where T : struct, IEntity<T>
         {
-            Debug.Assert(Storage is Storage<T>);
-            return new(Unsafe.As<Storage<T>>(Storage), Index, Generation);
+            Debug.Assert(Storage is ServerStorage<T>);
+            return new(Unsafe.As<ServerStorage<T>>(Storage), Index, Generation);
         }
 
-        public ViewHandle<T> View<T>() where T : struct, IEntity<T>
+        public ClientHandle<T> Client<T>() where T : struct, IEntity<T>
         {
-            Debug.Assert(Storage is StorageView<T>);
-            return new(Unsafe.As<StorageView<T>>(Storage), Index, Generation);
+            Debug.Assert(Storage is ClientStorage<T>);
+            return new(Unsafe.As<ClientStorage<T>>(Storage), Index, Generation);
         }
 
         public static bool operator ==(Handle a, Handle b)
@@ -45,14 +45,14 @@ namespace Notan
         public override int GetHashCode() => Index;
     }
 
-    public readonly struct StrongHandle<T> : IEquatable<StrongHandle<T>> where T : struct, IEntity<T>
+    public readonly struct ServerHandle<T> : IEquatable<ServerHandle<T>> where T : struct, IEntity<T>
     {
-        public readonly Storage<T> Storage;
+        public readonly ServerStorage<T> Storage;
 
         public readonly int Index;
         public readonly int Generation;
 
-        internal StrongHandle(Storage<T> storage, int index, int generation)
+        internal ServerHandle(ServerStorage<T> storage, int index, int generation)
         {
             Storage = storage;
             Index = index;
@@ -81,24 +81,24 @@ namespace Notan
             set => Storage.SetAuthority(Index, Generation, value);
         }
 
-        public static implicit operator Handle(StrongHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
+        public static implicit operator Handle(ServerHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
-        public static bool operator ==(StrongHandle<T> a, StrongHandle<T> b) => (Handle)a == b;
+        public static bool operator ==(ServerHandle<T> a, ServerHandle<T> b) => (Handle)a == b;
 
-        public static bool operator !=(StrongHandle<T> a, StrongHandle<T> b) => (Handle)a != b;
+        public static bool operator !=(ServerHandle<T> a, ServerHandle<T> b) => (Handle)a != b;
 
-        public bool Equals(StrongHandle<T> other) => this == other;
+        public bool Equals(ServerHandle<T> other) => this == other;
         public override int GetHashCode() => Index;
     }
 
-    public readonly struct ViewHandle<T> : IEquatable<ViewHandle<T>> where T : struct, IEntity<T>
+    public readonly struct ClientHandle<T> : IEquatable<ClientHandle<T>> where T : struct, IEntity<T>
     {
-        public readonly StorageView<T> Storage;
+        public readonly ClientStorage<T> Storage;
 
         public readonly int Index;
         public readonly int Generation;
 
-        internal ViewHandle(StorageView<T> storage, int index, int generation)
+        internal ClientHandle(ClientStorage<T> storage, int index, int generation)
         {
             Storage = storage;
             Index = index;
@@ -117,13 +117,13 @@ namespace Notan
 
         public void RequestUpdate(T entity) => Storage.RequestUpdate(Index, Generation, entity);
 
-        public static implicit operator Handle(ViewHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
+        public static implicit operator Handle(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
-        public static bool operator ==(ViewHandle<T> a, ViewHandle<T> b) => (Handle)a == b;
+        public static bool operator ==(ClientHandle<T> a, ClientHandle<T> b) => (Handle)a == b;
 
-        public static bool operator !=(ViewHandle<T> a, ViewHandle<T> b) => (Handle)a != b;
+        public static bool operator !=(ClientHandle<T> a, ClientHandle<T> b) => (Handle)a != b;
 
-        public bool Equals(ViewHandle<T> other) => this == other;
+        public bool Equals(ClientHandle<T> other) => this == other;
         public override int GetHashCode() => Index;
     }
 }
