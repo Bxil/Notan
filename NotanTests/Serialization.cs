@@ -38,7 +38,7 @@ namespace Notan.Testing
         },
         {
             ""$gen"": 42,
-            ""$dead"": """"
+            ""$dead"": true
         },
         {
             ""$gen"": 12,
@@ -50,7 +50,7 @@ namespace Notan.Testing
         },
         {
             ""$gen"": 12,
-            ""$dead"": """"
+            ""$dead"": true
         }
     ]
 }

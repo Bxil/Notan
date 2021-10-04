@@ -40,8 +40,8 @@ namespace Notan.Testing
         [TestMethod]
         public void Updates()
         {
-            var system1 = new IncSystem { Storage = clientWorld1.GetStorageView<ByteEntity>() };
-            var system2 = new IncSystem { Storage = clientWorld2.GetStorageView<ByteEntity>() };
+            var system1 = new IncSystem { Storage = clientWorld1.GetStorage<ByteEntity>() };
+            var system2 = new IncSystem { Storage = clientWorld2.GetStorage<ByteEntity>() };
 
             system1.Storage.RequestCreate(new ByteEntity { Value = 1 });
             system2.Storage.RequestCreate(new ByteEntity { Value = 3 });

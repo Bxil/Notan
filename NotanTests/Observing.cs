@@ -33,7 +33,7 @@ namespace Notan.Testing
         [TestMethod]
         public void AddAndDisconnect()
         {
-            clientWorld.GetStorageView<ByteEntity>().RequestCreate(new ByteEntity());
+            clientWorld.GetStorage<ByteEntity>().RequestCreate(new ByteEntity());
             clientWorld.Tick();
             serverWorld.Tick();
             var system = new ByteSystem();

@@ -22,7 +22,7 @@ namespace Notan
             EndPoint = null!;
         }
 
-        public Storage<T> GetStorageBase<T>() where T : struct, IEntity<T>
+        internal Storage<T> GetStorageBase<T>() where T : struct, IEntity<T>
         {
             return Unsafe.As<Storage<T>>(TypeNameToStorage[typeof(T).ToString()]);
         }
@@ -189,7 +189,7 @@ namespace Notan
             IdToStorage.Add(newstorage);
         }
 
-        public ClientStorage<T> GetStorageView<T>() where T : struct, IEntity<T>
+        public ClientStorage<T> GetStorage<T>() where T : struct, IEntity<T>
         {
             return Unsafe.As<ClientStorage<T>>(GetStorageBase<T>());
         }
