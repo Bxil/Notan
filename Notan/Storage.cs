@@ -242,7 +242,7 @@ namespace Notan
                 }
                 else
                 {
-                    serializer.ObjectNext("$dead").Write("");
+                    serializer.ObjectNext("$dead").Write(true);
                 }
                 serializer.ObjectEnd();
                 i++;
@@ -280,7 +280,7 @@ namespace Notan
                     }
                     else if (key == "$dead")
                     {
-                        deserializer.GetString();
+                        deserializer.GetBool();
                         dead = true;
                     }
                     else
