@@ -208,7 +208,7 @@ namespace Notan
             return entityToAuthority[indexToEntity[index]];
         }
 
-        public void Run<TSystem>(ref TSystem system) where TSystem : ISystem<T>
+        public void Run<TSystem>(ref TSystem system) where TSystem : IServerSystem<T>
         {
             int i = entities.Count;
             while (i > 0)
@@ -222,7 +222,7 @@ namespace Notan
             }
         }
 
-        public TSystem Run<TSystem>(TSystem system) where TSystem : ISystem<T>
+        public TSystem Run<TSystem>(TSystem system) where TSystem : IServerSystem<T>
         {
             Run(ref system);
             return system;
@@ -450,7 +450,7 @@ namespace Notan
             entityToIndex.RemoveAt(entityIndex);
         }
 
-        public void Run<TSystem>(ref TSystem system) where TSystem : IViewSystem<T>
+        public void Run<TSystem>(ref TSystem system) where TSystem : IClientSystem<T>
         {
             int i = entities.Count;
             while (i > 0)

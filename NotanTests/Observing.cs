@@ -46,7 +46,7 @@ namespace Notan.Testing
             serverWorld.GetStorage<ByteEntity>().Run(ref system);
         }
 
-        struct ByteSystem : ISystem<ByteEntity>
+        struct ByteSystem : IServerSystem<ByteEntity>
         {
             public void Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
             {

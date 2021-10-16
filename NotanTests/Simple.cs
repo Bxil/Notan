@@ -158,7 +158,7 @@ namespace Notan.Testing
             Assert.AreEqual(bytehandles.Length, system.Count);
         }
 
-        struct ByteSystem : ISystem<ByteEntity>
+        struct ByteSystem : IServerSystem<ByteEntity>
         {
             public int Sum;
 

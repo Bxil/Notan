@@ -67,21 +67,21 @@ namespace Notan.Testing
             Assert.AreEqual(6, sumSystem.Sum);
         }
 
-        struct IncSystem : IViewSystem<ByteEntity>
+        struct IncSystem : IClientSystem<ByteEntity>
         {
             public ClientStorage<ByteEntity> Storage;
 
-            void IViewSystem<ByteEntity>.Work(ClientHandle<ByteEntity> handle, ref ByteEntity entity)
+            void IClientSystem<ByteEntity>.Work(ClientHandle<ByteEntity> handle, ref ByteEntity entity)
             {
                 handle.RequestUpdate(new ByteEntity { Value = (byte)(entity.Value + 1) });
             }
         }
 
-        struct SumSystem : ISystem<ByteEntity>
+        struct SumSystem : IServerSystem<ByteEntity>
         {
             public int Sum;
 
-            void ISystem<ByteEntity>.Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
+            void IServerSystem<ByteEntity>.Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
             {
                 Sum += entity.Value;
             }
