@@ -4,7 +4,7 @@ using System;
 
 namespace Notan.Testing
 {
-    [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
+    [StorageOptions(StorageFlags.UnauthenticatedAuthority)]
     struct HandleEntity : IEntity<HandleEntity>
     {
         public Handle Value;

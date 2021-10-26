@@ -1,5 +1,4 @@
-﻿using Notan.Reflection;
-using Notan.Serialization;
+﻿using Notan.Serialization;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -9,14 +8,14 @@ namespace Notan
     //For storing in collections
     public abstract class Storage
     {
-        internal readonly bool NoPersistence;
+        internal readonly StorageFlags Flags;
 
         public int Id { get; }
 
-        private protected Storage(int id, bool noPersistence)
+        private protected Storage(int id, StorageFlags flags)
         {
             Id = id;
-            NoPersistence = noPersistence;
+            Flags = flags;
         }
 
         internal abstract void Serialize<T>(T serializer) where T : ISerializer<T>;
@@ -41,7 +40,7 @@ namespace Notan
         private protected int nextIndex;
         private protected int remaniningHandles = 0;
 
-        internal Storage(int id, bool noPersistence) : base(id, noPersistence) { }
+        internal Storage(int id, StorageFlags flags) : base(id, flags) { }
 
         internal ref T Get(int index, int generation)
         {
@@ -64,12 +63,7 @@ namespace Notan
         private FastList<FastList<Client>> entityToObservers = new();
         private FastList<Client?> entityToAuthority = new();
 
-        private readonly ClientAuthority authority;
-
-        internal ServerStorage(int id, StorageOptionsAttribute? options) : base(id, options != null && options.NoPersistence)
-        {
-            authority = options == null ? ClientAuthority.None : options.ClientAuthority;
-        }
+        internal ServerStorage(int id, StorageFlags flags = default) : base(id, flags) { }
 
         public ServerHandle<T> Create(T entity)
         {
@@ -104,25 +98,13 @@ namespace Notan
         {
             Get(index, generation).OnDestroy(new(this, index, generation));
 
-            DestroyInternal(index);
+            entityIsDead[indexToEntity[index]] = true;
 
             foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
             {
                 observer.Send(Id, MessageType.Destroy, index, generations[index], ref Unsafe.NullRef<T>());
             }
-        }
 
-        //Destroy an entity without notifying anyone and running its OnDestroy.
-        internal void Forget(int index, int generation)
-        {
-            Debug.Assert(Alive(index, generation));
-
-            DestroyInternal(index);
-        }
-
-        private void DestroyInternal(int index)
-        {
-            entityIsDead[indexToEntity[index]] = true;
             generations[index]++;
             destroyedEntityIndices.Add(index);
         }
@@ -324,7 +306,7 @@ namespace Notan
             switch (type)
             {
                 case MessageType.Create:
-                    if (authority == ClientAuthority.Unauthenticated || (authority == ClientAuthority.Authenticated && client.Authenticated))
+                    if (Flags.Has(StorageFlags.UnauthenticatedAuthority) || (Flags.Has(StorageFlags.AuthenticatedAuthority) && client.Authenticated))
                     {
                         T entity = default;
                         client.ReadIntoEntity(ref entity);
@@ -379,7 +361,9 @@ namespace Notan
     {
         private readonly Client server;
 
-        internal ClientStorage(int id, StorageOptionsAttribute? options, Client server) : base(id, options != null && options.NoPersistence)
+        private FastList<bool> linger = new();
+
+        internal ClientStorage(int id, StorageFlags flags, Client server) : base(id, flags)
         {
             this.server = server;
         }
@@ -405,17 +389,29 @@ namespace Notan
             DestroyInternal(index);
         }
 
+        internal bool Lingering(int index, int generation)
+        {
+            return Alive(index, generation) && linger[indexToEntity[index]];
+        }
+
         internal override void HandleMessage(Client client, MessageType type, int index, int generation)
         {
             switch (type)
             {
                 case MessageType.Create:
+                    if (Lingering(index, generation))
+                    {
+                        linger[indexToEntity[index]] = false;
+                        client.ReadIntoEntity(ref entities[indexToEntity[index]]);
+                    }
+                    else
                     {
                         int entid = entityToIndex.Count;
                         entityToIndex.Add(index);
                         T entity = default;
                         client.ReadIntoEntity(ref entity);
                         entities.Add(entity);
+                        linger.Add(false);
                         indexToEntity.EnsureSize(index + 1);
                         indexToEntity[index] = entid;
                         generations.EnsureSize(index + 1);
@@ -436,7 +432,14 @@ namespace Notan
                 case MessageType.Destroy:
                     if (Alive(index, generation))
                     {
-                        DestroyInternal(index);
+                        if (Flags.Has(StorageFlags.Linger))
+                        {
+                            linger[indexToEntity[index]] = true;
+                        }
+                        else
+                        {
+                            DestroyInternal(index);
+                        }
                     }
                     break;
             }
@@ -446,6 +449,7 @@ namespace Notan
         {
             var entityIndex = indexToEntity[index];
             entities.RemoveAt(entityIndex);
+            linger.RemoveAt(entityIndex);
             indexToEntity[entityToIndex[^1]] = entityIndex;
             entityToIndex.RemoveAt(entityIndex);
         }
@@ -459,6 +463,12 @@ namespace Notan
                 var index = entityToIndex[i];
                 system.Work(new(this, index, generations[index]), ref entities[i]);
             }
+        }
+
+        public TSystem Run<TSystem>(TSystem system) where TSystem : IClientSystem<T>
+        {
+            Run(ref system);
+            return system;
         }
 
         internal override void FinalizeFrame() => throw new NotImplementedException();

@@ -65,8 +65,6 @@ namespace Notan
 
         public void Destroy() => Storage.Destroy(Index, Generation);
 
-        public void Forget() => Storage.Forget(Index, Generation);
-
         public void AddObserver(Client client) => Storage.AddObserver(Index, Generation, client);
 
         public void RemoveObserver(Client client) => Storage.RemoveObserver(Index, Generation, client);
@@ -110,6 +108,8 @@ namespace Notan
         public bool Alive() => Storage?.Alive(Index, Generation) ?? false;
 
         public void Forget() => Storage.Forget(Index, Generation);
+
+        public bool Lingering() => Storage.Lingering(Index, Generation);
 
         public void RequestDestroy() => Storage.RequestDestroy(Index, Generation);
 

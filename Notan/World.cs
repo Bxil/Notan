@@ -30,7 +30,7 @@ namespace Notan
         private protected volatile bool exit = false;
         public void Exit() => exit = true;
 
-        public abstract void AddStorage<T>(StorageOptionsAttribute? options = default) where T : struct, IEntity<T>;
+        public abstract void AddStorage<T>(StorageFlags flags = default) where T : struct, IEntity<T>;
     }
 
     public sealed class ServerWorld : World
@@ -50,9 +50,9 @@ namespace Notan
             EndPoint = (IPEndPoint)listener.LocalEndpoint;
         }
 
-        public override void AddStorage<T>(StorageOptionsAttribute? options = default)
+        public override void AddStorage<T>(StorageFlags flags = default)
         {
-            Storage newstorage = new ServerStorage<T>(IdToStorage.Count, options);
+            Storage newstorage = new ServerStorage<T>(IdToStorage.Count, flags);
             TypeNameToStorage.Add(typeof(T).ToString(), newstorage);
             IdToStorage.Add(newstorage);
         }
@@ -142,7 +142,7 @@ namespace Notan
             serializer.ObjectBegin();
             foreach (var pair in TypeNameToStorage)
             {
-                if (pair.Value.NoPersistence)
+                if (pair.Value.Flags.Has(StorageFlags.Impermanent))
                 {
                     continue;
                 }
@@ -182,9 +182,9 @@ namespace Notan
             return new ClientWorld(client);
         }
 
-        public override void AddStorage<T>(StorageOptionsAttribute? options = default)
+        public override void AddStorage<T>(StorageFlags flags = default)
         {
-            Storage newstorage = new ClientStorage<T>(IdToStorage.Count, options, server);
+            var newstorage = new ClientStorage<T>(IdToStorage.Count, flags, server);
             TypeNameToStorage.Add(typeof(T).ToString(), newstorage);
             IdToStorage.Add(newstorage);
         }
