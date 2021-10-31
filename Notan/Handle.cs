@@ -71,7 +71,9 @@ namespace Notan
 
         public void UpdateObservers() => Storage.UpdateObservers(Index, Generation);
 
-        public void WipeObservers() => Storage.WipeObservers(Index, Generation);
+        public void ClearObservers() => Storage.ClearObservers(Index, Generation);
+
+        public ReadOnlySpan<Client> Observers => Storage.GetObservers(Index, Generation);
 
         public Client? Authority
         {

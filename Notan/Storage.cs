@@ -161,7 +161,7 @@ namespace Notan
             }
         }
 
-        internal void WipeObservers(int index, int generation)
+        internal void ClearObservers(int index, int generation)
         {
             Debug.Assert(Alive(index, generation));
             ref var list = ref entityToObservers[indexToEntity[index]];
@@ -172,6 +172,12 @@ namespace Notan
                 list[i].Send(Id, MessageType.Destroy, index, generation, ref Unsafe.NullRef<T>());
                 list.RemoveAt(i);
             }
+        }
+
+        internal ReadOnlySpan<Client> GetObservers(int index, int generation)
+        {
+            Debug.Assert(Alive(index, generation));
+            return entityToObservers[indexToEntity[index]].AsSpan();
         }
 
         internal void SetAuthority(int index, int generation, Client? client)

@@ -166,7 +166,7 @@ namespace Notan.Testing
             Assert.IsFalse(clientHandle100.Lingering());
 
             serverHandle50.Destroy();
-            serverHandle100.WipeObservers();
+            serverHandle100.ClearObservers();
             serverWorld.Tick();
             clientWorld.Tick();
 
