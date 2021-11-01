@@ -367,6 +367,9 @@ namespace Notan
     {
         private readonly Client server;
 
+        private FastList<int> forgottenEntityIndices = new();
+
+        private FastList<bool> entityIsForgotten = new();
         private FastList<bool> linger = new();
 
         internal ClientStorage(int id, StorageFlags flags, Client server) : base(id, flags)
@@ -392,7 +395,9 @@ namespace Notan
         internal void Forget(int index, int generation)
         {
             Debug.Assert(Alive(index, generation));
-            DestroyInternal(index);
+            generations[index] = -1;
+            entityIsForgotten[indexToEntity[index]] = true;
+            forgottenEntityIndices.Add(index);
         }
 
         internal bool Lingering(int index, int generation)
@@ -418,6 +423,7 @@ namespace Notan
                         client.ReadIntoEntity(ref entity);
                         entities.Add(entity);
                         linger.Add(false);
+                        entityIsForgotten.Add(false);
                         indexToEntity.EnsureSize(index + 1);
                         indexToEntity[index] = entid;
                         generations.EnsureSize(index + 1);
@@ -444,6 +450,7 @@ namespace Notan
                         }
                         else
                         {
+                            generations[index] = -1;
                             DestroyInternal(index);
                         }
                     }
@@ -458,7 +465,6 @@ namespace Notan
             linger.RemoveAt(entityIndex);
             indexToEntity[entityToIndex[^1]] = entityIndex;
             entityToIndex.RemoveAt(entityIndex);
-            generations[index] = -1;
         }
 
         public void Run<TSystem>(ref TSystem system) where TSystem : IClientSystem<T>
@@ -467,8 +473,11 @@ namespace Notan
             while (i > 0)
             {
                 i--;
-                var index = entityToIndex[i];
-                system.Work(new(this, index, generations[index]), ref entities[i]);
+                if (!entityIsForgotten[i])
+                {
+                    var index = entityToIndex[i];
+                    system.Work(new(this, index, generations[index]), ref entities[i]);
+                }
             }
         }
 
@@ -478,12 +487,20 @@ namespace Notan
             return system;
         }
 
-        internal override void FinalizeFrame() => throw new NotImplementedException();
-
         internal override void LateDeserialize() => throw new NotImplementedException();
 
         internal override void Serialize<TSer>(TSer serializer) => throw new NotImplementedException();
 
         internal override void Deserialize<TDeser>(TDeser deserializer) => throw new NotImplementedException();
+
+        internal override void FinalizeFrame()
+        {
+            foreach (var index in forgottenEntityIndices.AsSpan())
+            {
+                entityIsForgotten[indexToEntity[index]] = false;
+                DestroyInternal(index);
+            }
+            forgottenEntityIndices.Clear();
+        }
     }
 }

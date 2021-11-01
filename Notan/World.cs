@@ -193,8 +193,14 @@ namespace Notan
         {
             return Unsafe.As<ClientStorage<T>>(GetStorageBase<T>());
         }
+
         public bool Tick()
         {
+            foreach (var storage in IdToStorage.AsSpan())
+            {
+                storage.FinalizeFrame();
+            }
+
             if (exit)
             {
                 server.Disconnect();
