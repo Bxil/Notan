@@ -458,6 +458,7 @@ namespace Notan
             linger.RemoveAt(entityIndex);
             indexToEntity[entityToIndex[^1]] = entityIndex;
             entityToIndex.RemoveAt(entityIndex);
+            generations[index] = -1;
         }
 
         public void Run<TSystem>(ref TSystem system) where TSystem : IClientSystem<T>
