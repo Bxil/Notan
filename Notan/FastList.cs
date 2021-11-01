@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -51,6 +52,7 @@ namespace Notan
 
         public void RemoveAt(int index)
         {
+            Debug.Assert(index >= 0 && index < Count);
             this[index] = this[Count - 1];
             this[Count - 1] = default!;
             Count--;
@@ -72,7 +74,14 @@ namespace Notan
 
         public int IndexOf(T item) => Array.IndexOf(array ?? Array.Empty<T>(), item, 0, Count);
 
-        public ref T this[int index] => ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(array), index);
+        public ref T this[int index]
+        {
+            get
+            {
+                Debug.Assert(index >= 0 && index < Count);
+                return ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(array), index);
+            }
+        }
 
         public Span<T> AsSpan() => (array ?? Array.Empty<T>()).AsSpan(0, Count);
     }

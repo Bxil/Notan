@@ -461,6 +461,7 @@ namespace Notan
         private void DestroyInternal(int index)
         {
             var entityIndex = indexToEntity[index];
+            entityIsForgotten.RemoveAt(entityIndex);
             entities.RemoveAt(entityIndex);
             linger.RemoveAt(entityIndex);
             indexToEntity[entityToIndex[^1]] = entityIndex;
