@@ -111,8 +111,6 @@ namespace Notan
 
         public void Forget() => Storage.Forget(Index, Generation);
 
-        public bool Lingering() => Storage.Lingering(Index, Generation);
-
         public void RequestDestroy() => Storage.RequestDestroy(Index, Generation);
 
         public void RequestUpdate() => Storage.RequestUpdate(Index, Generation, Get());

@@ -7,13 +7,11 @@ namespace Notan.Testing
     [TestClass]
     public class Simple
     {
-        private ServerWorld serverWorld;
-        private ClientWorld clientWorld;
+        private ServerWorld world;
 
-        private ServerStorage<ByteEntity> serverStorage;
-        private ClientStorage<ByteEntity> clientStorage;
+        private ServerStorage<ByteEntity> bytestorage;
 
-        private ServerSystem serverSystem;
+        private ByteSystem system;
 
         private readonly Handle[] bytehandles = new Handle[byte.MaxValue];
 
@@ -34,41 +32,30 @@ namespace Notan.Testing
         [TestInitialize]
         public void Init()
         {
-            serverWorld = new ServerWorld(0);
-            serverWorld.AddStorages(Assembly.GetExecutingAssembly());
-            serverStorage = serverWorld.GetStorage<ByteEntity>();
-
-            clientWorld = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).AsTask().Result;
-            clientWorld.AddStorages(Assembly.GetExecutingAssembly());
-            clientStorage = clientWorld.GetStorage<ByteEntity>();
-
-            serverWorld.Tick();
+            world = new ServerWorld(0);
+            world.AddStorages(Assembly.GetExecutingAssembly());
+            bytestorage = world.GetStorage<ByteEntity>();
 
             for (byte i = 0; i < byte.MaxValue; i++)
             {
-                bytehandles[i] = serverStorage.Create(new ByteEntity { Value = i });
-                bytehandles[i].Server<ByteEntity>().AddObserver(serverWorld.Clients[0]);
-                bytehandles[i].Server<ByteEntity>().UpdateObservers();
+                bytehandles[i] = bytestorage.Create(new ByteEntity { Value = i });
             }
 
-            serverWorld.Tick();
-            clientWorld.Tick();
-
-            serverSystem = new();
+            system = new();
         }
 
         [TestCleanup]
         public void End()
         {
-            serverWorld.Exit();
-            serverWorld.Tick();
+            world.Exit();
+            world.Tick();
         }
 
         [TestMethod]
         public void CheckInit()
         {
-            serverStorage.Run(ref serverSystem);
-            Assert.AreEqual(SumBytes(), serverSystem.Sum);
+            bytestorage.Run(ref system);
+            Assert.AreEqual(SumBytes(), system.Sum);
         }
 
         [TestMethod]
@@ -88,10 +75,10 @@ namespace Notan.Testing
 
             Assert.IsFalse(bytehandles[delindex].Server<ByteEntity>().Alive());
 
-            serverStorage.Run(ref serverSystem);
+            bytestorage.Run(ref system);
 
-            Assert.AreEqual(sumBeforeDelete - 50, serverSystem.Sum);
-            Assert.AreEqual(serverSystem.Count, bytehandles.Length - 1);
+            Assert.AreEqual(sumBeforeDelete - 50, system.Sum);
+            Assert.AreEqual(system.Count, bytehandles.Length - 1);
         }
 
         [TestMethod]
@@ -105,14 +92,14 @@ namespace Notan.Testing
                 }
             }
 
-            serverStorage.Run(ref serverSystem);
-            Assert.AreEqual(bytehandles.Length / 2 + 1, serverSystem.Count);
+            bytestorage.Run(ref system);
+            Assert.AreEqual(bytehandles.Length / 2 + 1, system.Count);
 
-            serverWorld.Tick();
+            world.Tick();
 
             for (byte i = 0; i < bytehandles.Length / 2; i++)
             {
-                bytehandles[i * 2 + 1] = serverStorage.Create(new ByteEntity { Value = i });
+                bytehandles[i * 2 + 1] = bytestorage.Create(new ByteEntity { Value = i });
             }
 
             for (int i = 0; i < bytehandles.Length; i++)
@@ -143,45 +130,12 @@ namespace Notan.Testing
 
             Assert.AreEqual(expected, SumBytes());
 
-            serverSystem = new();
-            serverStorage.Run(ref serverSystem);
-            Assert.AreEqual(bytehandles.Length, serverSystem.Count);
+            system = new();
+            bytestorage.Run(ref system);
+            Assert.AreEqual(bytehandles.Length, system.Count);
         }
 
-        [TestMethod]
-        public void Linger()
-        {
-            var serverHandle50 = bytehandles[50].Server<ByteEntity>();
-            var clientHandle50 = clientStorage.Run(new FindSystem(50)).Handle.Client<ByteEntity>();
-
-            var serverHandle100 = bytehandles[100].Server<ByteEntity>();
-            var clientHandle100 = clientStorage.Run(new FindSystem(100)).Handle.Client<ByteEntity>();
-
-            Assert.IsTrue(serverHandle50.Alive());
-            Assert.IsTrue(clientHandle50.Alive());
-            Assert.IsFalse(clientHandle50.Lingering());
-
-            Assert.IsTrue(serverHandle100.Alive());
-            Assert.IsTrue(clientHandle100.Alive());
-            Assert.IsFalse(clientHandle100.Lingering());
-
-            serverHandle50.Destroy();
-            serverHandle100.ClearObservers();
-            serverWorld.Tick();
-            clientWorld.Tick();
-
-            Assert.IsFalse(serverHandle50.Alive());
-            Assert.IsTrue(clientHandle50.Alive());
-            Assert.IsTrue(clientHandle50.Lingering());
-            Assert.AreEqual(50, clientHandle50.Get().Value);
-
-            Assert.IsTrue(serverHandle100.Alive());
-            Assert.IsTrue(clientHandle100.Alive());
-            Assert.IsTrue(clientHandle100.Lingering());
-            Assert.AreEqual(100, clientHandle100.Get().Value);
-        }
-
-        struct ServerSystem : IServerSystem<ByteEntity>
+        struct ByteSystem : IServerSystem<ByteEntity>
         {
             public int Sum;
 
@@ -191,27 +145,6 @@ namespace Notan.Testing
             {
                 Sum += entity.Value;
                 Count += 1;
-            }
-        }
-
-        struct FindSystem : IClientSystem<ByteEntity>
-        {
-            private readonly int num;
-
-            public Handle Handle { get; private set; }
-
-            public FindSystem(int num)
-            {
-                Handle = default;
-                this.num = num;
-            }
-
-            public void Work(ClientHandle<ByteEntity> handle, ref ByteEntity entity)
-            {
-                if (handle.Get().Value == num)
-                {
-                    Handle = handle;
-                }
             }
         }
     }

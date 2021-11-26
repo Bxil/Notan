@@ -1,4 +1,5 @@
-﻿using Notan.Serialization;
+﻿using Notan.Reflection;
+using Notan.Serialization;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -8,14 +9,14 @@ namespace Notan
     //For storing in collections
     public abstract class Storage
     {
-        internal readonly StorageFlags Flags;
+        internal readonly bool NoPersistence;
 
         public int Id { get; }
 
-        private protected Storage(int id, StorageFlags flags)
+        private protected Storage(int id, bool noPersistence)
         {
             Id = id;
-            Flags = flags;
+            NoPersistence = noPersistence;
         }
 
         internal abstract void Serialize<T>(T serializer) where T : ISerializer<T>;
@@ -40,7 +41,7 @@ namespace Notan
         private protected int nextIndex;
         private protected int remaniningHandles = 0;
 
-        internal Storage(int id, StorageFlags flags) : base(id, flags) { }
+        internal Storage(int id, bool noPersistence) : base(id, noPersistence) { }
 
         internal ref T Get(int index, int generation)
         {
@@ -63,7 +64,12 @@ namespace Notan
         private FastList<FastList<Client>> entityToObservers = new();
         private FastList<Client?> entityToAuthority = new();
 
-        internal ServerStorage(int id, StorageFlags flags = default) : base(id, flags) { }
+        private readonly ClientAuthority authority;
+
+        internal ServerStorage(int id, StorageOptionsAttribute? options) : base(id, options != null && options.NoPersistence)
+        {
+            authority = options == null ? ClientAuthority.None : options.ClientAuthority;
+        }
 
         public ServerHandle<T> Create(T entity)
         {
@@ -98,13 +104,25 @@ namespace Notan
         {
             Get(index, generation).OnDestroy(new(this, index, generation));
 
-            entityIsDead[indexToEntity[index]] = true;
+            DestroyInternal(index);
 
             foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
             {
                 observer.Send(Id, MessageType.Destroy, index, generations[index], ref Unsafe.NullRef<T>());
             }
+        }
 
+        //Destroy an entity without notifying anyone and running its OnDestroy.
+        internal void Forget(int index, int generation)
+        {
+            Debug.Assert(Alive(index, generation));
+
+            DestroyInternal(index);
+        }
+
+        private void DestroyInternal(int index)
+        {
+            entityIsDead[indexToEntity[index]] = true;
             generations[index]++;
             destroyedEntityIndices.Add(index);
         }
@@ -312,7 +330,7 @@ namespace Notan
             switch (type)
             {
                 case MessageType.Create:
-                    if (Flags.Has(StorageFlags.UnauthenticatedAuthority) || (Flags.Has(StorageFlags.AuthenticatedAuthority) && client.Authenticated))
+                    if (authority == ClientAuthority.Unauthenticated || (authority == ClientAuthority.Authenticated && client.Authenticated))
                     {
                         T entity = default;
                         client.ReadIntoEntity(ref entity);
@@ -368,11 +386,9 @@ namespace Notan
         private readonly Client server;
 
         private FastList<int> forgottenEntityIndices = new();
-
         private FastList<bool> entityIsForgotten = new();
-        private FastList<bool> linger = new();
 
-        internal ClientStorage(int id, StorageFlags flags, Client server) : base(id, flags)
+        internal ClientStorage(int id, StorageOptionsAttribute? options, Client server) : base(id, options != null && options.NoPersistence)
         {
             this.server = server;
         }
@@ -400,29 +416,17 @@ namespace Notan
             forgottenEntityIndices.Add(index);
         }
 
-        internal bool Lingering(int index, int generation)
-        {
-            return Alive(index, generation) && linger[indexToEntity[index]];
-        }
-
         internal override void HandleMessage(Client client, MessageType type, int index, int generation)
         {
             switch (type)
             {
                 case MessageType.Create:
-                    if (Lingering(index, generation))
-                    {
-                        linger[indexToEntity[index]] = false;
-                        client.ReadIntoEntity(ref entities[indexToEntity[index]]);
-                    }
-                    else
                     {
                         int entid = entityToIndex.Count;
                         entityToIndex.Add(index);
                         T entity = default;
                         client.ReadIntoEntity(ref entity);
                         entities.Add(entity);
-                        linger.Add(false);
                         entityIsForgotten.Add(false);
                         indexToEntity.EnsureSize(index + 1);
                         indexToEntity[index] = entid;
@@ -444,15 +448,8 @@ namespace Notan
                 case MessageType.Destroy:
                     if (Alive(index, generation))
                     {
-                        if (Flags.Has(StorageFlags.Linger))
-                        {
-                            linger[indexToEntity[index]] = true;
-                        }
-                        else
-                        {
-                            generations[index] = -1;
-                            DestroyInternal(index);
-                        }
+                        generations[index] = -1;
+                        DestroyInternal(index);
                     }
                     break;
             }
@@ -463,7 +460,6 @@ namespace Notan
             var entityIndex = indexToEntity[index];
             entityIsForgotten.RemoveAt(entityIndex);
             entities.RemoveAt(entityIndex);
-            linger.RemoveAt(entityIndex);
             indexToEntity[entityToIndex[^1]] = entityIndex;
             entityToIndex.RemoveAt(entityIndex);
         }

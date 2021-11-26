@@ -13,7 +13,7 @@ namespace Notan.Reflection
             var arr = new object?[1];
             foreach (var type in assembly.GetTypes())
             {
-                arr[0] = type.GetCustomAttribute<StorageOptionsAttribute>()?.Flags;
+                arr[0] = type.GetCustomAttribute<StorageOptionsAttribute>();
                 try //this try is here specifically for the MakeGenericType
                 {
                     if (typeof(IEntity<>).MakeGenericType(type).IsAssignableFrom(type))
