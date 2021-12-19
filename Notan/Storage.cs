@@ -104,16 +104,11 @@ namespace Notan
         {
             Get(index, generation).OnDestroy(new(this, index, generation));
 
-            DestroyInternal(index);
-
             foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
             {
                 observer.Send(Id, MessageType.Destroy, index, generations[index], ref Unsafe.NullRef<T>());
             }
-        }
 
-        private void DestroyInternal(int index)
-        {
             entityIsDead[indexToEntity[index]] = true;
             generations[index]++;
             destroyedEntityIndices.Add(index);

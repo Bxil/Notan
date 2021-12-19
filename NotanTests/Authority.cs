@@ -40,50 +40,69 @@ namespace Notan.Testing
         [TestMethod]
         public void Updates()
         {
-            var system1 = new IncSystem { Storage = clientWorld1.GetStorage<ByteEntity>() };
-            var system2 = new IncSystem { Storage = clientWorld2.GetStorage<ByteEntity>() };
+            var storage1 = clientWorld1.GetStorage<ByteEntity>();
+            var storage2 = clientWorld2.GetStorage<ByteEntity>();
 
-            system1.Storage.RequestCreate(new ByteEntity { Value = 1 });
-            system2.Storage.RequestCreate(new ByteEntity { Value = 3 });
-
-            clientWorld1.Tick();
-            clientWorld2.Tick();
-
-            serverWorld.Tick();
-
-            clientWorld1.Tick();
-            clientWorld2.Tick();
-
-            system1.Storage.Run(ref system1);
-            system2.Storage.Run(ref system2);
+            storage1.RequestCreate(new ByteEntity { Value = 1 });
+            storage2.RequestCreate(new ByteEntity { Value = 3 });
 
             clientWorld1.Tick();
             clientWorld2.Tick();
 
             serverWorld.Tick();
 
-            var sumSystem = new SumSystem();
-            serverWorld.GetStorage<ByteEntity>().Run(ref sumSystem);
-            Assert.AreEqual(6, sumSystem.Sum);
+            clientWorld1.Tick();
+            clientWorld2.Tick();
+
+            storage1.Run(new IncSystem());
+            storage2.Run(new IncSystem());
+
+            clientWorld1.Tick();
+            clientWorld2.Tick();
+
+            serverWorld.Tick();
+
+            Assert.AreEqual(6, serverWorld.GetStorage<ByteEntity>().Run(new SumSystem()).Sum);
+
+            serverWorld.GetStorage<ByteEntity>().Run(new DestroySystem());
+
+            serverWorld.Tick();
+
+            clientWorld1.Tick();
+            clientWorld2.Tick();
+
+            Assert.AreEqual(0, storage1.Run(new SumSystem()).Sum);
+            Assert.AreEqual(0, storage2.Run(new SumSystem()).Sum);
         }
 
         struct IncSystem : IClientSystem<ByteEntity>
         {
-            public ClientStorage<ByteEntity> Storage;
-
             void IClientSystem<ByteEntity>.Work(ClientHandle<ByteEntity> handle, ref ByteEntity entity)
             {
                 handle.RequestUpdate(new ByteEntity { Value = (byte)(entity.Value + 1) });
             }
         }
 
-        struct SumSystem : IServerSystem<ByteEntity>
+        struct SumSystem : IServerSystem<ByteEntity>, IClientSystem<ByteEntity>
         {
             public int Sum;
 
             void IServerSystem<ByteEntity>.Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
             {
                 Sum += entity.Value;
+            }
+
+            void IClientSystem<ByteEntity>.Work(ClientHandle<ByteEntity> handle, ref ByteEntity entity)
+            {
+                Sum += entity.Value;
+            }
+        }
+
+        struct DestroySystem : IServerSystem<ByteEntity>
+        {
+            void IServerSystem<ByteEntity>.Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
+            {
+                handle.Destroy();
             }
         }
     }
