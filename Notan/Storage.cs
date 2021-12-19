@@ -112,14 +112,6 @@ namespace Notan
             }
         }
 
-        //Destroy an entity without notifying anyone and running its OnDestroy.
-        internal void Forget(int index, int generation)
-        {
-            Debug.Assert(Alive(index, generation));
-
-            DestroyInternal(index);
-        }
-
         private void DestroyInternal(int index)
         {
             entityIsDead[indexToEntity[index]] = true;
