@@ -5,7 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 
-namespace Notan.Testing
+namespace Notan.Tests
 {
     [TestClass]
     public class Serialization
@@ -31,7 +31,7 @@ namespace Notan.Testing
         {
             const string jsonsave = @"
 {
-    ""Notan.Testing.ByteEntity"": [
+    ""Notan.Tests.ByteEntity"": [
         {
             ""$gen"": 0,
             ""Value"": 2

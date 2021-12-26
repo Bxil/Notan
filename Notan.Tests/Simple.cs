@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Notan.Reflection;
 using System.Reflection;
 
-namespace Notan.Testing
+namespace Notan.Tests
 {
     [TestClass]
     public class Simple

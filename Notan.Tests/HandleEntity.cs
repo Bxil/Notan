@@ -2,10 +2,10 @@
 using Notan.Serialization;
 using System;
 
-namespace Notan.Testing
+namespace Notan.Tests
 {
     [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
-    struct HandleEntity : IEntity<HandleEntity>
+    partial struct HandleEntity : IEntity<HandleEntity>
     {
         public Handle Value;
 

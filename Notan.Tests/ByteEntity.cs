@@ -2,10 +2,10 @@
 using Notan.Serialization;
 using System;
 
-namespace Notan.Testing
+namespace Notan.Tests
 {
     [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
-    struct ByteEntity : IEntity<ByteEntity>
+    partial struct ByteEntity : IEntity<ByteEntity>
     {
         public byte Value;
 
