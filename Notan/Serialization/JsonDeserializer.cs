@@ -45,7 +45,7 @@ namespace Notan.Serialization
             var reader = stream.Read(false);
             if (reader.TokenType == JsonTokenType.EndArray)
             {
-                stream.Read();
+                _ = stream.Read();
                 return false;
             }
             return true;
@@ -53,11 +53,7 @@ namespace Notan.Serialization
 
         public JsonDeserializer ArrayNext()
         {
-            if (ArrayTryNext())
-            {
-                return this;
-            }
-            throw new IOException("Array has no more elements.");
+            return ArrayTryNext() ? this : throw new IOException("Array has no more elements.");
         }
 
         public void ObjectBegin()
@@ -82,11 +78,7 @@ namespace Notan.Serialization
 
         public JsonDeserializer ObjectNext(out Key key)
         {
-            if (ObjectTryNext(out key))
-            {
-                return this;
-            }
-            throw new IOException("Array has no more elements.");
+            return ObjectTryNext(out key) ? this : throw new IOException("Array has no more elements.");
         }
     }
 

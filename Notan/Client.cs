@@ -66,7 +66,7 @@ namespace Notan
         internal void Send<T>(int storageid, MessageType type, int index, int generation, ref T entity) where T : struct, IEntity<T>
         {
             //Leave space for the length prefix
-            int prefixPosition = (int)outgoing.Position;
+            var prefixPosition = (int)outgoing.Position;
             outgoing.Position += sizeof(int);
 
             writer.Write(storageid);
@@ -87,7 +87,7 @@ namespace Notan
                     break;
             }
 
-            int endPosition = (int)outgoing.Position;
+            var endPosition = (int)outgoing.Position;
             outgoing.Position = prefixPosition;
             writer.Write(endPosition - prefixPosition - sizeof(int));
             outgoing.Position = endPosition;
@@ -113,7 +113,7 @@ namespace Notan
         {
             LastCommunicated = DateTimeOffset.Now;
 
-            int storageid = reader.ReadInt32();
+            var storageid = reader.ReadInt32();
             type = (MessageType)reader.ReadByte();
             index = reader.ReadInt32();
             generation = reader.ReadInt32();

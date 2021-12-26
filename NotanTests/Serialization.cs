@@ -23,7 +23,7 @@ namespace Notan.Testing
         public void End()
         {
             world.Exit();
-            world.Tick();
+            _ = world.Tick();
         }
 
         [TestMethod]
@@ -75,20 +75,20 @@ namespace Notan.Testing
                 world.Serialize(new Notan.Serialization.JsonSerializer(writer));
             }
             mem.Position = 0;
-            new StreamReader(mem).ReadToEnd();
+            _ = new StreamReader(mem).ReadToEnd();
             //TODO
         }
 
         [TestMethod]
         public void LargeJson()
         {
-            for (int i = 0; i < 1000; i++)
+            for (var i = 0; i < 1000; i++)
             {
-                world.GetStorage<ByteEntity>().Create(new ByteEntity { Value = (byte)(i % 100) });
+                _ = world.GetStorage<ByteEntity>().Create(new ByteEntity { Value = (byte)(i % 100) });
             }
-            for (int i = 0; i < 100; i++)
+            for (var i = 0; i < 100; i++)
             {
-                world.GetStorage<HandleEntity>().Create(new HandleEntity { Value = new() });
+                _ = world.GetStorage<HandleEntity>().Create(new HandleEntity { Value = new() });
             }
             var mem = new MemoryStream();
             using (var writer = new Utf8JsonWriter(mem))

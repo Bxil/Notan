@@ -17,8 +17,8 @@ namespace Notan.Testing
 
         private int SumBytes()
         {
-            int sum = 0;
-            for (int i = 0; i < bytehandles.Length; i++)
+            var sum = 0;
+            for (var i = 0; i < bytehandles.Length; i++)
             {
                 var strong = bytehandles[i].Server<ByteEntity>();
                 if (strong.Alive())
@@ -48,7 +48,7 @@ namespace Notan.Testing
         public void End()
         {
             world.Exit();
-            world.Tick();
+            _ = world.Tick();
         }
 
         [TestMethod]
@@ -63,7 +63,7 @@ namespace Notan.Testing
         {
             const int delindex = 50;
 
-            int sumBeforeDelete = SumBytes();
+            var sumBeforeDelete = SumBytes();
 
             Assert.IsTrue(bytehandles[delindex].Server<ByteEntity>().Alive());
 
@@ -84,7 +84,7 @@ namespace Notan.Testing
         [TestMethod]
         public void DestroyMany()
         {
-            for (int i = 0; i < bytehandles.Length; i++)
+            for (var i = 0; i < bytehandles.Length; i++)
             {
                 if (i % 2 == 1)
                 {
@@ -95,14 +95,14 @@ namespace Notan.Testing
             bytestorage.Run(ref system);
             Assert.AreEqual(bytehandles.Length / 2 + 1, system.Count);
 
-            world.Tick();
+            _ = world.Tick();
 
             for (byte i = 0; i < bytehandles.Length / 2; i++)
             {
                 bytehandles[i * 2 + 1] = bytestorage.Create(new ByteEntity { Value = i });
             }
 
-            for (int i = 0; i < bytehandles.Length; i++)
+            for (var i = 0; i < bytehandles.Length; i++)
             {
                 var bytehandle = bytehandles[i].Server<ByteEntity>();
                 if (i % 2 == 1)
@@ -115,8 +115,8 @@ namespace Notan.Testing
                 }
             }
 
-            int expected = 0;
-            for (int i = 0; i < bytehandles.Length; i++)
+            var expected = 0;
+            for (var i = 0; i < bytehandles.Length; i++)
             {
                 if (i % 2 == 1)
                 {

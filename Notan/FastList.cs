@@ -43,7 +43,7 @@ namespace Notan
 
         public void Clear()
         {
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
                 this[i] = default!;
             }

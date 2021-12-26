@@ -52,7 +52,7 @@ namespace Notan
 
         public override void AddStorage<T>(StorageOptionsAttribute? options = default)
         {
-            Storage newstorage = new ServerStorage<T>(IdToStorage.Count, options);
+            var newstorage = new ServerStorage<T>(IdToStorage.Count, options);
             TypeNameToStorage.Add(typeof(T).ToString(), newstorage);
             IdToStorage.Add(newstorage);
         }
@@ -77,7 +77,7 @@ namespace Notan
 
             while (listener.Pending())
             {
-                if (!clientIds.TryPop(out int id))
+                if (!clientIds.TryPop(out var id))
                 {
                     id = nextClientId;
                     nextClientId++;
@@ -85,7 +85,7 @@ namespace Notan
                 clients.Add(new(this, listener.AcceptTcpClient(), id));
             }
 
-            int i = clients.Count;
+            var i = clients.Count;
             while (i > 0)
             {
                 i--;
@@ -93,10 +93,10 @@ namespace Notan
                 try
                 {
                     const int messageReadMaximum = 10;
-                    int messagesRead = 0;
+                    var messagesRead = 0;
                     while (messagesRead < messageReadMaximum && client.CanRead())
                     {
-                        int id = client.ReadHeader(out var type, out var index, out var generation);
+                        var id = client.ReadHeader(out var type, out var index, out var generation);
                         if (id < 0 || id >= IdToStorage.Count)
                         {
                             throw new IOException();
@@ -134,7 +134,7 @@ namespace Notan
         {
             clientIds.Push(client.Id);
             client.Disconnect();
-            clients.Remove(client);
+            _ = clients.Remove(client);
         }
 
         public void Serialize<T>(T serializer) where T : ISerializer<T>
@@ -210,7 +210,7 @@ namespace Notan
             server.Flush(); //TODO: make this not crash the client
             while (server.CanRead())
             {
-                IdToStorage[server.ReadHeader(out var type, out int index, out var generation)].HandleMessage(server, type, index, generation);
+                IdToStorage[server.ReadHeader(out var type, out var index, out var generation)].HandleMessage(server, type, index, generation);
             }
 
             return true;

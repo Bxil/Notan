@@ -22,7 +22,7 @@ namespace Notan.Serialization
                 return false;
             }
 
-            for (int i = 0; i < left.utf8.Length; i++)
+            for (var i = 0; i < left.utf8.Length; i++)
             {
                 if (left.utf8[i] != right[i])
                 {

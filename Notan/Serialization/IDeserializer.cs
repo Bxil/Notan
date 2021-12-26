@@ -30,7 +30,7 @@
         {
             deserializer.ArrayBegin();
             var handle = new Handle(deserializer.World.GetStorageBase<TEntity>(), deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
-            deserializer.ArrayTryNext(); //consume the end marker
+            _ = deserializer.ArrayTryNext(); //consume the end marker
             return handle;
         }
     }

@@ -23,18 +23,18 @@ namespace Notan.Testing
             clientWorld2 = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).AsTask().Result;
             clientWorld2.AddStorages(Assembly.GetExecutingAssembly());
 
-            serverWorld.Tick();
+            _ = serverWorld.Tick();
         }
 
         [TestCleanup]
         public void End()
         {
             serverWorld.Exit();
-            serverWorld.Tick();
+            _ = serverWorld.Tick();
             clientWorld1.Exit();
-            clientWorld1.Tick();
+            _ = clientWorld1.Tick();
             clientWorld2.Exit();
-            clientWorld2.Tick();
+            _ = clientWorld2.Tick();
         }
 
         [TestMethod]
@@ -46,30 +46,30 @@ namespace Notan.Testing
             storage1.RequestCreate(new ByteEntity { Value = 1 });
             storage2.RequestCreate(new ByteEntity { Value = 3 });
 
-            clientWorld1.Tick();
-            clientWorld2.Tick();
+            _ = clientWorld1.Tick();
+            _ = clientWorld2.Tick();
 
-            serverWorld.Tick();
+            _ = serverWorld.Tick();
 
-            clientWorld1.Tick();
-            clientWorld2.Tick();
+            _ = clientWorld1.Tick();
+            _ = clientWorld2.Tick();
 
-            storage1.Run(new IncSystem());
-            storage2.Run(new IncSystem());
+            _ = storage1.Run(new IncSystem());
+            _ = storage2.Run(new IncSystem());
 
-            clientWorld1.Tick();
-            clientWorld2.Tick();
+            _ = clientWorld1.Tick();
+            _ = clientWorld2.Tick();
 
-            serverWorld.Tick();
+            _ = serverWorld.Tick();
 
             Assert.AreEqual(6, serverWorld.GetStorage<ByteEntity>().Run(new SumSystem()).Sum);
 
-            serverWorld.GetStorage<ByteEntity>().Run(new DestroySystem());
+            _ = serverWorld.GetStorage<ByteEntity>().Run(new DestroySystem());
 
-            serverWorld.Tick();
+            _ = serverWorld.Tick();
 
-            clientWorld1.Tick();
-            clientWorld2.Tick();
+            _ = clientWorld1.Tick();
+            _ = clientWorld2.Tick();
 
             Assert.AreEqual(0, storage1.Run(new SumSystem()).Sum);
             Assert.AreEqual(0, storage2.Run(new SumSystem()).Sum);

@@ -40,11 +40,7 @@ namespace Notan.Serialization
 
         public BinaryDeserializer ArrayNext()
         {
-            if (ArrayTryNext())
-            {
-                return this;
-            }
-            throw new IOException("Array has no more elements.");
+            return ArrayTryNext() ? this : throw new IOException("Array has no more elements.");
         }
 
         public void ObjectBegin() { }
@@ -57,23 +53,19 @@ namespace Notan.Serialization
                 return false;
             }
             //TODO: support more than ASCII
-            int keylength = reader.Read7BitEncodedInt();
+            var keylength = reader.Read7BitEncodedInt();
             if (keylength > buffer.Length)
             {
                 Array.Resize(ref buffer, keylength);
             }
-            reader.Read(buffer.AsSpan(0, keylength));
+            _ = reader.Read(buffer.AsSpan(0, keylength));
             key = new(buffer.AsSpan(0, keylength));
             return true;
         }
 
         public BinaryDeserializer ObjectNext(out Key key)
         {
-            if (ObjectTryNext(out key))
-            {
-                return this;
-            }
-            throw new IOException("Array has no more elements.");
+            return ObjectTryNext(out key) ? this : throw new IOException("Array has no more elements.");
         }
     }
 }

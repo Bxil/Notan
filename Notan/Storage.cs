@@ -73,7 +73,7 @@ namespace Notan
 
         public ServerHandle<T> Create(T entity)
         {
-            int entind = entities.Count;
+            var entind = entities.Count;
             entityToObservers.Add(new());
             entityToAuthority.Add(null);
             entityIsDead.Add(false);
@@ -150,7 +150,7 @@ namespace Notan
             ref var entity = ref Get(index, generation);
             ref var list = ref entityToObservers[indexToEntity[index]];
             var span = list.AsSpan();
-            int i = span.Length;
+            var i = span.Length;
             while (i > 0)
             {
                 i--;
@@ -170,7 +170,7 @@ namespace Notan
         {
             Debug.Assert(Alive(index, generation));
             ref var list = ref entityToObservers[indexToEntity[index]];
-            int i = list.Count;
+            var i = list.Count;
             while (i > 0)
             {
                 i--;
@@ -203,7 +203,7 @@ namespace Notan
 
         public void Run<TSystem>(ref TSystem system) where TSystem : IServerSystem<T>
         {
-            int i = entities.Count;
+            var i = entities.Count;
             while (i > 0)
             {
                 i--;
@@ -224,7 +224,7 @@ namespace Notan
         internal override void Serialize<TSer>(TSer serializer)
         {
             serializer.ArrayBegin();
-            int i = 0;
+            var i = 0;
             foreach (var index in indexToEntity.AsSpan())
             {
                 serializer.ArrayNext().ObjectBegin();
@@ -257,14 +257,14 @@ namespace Notan
             generations.Clear();
 
             deserializer.ArrayBegin();
-            int i = 0;
+            var i = 0;
             while (deserializer.ArrayTryNext())
             {
                 deserializer.ObjectBegin();
 
-                bool dead = false;
+                var dead = false;
                 T t = default;
-                int gen = -1;
+                var gen = -1;
                 while (deserializer.ObjectTryNext(out var key))
                 {
                     if (key == "$gen")
@@ -273,7 +273,7 @@ namespace Notan
                     }
                     else if (key == "$dead")
                     {
-                        deserializer.GetBool();
+                        _ = deserializer.GetBool();
                         dead = true;
                     }
                     else
@@ -304,7 +304,7 @@ namespace Notan
 
         internal override void LateDeserialize()
         {
-            int i = 0;
+            var i = 0;
             foreach (ref var entity in entities.AsSpan())
             {
                 entity.LateDeserialize(new(this, entityToIndex[i], generations[entityToIndex[i]]));
@@ -409,7 +409,7 @@ namespace Notan
             {
                 case MessageType.Create:
                     {
-                        int entid = entityToIndex.Count;
+                        var entid = entityToIndex.Count;
                         entityToIndex.Add(index);
                         T entity = default;
                         client.ReadIntoEntity(ref entity);
@@ -453,7 +453,7 @@ namespace Notan
 
         public void Run<TSystem>(ref TSystem system) where TSystem : IClientSystem<T>
         {
-            int i = entities.Count;
+            var i = entities.Count;
             while (i > 0)
             {
                 i--;

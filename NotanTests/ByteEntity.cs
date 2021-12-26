@@ -11,14 +11,7 @@ namespace Notan.Testing
 
         void IEntity<ByteEntity>.Deserialize<T>(Key key, T entry)
         {
-            if (key == nameof(Value))
-            {
-                Value = entry.GetByte();
-            }
-            else
-            {
-                throw new Exception();
-            }
+            Value = key == nameof(Value) ? entry.GetByte() : throw new Exception();
         }
 
         void IEntity<ByteEntity>.Serialize<T>(T serializer)
