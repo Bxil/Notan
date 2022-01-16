@@ -1,9 +1,8 @@
-﻿namespace Notan
+﻿namespace Notan;
+
+internal enum MessageType : byte
 {
-    internal enum MessageType : byte
-    {
-        Create,
-        Update,
-        Destroy,
-    }
+    Create,
+    Update,
+    Destroy,
 }

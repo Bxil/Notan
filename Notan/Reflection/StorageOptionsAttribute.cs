@@ -1,11 +1,10 @@
 ﻿using System;
 
-namespace Notan.Reflection
+namespace Notan.Reflection;
+
+[AttributeUsage(AttributeTargets.Struct)]
+public sealed class StorageOptionsAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.Struct)]
-    public sealed class StorageOptionsAttribute : Attribute
-    {
-        public ClientAuthority ClientAuthority;
-        public bool NoPersistence;
-    }
+    public ClientAuthority ClientAuthority;
+    public bool NoPersistence;
 }
