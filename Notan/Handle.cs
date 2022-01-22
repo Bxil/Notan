@@ -25,10 +25,32 @@ public readonly struct Handle : IEquatable<Handle>
         return new(Unsafe.As<ServerStorage<T>>(Storage), Index, Generation);
     }
 
+    public bool TryServer<T>(out ServerHandle<T> handle) where T : struct, IEntity<T>
+    {
+        if (Storage is ServerStorage<T> storage)
+        {
+            handle = new(storage, Index, Generation);
+            return true;
+        }
+        handle = default;
+        return false;
+    }
+
     public ClientHandle<T> Client<T>() where T : struct, IEntity<T>
     {
         Debug.Assert(Storage is ClientStorage<T>);
         return new(Unsafe.As<ClientStorage<T>>(Storage), Index, Generation);
+    }
+
+    public bool TryClient<T>(out ClientHandle<T> handle) where T : struct, IEntity<T>
+    {
+        if (Storage is ClientStorage<T> storage)
+        {
+            handle = new(storage, Index, Generation);
+            return true;
+        }
+        handle = default;
+        return false;
     }
 
     public static bool operator ==(Handle a, Handle b)
