@@ -1,4 +1,7 @@
-﻿namespace Notan.Serialization;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+
+namespace Notan.Serialization;
 
 public interface IDeserializer<T> where T : IDeserializer<T>
 {
@@ -24,13 +27,25 @@ public interface IDeserializer<T> where T : IDeserializer<T>
 
 public static class DeserializerExtensions
 {
-    public static Handle GetHandle<T, TEntity>(this T deserializer)
+    public static HandleDeserializer<T> GetHandle<T>(this T deserializer)
         where T : IDeserializer<T>
-        where TEntity : struct, IEntity<TEntity>
+        => new(deserializer);
+
+    public struct HandleDeserializer<T> where T : IDeserializer<T>
     {
-        deserializer.ArrayBegin();
-        var handle = new Handle(deserializer.World.GetStorageBase<TEntity>(), deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
-        _ = deserializer.ArrayTryNext(); //consume the end marker
-        return handle;
+        [SuppressMessage("Style", "IDE0044:Add readonly modifier")]
+        private T deserializer;
+
+        internal HandleDeserializer(T deserializer) => this.deserializer = deserializer;
+
+        public Handle As<TEntity>() where TEntity : struct, IEntity<TEntity> => As(typeof(TEntity));
+
+        public Handle As(Type type)
+        {
+            deserializer.ArrayBegin();
+            var handle = new Handle(deserializer.World.GetStorageBase(type), deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
+            _ = deserializer.ArrayTryNext(); //consume the end marker
+            return handle;
+        }
     }
 }

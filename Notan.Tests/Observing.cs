@@ -16,7 +16,7 @@ public class Observing
         serverWorld = new ServerWorld(0);
         serverWorld.AddStorages(Assembly.GetExecutingAssembly());
 
-        clientWorld = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).AsTask().Result;
+        clientWorld = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).Result;
         clientWorld.AddStorages(Assembly.GetExecutingAssembly());
 
         _ = serverWorld.Tick();

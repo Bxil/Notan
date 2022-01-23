@@ -22,9 +22,14 @@ public abstract class World
         EndPoint = null!;
     }
 
-    internal Storage<T> GetStorageBase<T>() where T : struct, IEntity<T>
+    private protected Storage<T> GetStorageBase<T>() where T : struct, IEntity<T>
     {
         return Unsafe.As<Storage<T>>(TypeNameToStorage[typeof(T).ToString()]);
+    }
+
+    internal Storage GetStorageBase(Type type)
+    {
+        return TypeNameToStorage[type.ToString()];
     }
 
     private protected volatile bool exit = false;
@@ -175,7 +180,7 @@ public sealed class ClientWorld : World
         EndPoint = (IPEndPoint)server.Client.LocalEndPoint!;
     }
 
-    public static async ValueTask<ClientWorld> StartAsync(string host, int port)
+    public static async Task<ClientWorld> StartAsync(string host, int port)
     {
         var client = new TcpClient();
         await client.ConnectAsync(host, port);
