@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Notan.Serialization;
 
-public struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
+public class BinaryDeserializer : IDeserializer<BinaryDeserializer>
 {
     public World World { get; }
 

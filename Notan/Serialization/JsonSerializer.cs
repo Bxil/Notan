@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Notan.Serialization;
 
-public struct JsonSerializer : ISerializer<JsonSerializer>
+public class JsonSerializer : ISerializer<JsonSerializer>
 {
     private readonly Utf8JsonWriter writer;
 

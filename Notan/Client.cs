@@ -18,6 +18,9 @@ public class Client
     private readonly BinaryWriter writer;
     private readonly BinaryReader reader;
 
+    private readonly BinaryDeserializer deserializer;
+    private readonly BinarySerializer serializer;
+
     private static readonly Encoding encoding = new UTF8Encoding(false);
 
     public int Id { get; }
@@ -44,6 +47,9 @@ public class Client
 
         writer = new BinaryWriter(outgoing, encoding);
         reader = new BinaryReader(stream, encoding);
+
+        deserializer = new(world, reader);
+        serializer = new(writer);
 
         lengthPrefix = 0;
     }
@@ -78,10 +84,9 @@ public class Client
         {
             case MessageType.Create:
             case MessageType.Update:
-                var ser = new BinarySerializer(writer);
-                ser.ObjectBegin();
-                entity.Serialize(ser);
-                ser.ObjectEnd();
+                serializer.ObjectBegin();
+                entity.Serialize(serializer);
+                serializer.ObjectEnd();
                 break;
             case MessageType.Destroy:
                 break;
@@ -124,11 +129,10 @@ public class Client
 
     internal void ReadIntoEntity<T>(ref T entity) where T : struct, IEntity<T>
     {
-        var deser = new BinaryDeserializer(world, reader);
-        deser.ObjectBegin();
-        while (deser.ObjectTryNext(out var key))
+        deserializer.ObjectBegin();
+        while (deserializer.ObjectTryNext(out var key))
         {
-            entity.Deserialize(key, deser);
+            entity.Deserialize(key, deserializer);
         }
     }
 }

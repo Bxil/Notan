@@ -4,86 +4,10 @@ using System.Text.Json;
 
 namespace Notan.Serialization;
 
-public struct JsonDeserializer : IDeserializer<JsonDeserializer>
+public class JsonDeserializer : IDeserializer<JsonDeserializer>
 {
     public World World { get; }
 
-    private readonly JsonStream stream;
-
-    public JsonDeserializer(World world, Stream stream)
-    {
-        World = world;
-        this.stream = new(stream);
-    }
-
-    public bool GetBool() => stream.Read().GetBoolean();
-
-    public byte GetByte() => stream.Read().GetByte();
-
-    public double GetDouble() => stream.Read().GetDouble();
-
-    public short GetInt16() => stream.Read().GetInt16();
-
-    public int GetInt32() => stream.Read().GetInt32();
-
-    public long GetInt64() => stream.Read().GetInt64();
-
-    public float GetSingle() => stream.Read().GetSingle();
-
-    public string GetString() => stream.Read().GetString()!;
-
-    public void ArrayBegin()
-    {
-        if (stream.Read().TokenType != JsonTokenType.StartArray)
-        {
-            throw new Exception("Excepted array start.");
-        }
-    }
-
-    public bool ArrayTryNext()
-    {
-        var reader = stream.Read(false);
-        if (reader.TokenType == JsonTokenType.EndArray)
-        {
-            _ = stream.Read();
-            return false;
-        }
-        return true;
-    }
-
-    public JsonDeserializer ArrayNext()
-    {
-        return ArrayTryNext() ? this : throw new IOException("Array has no more elements.");
-    }
-
-    public void ObjectBegin()
-    {
-        if (stream.Read().TokenType != JsonTokenType.StartObject)
-        {
-            throw new Exception("Excepted object start.");
-        }
-    }
-
-    public bool ObjectTryNext(out Key key)
-    {
-        var reader = stream.Read();
-        if (reader.TokenType == JsonTokenType.EndObject)
-        {
-            key = default;
-            return false;
-        }
-        key = new(stream.Span((int)reader.TokenStartIndex + 1, (int)(reader.BytesConsumed - reader.TokenStartIndex - 3)));
-        return true;
-    }
-
-    public JsonDeserializer ObjectNext(out Key key)
-    {
-        return ObjectTryNext(out key) ? this : throw new IOException("Array has no more elements.");
-    }
-}
-
-internal class JsonStream
-{
     private readonly Stream stream;
     private byte[] buffer = new byte[Environment.SystemPageSize];
     private int len = 0;
@@ -92,13 +16,14 @@ internal class JsonStream
 
     private JsonReaderState state = new();
 
-    public JsonStream(Stream stream)
+    public JsonDeserializer(World world, Stream stream)
     {
+        World = world;
         this.stream = stream;
     }
 
     //After this call get a token, and do nothing else with the reader
-    public Utf8JsonReader Read(bool consume = true)
+    private Utf8JsonReader Read(bool consume = true)
     {
         buffer.AsSpan(this.consume, len - this.consume).CopyTo(buffer);
         len -= this.consume;
@@ -118,5 +43,68 @@ internal class JsonStream
         return reader;
     }
 
-    public Span<byte> Span(int from, int length) => buffer.AsSpan(from, length);
+    public bool GetBool() => Read().GetBoolean();
+
+    public byte GetByte() => Read().GetByte();
+
+    public double GetDouble() => Read().GetDouble();
+
+    public short GetInt16() => Read().GetInt16();
+
+    public int GetInt32() => Read().GetInt32();
+
+    public long GetInt64() => Read().GetInt64();
+
+    public float GetSingle() => Read().GetSingle();
+
+    public string GetString() => Read().GetString()!;
+
+    public void ArrayBegin()
+    {
+        if (Read().TokenType != JsonTokenType.StartArray)
+        {
+            throw new Exception("Excepted array start.");
+        }
+    }
+
+    public bool ArrayTryNext()
+    {
+        var reader = Read(false);
+        if (reader.TokenType == JsonTokenType.EndArray)
+        {
+            _ = Read();
+            return false;
+        }
+        return true;
+    }
+
+    public JsonDeserializer ArrayNext()
+    {
+        return ArrayTryNext() ? this : throw new IOException("Array has no more elements.");
+    }
+
+    public void ObjectBegin()
+    {
+        if (Read().TokenType != JsonTokenType.StartObject)
+        {
+            throw new Exception("Excepted object start.");
+        }
+    }
+
+    public bool ObjectTryNext(out Key key)
+    {
+        var reader = Read();
+        if (reader.TokenType == JsonTokenType.EndObject)
+        {
+            key = default;
+            return false;
+        }
+        key = new(buffer.AsSpan((int)reader.TokenStartIndex + 1, (int)(reader.BytesConsumed - reader.TokenStartIndex - 3)));
+        return true;
+    }
+
+    public JsonDeserializer ObjectNext(out Key key)
+    {
+        return ObjectTryNext(out key) ? this : throw new IOException("Array has no more elements.");
+    }
 }

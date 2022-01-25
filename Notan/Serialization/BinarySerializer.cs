@@ -2,7 +2,7 @@
 
 namespace Notan.Serialization;
 
-public struct BinarySerializer : ISerializer<BinarySerializer>
+public class BinarySerializer : ISerializer<BinarySerializer>
 {
     private readonly BinaryWriter writer;
 
