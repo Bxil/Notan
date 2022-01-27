@@ -212,7 +212,15 @@ public sealed class ClientWorld : World
             return false;
         }
 
-        server.Flush(); //TODO: make this not crash the client
+        try
+        {
+            server.Flush();
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+
         while (server.CanRead())
         {
             IdToStorage[server.ReadHeader(out var type, out var index, out var generation)].HandleMessage(server, type, index, generation);
