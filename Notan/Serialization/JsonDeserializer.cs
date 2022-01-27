@@ -5,64 +5,37 @@ using System.Text.Json;
 
 namespace Notan.Serialization;
 
-public sealed class JsonDeserializer : IDeserializer<JsonDeserializer>
+public struct JsonDeserializer : IDeserializer<JsonDeserializer>
 {
     public World World { get; }
 
-    private readonly Stream stream;
-    private byte[] buffer = new byte[Environment.SystemPageSize];
-    private int len = 0;
-
-    private int consume = 0;
-
-    private JsonReaderState state = new();
+    private readonly JsonStream stream;
 
     public JsonDeserializer(World world, Stream stream)
     {
         World = world;
-        this.stream = stream;
+        this.stream = new(stream);
     }
 
-    //After this call get a token, and do nothing else with the reader
-    private Utf8JsonReader Read(bool consume = true)
-    {
-        buffer.AsSpan(this.consume, len - this.consume).CopyTo(buffer);
-        len -= this.consume;
+    public bool GetBool() => stream.Read().GetBoolean();
 
-        var reader = new Utf8JsonReader(buffer.AsSpan(0, len), false, state);
-        while (!reader.Read())
-        {
-            if (len == buffer.Length)
-            {
-                Array.Resize(ref buffer, buffer.Length * 2);
-            }
-            len += stream.Read(buffer, len, buffer.Length - len);
-            reader = new(buffer, false, reader.CurrentState);
-        }
-        this.consume = consume ? (int)reader.BytesConsumed : 0;
-        state = consume ? reader.CurrentState : state;
-        return reader;
-    }
+    public byte GetByte() => stream.Read().GetByte();
 
-    public bool GetBool() => Read().GetBoolean();
+    public double GetDouble() => stream.Read().GetDouble();
 
-    public byte GetByte() => Read().GetByte();
+    public short GetInt16() => stream.Read().GetInt16();
 
-    public double GetDouble() => Read().GetDouble();
+    public int GetInt32() => stream.Read().GetInt32();
 
-    public short GetInt16() => Read().GetInt16();
+    public long GetInt64() => stream.Read().GetInt64();
 
-    public int GetInt32() => Read().GetInt32();
+    public float GetSingle() => stream.Read().GetSingle();
 
-    public long GetInt64() => Read().GetInt64();
-
-    public float GetSingle() => Read().GetSingle();
-
-    public string GetString() => Read().GetString()!;
+    public string GetString() => stream.Read().GetString()!;
 
     public void ArrayBegin()
     {
-        if (Read().TokenType != JsonTokenType.StartArray)
+        if (stream.Read().TokenType != JsonTokenType.StartArray)
         {
             throw new Exception("Excepted array start.");
         }
@@ -70,10 +43,10 @@ public sealed class JsonDeserializer : IDeserializer<JsonDeserializer>
 
     public bool ArrayTryNext()
     {
-        var reader = Read(false);
+        var reader = stream.Read(false);
         if (reader.TokenType == JsonTokenType.EndArray)
         {
-            _ = Read();
+            _ = stream.Read();
             return false;
         }
         return true;
@@ -86,7 +59,7 @@ public sealed class JsonDeserializer : IDeserializer<JsonDeserializer>
 
     public void ObjectBegin()
     {
-        if (Read().TokenType != JsonTokenType.StartObject)
+        if (stream.Read().TokenType != JsonTokenType.StartObject)
         {
             throw new Exception("Excepted object start.");
         }
@@ -94,13 +67,13 @@ public sealed class JsonDeserializer : IDeserializer<JsonDeserializer>
 
     public bool ObjectTryNext(out Key key)
     {
-        var reader = Read();
+        var reader = stream.Read();
         if (reader.TokenType == JsonTokenType.EndObject)
         {
             key = default;
             return false;
         }
-        key = new(Encoding.UTF8, buffer.AsSpan((int)reader.TokenStartIndex + 1, (int)(reader.BytesConsumed - reader.TokenStartIndex - 3)));
+        key = new(Encoding.UTF8, stream.Span((int)reader.TokenStartIndex + 1, (int)(reader.BytesConsumed - reader.TokenStartIndex - 3)));
         return true;
     }
 
@@ -108,4 +81,44 @@ public sealed class JsonDeserializer : IDeserializer<JsonDeserializer>
     {
         return ObjectTryNext(out key) ? this : throw new IOException("Array has no more elements.");
     }
+
+    private class JsonStream
+    {
+        private readonly Stream stream;
+        private byte[] buffer = new byte[Environment.SystemPageSize];
+        private int len = 0;
+
+        private int consume = 0;
+
+        private JsonReaderState state = new();
+
+        public JsonStream(Stream stream)
+        {
+            this.stream = stream;
+        }
+
+        //After this call get a token, and do nothing else with the reader
+        public Utf8JsonReader Read(bool consume = true)
+        {
+            buffer.AsSpan(this.consume, len - this.consume).CopyTo(buffer);
+            len -= this.consume;
+
+            var reader = new Utf8JsonReader(buffer.AsSpan(0, len), false, state);
+            while (!reader.Read())
+            {
+                if (len == buffer.Length)
+                {
+                    Array.Resize(ref buffer, buffer.Length * 2);
+                }
+                len += stream.Read(buffer, len, buffer.Length - len);
+                reader = new(buffer, false, reader.CurrentState);
+            }
+            this.consume = consume ? (int)reader.BytesConsumed : 0;
+            state = consume ? reader.CurrentState : state;
+            return reader;
+        }
+
+        public Span<byte> Span(int from, int length) => buffer.AsSpan(from, length);
+    }
+
 }

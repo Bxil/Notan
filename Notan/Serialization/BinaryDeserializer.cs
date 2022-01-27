@@ -1,17 +1,18 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Notan.Serialization;
 
-public sealed class BinaryDeserializer : IDeserializer<BinaryDeserializer>
+public struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
 {
     public World World { get; }
 
     private readonly BinaryReader reader;
     private readonly Encoding encoding;
 
-    private byte[] buffer = new byte[64];
+    private readonly StrongBox<byte[]> buffer = new(new byte[64]);
 
     public BinaryDeserializer(World world, Stream stream, Encoding encoding)
     {
@@ -55,12 +56,12 @@ public sealed class BinaryDeserializer : IDeserializer<BinaryDeserializer>
             return false;
         }
         var keylength = reader.Read7BitEncodedInt();
-        if (keylength > buffer.Length)
+        if (keylength > buffer.Value!.Length)
         {
-            Array.Resize(ref buffer, keylength);
+            Array.Resize(ref buffer.Value, keylength);
         }
-        _ = reader.Read(buffer.AsSpan(0, keylength));
-        key = new(encoding, buffer.AsSpan(0, keylength));
+        _ = reader.Read(buffer.Value.AsSpan(0, keylength));
+        key = new(encoding, buffer.Value.AsSpan(0, keylength));
         return true;
     }
 

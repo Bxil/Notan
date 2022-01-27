@@ -18,7 +18,7 @@ public class Client
     private readonly BinarySerializer serializer;
     private readonly BinaryDeserializer deserializer;
 
-    private static readonly Encoding encoding = new UTF8Encoding(false);
+    private static readonly UTF8Encoding encoding = new(false);
 
     public int Id { get; }
     public bool Authenticated { get; set; } = false;

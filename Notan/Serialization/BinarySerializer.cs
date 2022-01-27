@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Notan.Serialization;
 
-public sealed class BinarySerializer : ISerializer<BinarySerializer>
+public struct BinarySerializer : ISerializer<BinarySerializer>
 {
     private readonly BinaryWriter writer;
 
