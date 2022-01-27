@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Text;
 
 namespace Notan.Serialization;
@@ -15,18 +16,26 @@ public readonly ref struct Key
 
     public static bool operator ==(Key left, string right)
     {
-        //TODO: Implement for more than just ascii
-        if (left.utf8.Length != right.Length)
+        int i = 0;
+        int bytecount = 0;
+        while (i < right.Length && Rune.DecodeFromUtf8(left.utf8[bytecount..], out var rune, out var bytes) == OperationStatus.Done)
         {
-            return false;
-        }
+            int charsread = 1;
+            if (!Rune.TryCreate(right[i], out var rrune))
+            {
+                if (!Rune.TryCreate(right[i], right[i + 1], out rrune))
+                {
+                    return false;
+                }
+                charsread = 2;
+            }
 
-        for (var i = 0; i < left.utf8.Length; i++)
-        {
-            if (left.utf8[i] != right[i])
+            if (rune != rrune)
             {
                 return false;
             }
+            bytecount += bytes;
+            i += charsread;
         }
         return true;
     }
