@@ -15,8 +15,8 @@ public class Client
     private readonly BinaryWriter writer;
     private readonly BinaryReader reader;
 
-    private readonly BinaryDeserializer deserializer;
     private readonly BinarySerializer serializer;
+    private readonly BinaryDeserializer deserializer;
 
     private static readonly Encoding encoding = new UTF8Encoding(false);
 
@@ -41,11 +41,11 @@ public class Client
         stream = tcpClient.GetStream();
         tcpClient.Client.Blocking = false; //Blocking cannot be false before the acquisiton of a stream.
 
-        writer = new BinaryWriter(outgoing, encoding);
-        reader = new BinaryReader(stream, encoding);
+        writer = new BinaryWriter(outgoing, encoding, true);
+        reader = new BinaryReader(stream, encoding, true);
 
-        deserializer = new(world, reader);
-        serializer = new(writer);
+        serializer = new(outgoing, encoding);
+        deserializer = new(world, stream, encoding);
 
         lengthPrefix = 0;
     }

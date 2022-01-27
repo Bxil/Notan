@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Text.Json;
 
 namespace Notan.Serialization;
 
-public class JsonDeserializer : IDeserializer<JsonDeserializer>
+public sealed class JsonDeserializer : IDeserializer<JsonDeserializer>
 {
     public World World { get; }
 
@@ -99,7 +100,7 @@ public class JsonDeserializer : IDeserializer<JsonDeserializer>
             key = default;
             return false;
         }
-        key = new(buffer.AsSpan((int)reader.TokenStartIndex + 1, (int)(reader.BytesConsumed - reader.TokenStartIndex - 3)));
+        key = new(Encoding.UTF8, buffer.AsSpan((int)reader.TokenStartIndex + 1, (int)(reader.BytesConsumed - reader.TokenStartIndex - 3)));
         return true;
     }
 

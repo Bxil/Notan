@@ -1,12 +1,13 @@
 ﻿using System.IO;
+using System.Text;
 
 namespace Notan.Serialization;
 
-public class BinarySerializer : ISerializer<BinarySerializer>
+public sealed class BinarySerializer : ISerializer<BinarySerializer>
 {
     private readonly BinaryWriter writer;
 
-    public BinarySerializer(BinaryWriter writer) => this.writer = writer;
+    public BinarySerializer(Stream stream, Encoding encoding) => writer = new BinaryWriter(stream, encoding, true);
 
     public void Write(bool value) => writer.Write(value);
 

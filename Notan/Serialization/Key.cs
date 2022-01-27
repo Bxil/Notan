@@ -1,45 +1,28 @@
 ﻿using System;
 using System.Buffers;
 using System.Text;
-using System.Text.Unicode;
 
 namespace Notan.Serialization;
 #pragma warning disable CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
 public readonly ref struct Key
 #pragma warning restore CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
 {
-    private readonly ReadOnlySpan<byte> utf8;
+    private readonly Encoding encoding;
+    private readonly ReadOnlySpan<byte> bytes;
 
-    public Key(ReadOnlySpan<byte> utf8)
+    public Key(Encoding encoding, ReadOnlySpan<byte> bytes)
     {
-        this.utf8 = utf8;
+        this.encoding = encoding;
+        this.bytes = bytes;
     }
 
     public static bool operator ==(Key left, string right)
     {
-        var utf8 = left.utf8;
-        ReadOnlySpan<char> utf16 = right;
-
-        Span<char> utf16Buf = stackalloc char[16];
-
-        do
-        {
-            if (Utf8.ToUtf16(utf8, utf16Buf, out int read8, out int written16)
-                is not OperationStatus.Done and not OperationStatus.DestinationTooSmall)
-                throw new Exception("Failed to convert UTF-8 to UTF-16.");
-
-            if (written16 > right.Length)
-                break;
-
-            if (!utf16[..written16].Equals(utf16Buf[..written16], StringComparison.InvariantCulture))
-                break;
-
-            utf16 = utf16[written16..];
-            utf8 = utf8[read8..];
-        }
-        while (utf8.Length > 0);
-
-        return utf8.IsEmpty;
+        var buffer = ArrayPool<char>.Shared.Rent(left.encoding.GetMaxCharCount(left.bytes.Length));
+        int count = left.encoding.GetChars(left.bytes, buffer);
+        var ok = ((ReadOnlySpan<char>)buffer[..count]).Equals(right, StringComparison.Ordinal);
+        ArrayPool<char>.Shared.Return(buffer);
+        return ok;
     }
 
     public static bool operator !=(Key left, string right) => !(left == right);
@@ -49,6 +32,6 @@ public readonly ref struct Key
 
     public override string ToString()
     {
-        return Encoding.UTF8.GetString(utf8);
+        return encoding.GetString(bytes);
     }
 }
