@@ -14,6 +14,7 @@ public class Keys
         Compare("ascii");
         Compare("_ő_á_ű_");
         Compare("😀");
+        Assert.IsTrue(new Key(new byte[] { 0xC3, 0x28 }) != "");
     }
 
     private static void Compare(string str)

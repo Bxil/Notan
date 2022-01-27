@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Text;
+using System.Text.Unicode;
 
 namespace Notan.Serialization;
 #pragma warning disable CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
@@ -16,28 +17,29 @@ public readonly ref struct Key
 
     public static bool operator ==(Key left, string right)
     {
-        int i = 0;
-        int bytecount = 0;
-        while (i < right.Length && Rune.DecodeFromUtf8(left.utf8[bytecount..], out var rune, out var bytes) == OperationStatus.Done)
-        {
-            int charsread = 1;
-            if (!Rune.TryCreate(right[i], out var rrune))
-            {
-                if (!Rune.TryCreate(right[i], right[i + 1], out rrune))
-                {
-                    return false;
-                }
-                charsread = 2;
-            }
+        var utf8 = left.utf8;
+        ReadOnlySpan<char> utf16 = right;
 
-            if (rune != rrune)
-            {
-                return false;
-            }
-            bytecount += bytes;
-            i += charsread;
+        Span<char> utf16Buf = stackalloc char[16];
+
+        do
+        {
+            if (Utf8.ToUtf16(utf8, utf16Buf, out int read8, out int written16)
+                is not OperationStatus.Done and not OperationStatus.DestinationTooSmall)
+                throw new Exception("Failed to convert UTF-8 to UTF-16.");
+
+            if (written16 > right.Length)
+                break;
+
+            if (!utf16[..written16].Equals(utf16Buf[..written16], StringComparison.InvariantCulture))
+                break;
+
+            utf16 = utf16[written16..];
+            utf8 = utf8[read8..];
         }
-        return true;
+        while (utf8.Length > 0);
+
+        return utf8.IsEmpty;
     }
 
     public static bool operator !=(Key left, string right) => !(left == right);
