@@ -1,6 +1,5 @@
 ﻿using Notan.Serialization;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -10,8 +9,6 @@ namespace Notan;
 
 public class Client
 {
-    private readonly World world;
-
     private readonly TcpClient tcpClient;
     private readonly MemoryStream outgoing;
     private readonly NetworkStream stream;
@@ -32,7 +29,6 @@ public class Client
 
     internal Client(World world, TcpClient tcpClient, int id)
     {
-        this.world = world;
         this.tcpClient = tcpClient;
         IPEndPoint = (IPEndPoint)tcpClient.Client.RemoteEndPoint!;
         Id = id;
