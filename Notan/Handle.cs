@@ -7,12 +7,12 @@ namespace Notan;
 //TODO: Make this a generic when https://github.com/dotnet/runtime/issues/6924 is finally fixed.
 public readonly struct Handle : IEquatable<Handle>
 {
-    internal readonly Storage Storage;
+    internal readonly Storage? Storage;
 
     public readonly int Index;
     public readonly int Generation;
 
-    internal Handle(Storage storage, int index, int generation)
+    internal Handle(Storage? storage, int index, int generation)
     {
         Storage = storage;
         Index = index;
@@ -21,7 +21,7 @@ public readonly struct Handle : IEquatable<Handle>
 
     public ServerHandle<T> Server<T>() where T : struct, IEntity<T>
     {
-        Debug.Assert(Storage is ServerStorage<T>);
+        Debug.Assert(Storage is null or ServerStorage<T>);
         return new(Unsafe.As<ServerStorage<T>>(Storage), Index, Generation);
     }
 
@@ -38,7 +38,7 @@ public readonly struct Handle : IEquatable<Handle>
 
     public ClientHandle<T> Client<T>() where T : struct, IEntity<T>
     {
-        Debug.Assert(Storage is ClientStorage<T>);
+        Debug.Assert(Storage is null or ClientStorage<T>);
         return new(Unsafe.As<ClientStorage<T>>(Storage), Index, Generation);
     }
 
@@ -69,38 +69,38 @@ public readonly struct Handle : IEquatable<Handle>
 
 public readonly struct ServerHandle<T> : IEquatable<ServerHandle<T>> where T : struct, IEntity<T>
 {
-    public readonly ServerStorage<T> Storage;
+    public readonly ServerStorage<T>? Storage;
 
     public readonly int Index;
     public readonly int Generation;
 
-    internal ServerHandle(ServerStorage<T> storage, int index, int generation)
+    internal ServerHandle(ServerStorage<T>? storage, int index, int generation)
     {
         Storage = storage;
         Index = index;
         Generation = generation;
     }
 
-    public ref T Get() => ref Storage.Get(Index, Generation);
+    public ref T Get() => ref Storage!.Get(Index, Generation);
 
     public bool Alive() => Storage?.Alive(Index, Generation) ?? false;
 
-    public void Destroy() => Storage.Destroy(Index, Generation);
+    public void Destroy() => Storage!.Destroy(Index, Generation);
 
-    public void AddObserver(Client client) => Storage.AddObserver(Index, Generation, client);
+    public void AddObserver(Client client) => Storage!.AddObserver(Index, Generation, client);
 
-    public void RemoveObserver(Client client) => Storage.RemoveObserver(Index, Generation, client);
+    public void RemoveObserver(Client client) => Storage!.RemoveObserver(Index, Generation, client);
 
-    public void UpdateObservers() => Storage.UpdateObservers(Index, Generation);
+    public void UpdateObservers() => Storage!.UpdateObservers(Index, Generation);
 
-    public void ClearObservers() => Storage.ClearObservers(Index, Generation);
+    public void ClearObservers() => Storage!.ClearObservers(Index, Generation);
 
-    public ReadOnlySpan<Client> Observers => Storage.GetObservers(Index, Generation);
+    public ReadOnlySpan<Client> Observers => Storage!.GetObservers(Index, Generation);
 
     public Client? Authority
     {
-        get => Storage.GetAuthority(Index, Generation);
-        set => Storage.SetAuthority(Index, Generation, value);
+        get => Storage!.GetAuthority(Index, Generation);
+        set => Storage!.SetAuthority(Index, Generation, value);
     }
 
     public static implicit operator Handle(ServerHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
@@ -115,29 +115,29 @@ public readonly struct ServerHandle<T> : IEquatable<ServerHandle<T>> where T : s
 
 public readonly struct ClientHandle<T> : IEquatable<ClientHandle<T>> where T : struct, IEntity<T>
 {
-    public readonly ClientStorage<T> Storage;
+    public readonly ClientStorage<T>? Storage;
 
     public readonly int Index;
     public readonly int Generation;
 
-    internal ClientHandle(ClientStorage<T> storage, int index, int generation)
+    internal ClientHandle(ClientStorage<T>? storage, int index, int generation)
     {
         Storage = storage;
         Index = index;
         Generation = generation;
     }
 
-    public ref T Get() => ref Storage.Get(Index, Generation);
+    public ref T Get() => ref Storage!.Get(Index, Generation);
 
     public bool Alive() => Storage?.Alive(Index, Generation) ?? false;
 
-    public void Forget() => Storage.Forget(Index, Generation);
+    public void Forget() => Storage!.Forget(Index, Generation);
 
-    public void RequestDestroy() => Storage.RequestDestroy(Index, Generation);
+    public void RequestDestroy() => Storage!.RequestDestroy(Index, Generation);
 
-    public void RequestUpdate() => Storage.RequestUpdate(Index, Generation, Get());
+    public void RequestUpdate() => Storage!.RequestUpdate(Index, Generation, Get());
 
-    public void RequestUpdate(T entity) => Storage.RequestUpdate(Index, Generation, entity);
+    public void RequestUpdate(T entity) => Storage!.RequestUpdate(Index, Generation, entity);
 
     public static implicit operator Handle(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
