@@ -40,10 +40,10 @@ public static class DeserializerExtensions
 
         public Handle As<TEntity>() where TEntity : struct, IEntity<TEntity> => As(typeof(TEntity));
 
-        public Handle As(Type type)
+        public Handle As(Type? type)
         {
             deserializer.ArrayBegin();
-            var handle = new Handle(deserializer.World.GetStorageBase(type), deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
+            var handle = new Handle(type == null ? null : deserializer.World.GetStorageBase(type), deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
             _ = deserializer.ArrayTryNext(); //consume the end marker
             return handle;
         }
