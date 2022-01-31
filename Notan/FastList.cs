@@ -7,6 +7,8 @@ namespace Notan;
 
 internal struct FastList<T>
 {
+    private const int growthRate = 1024;
+
     private T[] array;
     public int Count { get; private set; }
 
@@ -14,11 +16,11 @@ internal struct FastList<T>
     {
         if (array == null)
         {
-            array = new T[8];
+            array = new T[growthRate];
         }
-        if (array.Length == Count)
+        else if (array.Length == Count)
         {
-            Array.Resize(ref array, Count * 2);
+            EnsureCapacity(Count + growthRate); //Instead of powers of two, we try to be conservative with memory
         }
         array[Count] = t;
         Count++;
@@ -34,7 +36,7 @@ internal struct FastList<T>
 
     public void EnsureSize(int size)
     {
-        EnsureCapacity(size);
+        EnsureCapacity(((size - 1) / growthRate + 1) * growthRate); //Find the next ideal multiple of growthRate
         if (size > Count)
         {
             Count = size;
