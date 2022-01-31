@@ -147,11 +147,10 @@ public sealed class ServerWorld : World
         serializer.ObjectBegin();
         foreach (var pair in TypeNameToStorage)
         {
-            if (pair.Value.NoPersistence)
+            if (!pair.Value.Impermanent)
             {
-                continue;
+                pair.Value.Serialize(serializer.ObjectNext(pair.Key));
             }
-            pair.Value.Serialize(serializer.ObjectNext(pair.Key));
         }
         serializer.ObjectEnd();
     }

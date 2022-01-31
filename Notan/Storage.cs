@@ -9,14 +9,14 @@ namespace Notan;
 //For storing in collections
 public abstract class Storage
 {
-    internal readonly bool NoPersistence;
+    internal readonly bool Impermanent;
 
     public int Id { get; }
 
-    private protected Storage(int id, bool noPersistence)
+    private protected Storage(int id, bool impermanent)
     {
         Id = id;
-        NoPersistence = noPersistence;
+        Impermanent = impermanent;
     }
 
     internal abstract void Serialize<T>(T serializer) where T : ISerializer<T>;
@@ -41,7 +41,7 @@ public abstract class Storage<T> : Storage where T : struct, IEntity<T>
     private protected int nextIndex;
     private protected int remaniningHandles = 0;
 
-    internal Storage(int id, bool noPersistence) : base(id, noPersistence) { }
+    internal Storage(int id, bool impermanent) : base(id, impermanent) { }
 
     internal ref T Get(int index, int generation)
     {
@@ -66,7 +66,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     private readonly ClientAuthority authority;
 
-    internal ServerStorage(int id, StorageOptionsAttribute? options) : base(id, options != null && options.NoPersistence)
+    internal ServerStorage(int id, StorageOptionsAttribute? options) : base(id, options != null && options.Impermanent)
     {
         authority = options == null ? ClientAuthority.None : options.ClientAuthority;
     }
@@ -375,7 +375,7 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
     private FastList<int> forgottenEntityIndices = new();
     private FastList<bool> entityIsForgotten = new();
 
-    internal ClientStorage(int id, StorageOptionsAttribute? options, Client server) : base(id, options != null && options.NoPersistence)
+    internal ClientStorage(int id, StorageOptionsAttribute? options, Client server) : base(id, options != null && options.Impermanent)
     {
         this.server = server;
     }

@@ -6,5 +6,5 @@ namespace Notan.Reflection;
 public sealed class StorageOptionsAttribute : Attribute
 {
     public ClientAuthority ClientAuthority;
-    public bool NoPersistence;
+    public bool Impermanent;
 }
