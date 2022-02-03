@@ -68,6 +68,8 @@ public readonly struct Handle<T> : IEquatable<Handle<T>> where T : struct, IEnti
         Generation = generation;
     }
 
+    public ref T Get() => ref Storage!.Get(Index, Generation);
+
     public ServerHandle<T> Server()
     {
         Debug.Assert(Storage is null or ServerStorage<T>);
