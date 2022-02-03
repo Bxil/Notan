@@ -5,13 +5,14 @@
     <Nullable>Enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>Notan</RootNamespace>
-    <Version>0.36.2</Version>
+    <Version>0.37.0</Version>
     <Authors>Bxil</Authors>
     <PackageProjectUrl>https://github.com/Bxil/Notan</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Bxil/Notan.git</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <PackageTags>ecs entity-component-system networking</PackageTags>
+    <PackageOutputPath>pkg</PackageOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' != 'DEBUG'">

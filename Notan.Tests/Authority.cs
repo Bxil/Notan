@@ -45,11 +45,14 @@ public class Authority
 
         storage1.RequestCreate(new ByteEntity { Value = 1 });
         storage2.RequestCreate(new ByteEntity { Value = 3 });
+        //Note that the value of the ByteEntities are raised by 1 each time they are deserialized by their LateDeserialize.
 
         _ = clientWorld1.Tick();
         _ = clientWorld2.Tick();
 
         _ = serverWorld.Tick();
+
+        Assert.AreEqual(6, serverWorld.GetStorage<ByteEntity>().Run(new SumSystem()).Sum);
 
         _ = clientWorld1.Tick();
         _ = clientWorld2.Tick();
@@ -62,7 +65,7 @@ public class Authority
 
         _ = serverWorld.Tick();
 
-        Assert.AreEqual(6, serverWorld.GetStorage<ByteEntity>().Run(new SumSystem()).Sum);
+        Assert.AreEqual(10, serverWorld.GetStorage<ByteEntity>().Run(new SumSystem()).Sum);
 
         _ = serverWorld.GetStorage<ByteEntity>().Run(new DestroySystem());
 

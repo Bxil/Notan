@@ -14,6 +14,11 @@ partial struct ByteEntity : IEntity<ByteEntity>
         Value = key == nameof(Value) ? entry.GetByte() : throw new Exception();
     }
 
+    void IEntity<ByteEntity>.LateDeserialize(Handle<ByteEntity> handle)
+    {
+        Value += 1;
+    }
+
     void IEntity<ByteEntity>.Serialize<T>(T serializer)
     {
         serializer.ObjectNext(nameof(Value)).Write(Value);

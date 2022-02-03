@@ -323,6 +323,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
                     client.ReadIntoEntity(ref entity);
                     var handle = Create(entity);
                     SetAuthority(handle.Index, handle.Generation, client);
+                    Get(index, generation).LateDeserialize(handle);
                 }
                 else
                 {
@@ -333,7 +334,9 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
             case MessageType.Update:
                 if (Alive(index, generation) && entityToAuthority[indexToEntity[index]] == client)
                 {
-                    client.ReadIntoEntity(ref Get(index, generation));
+                    ref var entity = ref Get(index, generation);
+                    client.ReadIntoEntity(ref entity);
+                    entity.LateDeserialize(new(this, index, generation));
                 }
                 else
                 {
@@ -419,12 +422,15 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
                     indexToEntity[index] = entid;
                     generations.EnsureSize(index + 1);
                     generations[index] = generation;
+                    Get(index, generation).LateDeserialize(new(this, index, generation));
                 }
                 break;
             case MessageType.Update:
                 if (Alive(index, generation))
                 {
-                    client.ReadIntoEntity(ref entities[indexToEntity[index]]);
+                    ref var entity = ref Get(index, generation);
+                    client.ReadIntoEntity(ref entity);
+                    entity.LateDeserialize(new(this, index, generation));
                 }
                 else
                 {
