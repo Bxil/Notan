@@ -13,14 +13,14 @@ public class Simple
 
     private ByteSystem system;
 
-    private readonly Handle[] bytehandles = new Handle[byte.MaxValue];
+    private readonly Handle<ByteEntity>[] bytehandles = new Handle<ByteEntity>[byte.MaxValue];
 
     private int SumBytes()
     {
         var sum = 0;
         for (var i = 0; i < bytehandles.Length; i++)
         {
-            var strong = bytehandles[i].Server<ByteEntity>();
+            var strong = bytehandles[i].Server();
             if (strong.Alive())
             {
                 sum += strong.Get().Value;
@@ -65,15 +65,15 @@ public class Simple
 
         var sumBeforeDelete = SumBytes();
 
-        Assert.IsTrue(bytehandles[delindex].Server<ByteEntity>().Alive());
+        Assert.IsTrue(bytehandles[delindex].Server().Alive());
 
-        ref var entity = ref bytehandles[delindex].Server<ByteEntity>().Get();
+        ref var entity = ref bytehandles[delindex].Server().Get();
 
-        bytehandles[delindex].Server<ByteEntity>().Destroy();
+        bytehandles[delindex].Server().Destroy();
 
         Assert.AreEqual(49, entity.Value);
 
-        Assert.IsFalse(bytehandles[delindex].Server<ByteEntity>().Alive());
+        Assert.IsFalse(bytehandles[delindex].Server().Alive());
 
         bytestorage.Run(ref system);
 
@@ -88,7 +88,7 @@ public class Simple
         {
             if (i % 2 == 1)
             {
-                bytehandles[i].Server<ByteEntity>().Destroy();
+                bytehandles[i].Server().Destroy();
             }
         }
 
@@ -104,7 +104,7 @@ public class Simple
 
         for (var i = 0; i < bytehandles.Length; i++)
         {
-            var bytehandle = bytehandles[i].Server<ByteEntity>();
+            var bytehandle = bytehandles[i].Server();
             if (i % 2 == 1)
             {
                 Assert.AreEqual(1, bytehandle.Generation);
