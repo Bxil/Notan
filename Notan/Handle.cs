@@ -128,6 +128,8 @@ public readonly struct ServerHandle<T> : IEquatable<ServerHandle<T>> where T : s
         set => Storage!.SetAuthority(Index, Generation, value);
     }
 
+    public static implicit operator Handle(ServerHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
+
     public static implicit operator Handle<T>(ServerHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
     public static bool operator ==(ServerHandle<T> a, ServerHandle<T> b) => (Handle<T>)a == b;
@@ -163,6 +165,8 @@ public readonly struct ClientHandle<T> : IEquatable<ClientHandle<T>> where T : s
     public void RequestUpdate() => Storage!.RequestUpdate(Index, Generation, Get());
 
     public void RequestUpdate(T entity) => Storage!.RequestUpdate(Index, Generation, entity);
+
+    public static implicit operator Handle(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
     public static implicit operator Handle<T>(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
