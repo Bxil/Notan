@@ -18,6 +18,10 @@ public readonly struct Handle : IEquatable<Handle>
         Generation = generation;
     }
 
+    public ServerHandle<T> Server<T>() where T : struct, IEntity<T> => Strong<T>().Server();
+
+    public ClientHandle<T> Client<T>() where T : struct, IEntity<T> => Strong<T>().Client();
+
     public Handle<T> Strong<T>() where T : struct, IEntity<T>
     {
         Debug.Assert(Storage is null or Storage<T>);
