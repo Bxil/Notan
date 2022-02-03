@@ -38,7 +38,7 @@ public static class DeserializerExtensions
 
         internal HandleDeserializer(T deserializer) => this.deserializer = deserializer;
 
-        public Handle As<TEntity>() where TEntity : struct, IEntity<TEntity> => As(typeof(TEntity));
+        public Handle<TEntity> As<TEntity>() where TEntity : struct, IEntity<TEntity> => As(typeof(TEntity)).Strong<TEntity>();
 
         public Handle As(Type? type)
         {
