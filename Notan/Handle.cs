@@ -61,6 +61,8 @@ public readonly struct Handle<T> : IEquatable<Handle<T>> where T : struct, IEnti
     public readonly int Index;
     public readonly int Generation;
 
+    public bool IsServer => Storage is ServerStorage<T>;
+
     internal Handle(Storage<T>? storage, int index, int generation)
     {
         Storage = storage;
