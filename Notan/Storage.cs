@@ -9,6 +9,8 @@ namespace Notan;
 //For storing in collections
 public abstract class Storage
 {
+    private protected FastList<int> generations = new();
+
     internal readonly bool Impermanent;
 
     public int Id { get; }
@@ -17,6 +19,11 @@ public abstract class Storage
     {
         Id = id;
         Impermanent = impermanent;
+    }
+
+    internal bool Alive(int index, int generation)
+    {
+        return generations.Count > index && generations[index] == generation;
     }
 
     internal abstract void Serialize<T>(T serializer) where T : ISerializer<T>;
@@ -36,7 +43,6 @@ public abstract class Storage<T> : Storage where T : struct, IEntity<T>
     private protected FastList<T> entities = new();
     private protected FastList<int> entityToIndex = new();
     private protected FastList<int> indexToEntity = new();
-    private protected FastList<int> generations = new();
 
     private protected int nextIndex;
     private protected int remaniningHandles = 0;
@@ -47,11 +53,6 @@ public abstract class Storage<T> : Storage where T : struct, IEntity<T>
     {
         Debug.Assert(Alive(index, generation));
         return ref entities[indexToEntity[index]];
-    }
-
-    internal bool Alive(int index, int generation)
-    {
-        return generations.Count > index && generations[index] == generation;
     }
 }
 

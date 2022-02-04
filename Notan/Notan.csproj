@@ -5,17 +5,18 @@
     <Nullable>Enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>Notan</RootNamespace>
-    <Version>0.40.0</Version>
+    <Version>0.41.0</Version>
     <Authors>Bxil</Authors>
     <PackageProjectUrl>https://github.com/Bxil/Notan</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Bxil/Notan.git</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <PackageTags>ecs entity-component-system networking</PackageTags>
-    <PackageOutputPath>pkg</PackageOutputPath>
+    <PackageOutputPath>../pkg</PackageOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' != 'DEBUG'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <PackageId>Notan</PackageId>
     <Description>Not an ECS: a simple and fast library designed for real-time applications, persistence, and networking.</Description>
   </PropertyGroup>

@@ -4,12 +4,13 @@ using System.Runtime.CompilerServices;
 
 namespace Notan;
 
-public readonly record struct Handle
+public readonly record struct Handle : IHandle
 {
     internal readonly Storage? Storage;
+    Storage? IHandle.Storage => Storage;
 
-    public readonly int Index;
-    public readonly int Generation;
+    public int Index { get; }
+    public int Generation { get; }
 
     internal Handle(Storage? storage, int index, int generation)
     {
@@ -41,12 +42,13 @@ public readonly record struct Handle
 }
 
 //Beware of https://github.com/dotnet/runtime/issues/6924
-public readonly record struct Handle<T> where T : struct, IEntity<T>
+public readonly record struct Handle<T> : IHandle where T : struct, IEntity<T>
 {
     internal readonly Storage<T>? Storage;
+    Storage? IHandle.Storage => Storage;
 
-    public readonly int Index;
-    public readonly int Generation;
+    public int Index { get; }
+    public int Generation { get; }
 
     public bool IsServer => Storage is ServerStorage<T>;
 
@@ -74,12 +76,13 @@ public readonly record struct Handle<T> where T : struct, IEntity<T>
     public static implicit operator Handle(Handle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 }
 
-public readonly record struct ServerHandle<T> : IEquatable<ServerHandle<T>> where T : struct, IEntity<T>
+public readonly record struct ServerHandle<T> : IHandle where T : struct, IEntity<T>
 {
     public readonly ServerStorage<T>? Storage;
+    Storage? IHandle.Storage => Storage;
 
-    public readonly int Index;
-    public readonly int Generation;
+    public int Index { get; }
+    public int Generation { get; }
 
     internal ServerHandle(ServerStorage<T>? storage, int index, int generation)
     {
@@ -89,8 +92,6 @@ public readonly record struct ServerHandle<T> : IEquatable<ServerHandle<T>> wher
     }
 
     public ref T Get() => ref Storage!.Get(Index, Generation);
-
-    public bool Alive() => Storage?.Alive(Index, Generation) ?? false;
 
     public void Destroy() => Storage!.Destroy(Index, Generation);
 
@@ -115,12 +116,13 @@ public readonly record struct ServerHandle<T> : IEquatable<ServerHandle<T>> wher
     public static implicit operator Handle<T>(ServerHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 }
 
-public readonly record struct ClientHandle<T> : IEquatable<ClientHandle<T>> where T : struct, IEntity<T>
+public readonly record struct ClientHandle<T> : IHandle where T : struct, IEntity<T>
 {
     public readonly ClientStorage<T>? Storage;
+    Storage? IHandle.Storage => Storage;
 
-    public readonly int Index;
-    public readonly int Generation;
+    public int Index { get; }
+    public int Generation { get; }
 
     internal ClientHandle(ClientStorage<T>? storage, int index, int generation)
     {
@@ -130,8 +132,6 @@ public readonly record struct ClientHandle<T> : IEquatable<ClientHandle<T>> wher
     }
 
     public ref T Get() => ref Storage!.Get(Index, Generation);
-
-    public bool Alive() => Storage?.Alive(Index, Generation) ?? false;
 
     public void Forget() => Storage!.Forget(Index, Generation);
 
@@ -144,4 +144,30 @@ public readonly record struct ClientHandle<T> : IEquatable<ClientHandle<T>> wher
     public static implicit operator Handle(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
     public static implicit operator Handle<T>(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
+}
+
+public interface IHandle
+{
+    Storage? Storage { get; }
+    int Index { get; }
+    int Generation { get; }
+}
+
+public readonly struct Maybe<T> where T : IHandle
+{
+    private readonly T handle;
+
+    public Maybe(T handle) => this.handle = handle;
+
+    public T Unwrap() => handle;
+
+    public bool Alive() => handle.Storage?.Alive(handle.Index, handle.Generation) ?? false;
+
+    public bool Alive(out T handle)
+    {
+        handle = this.handle;
+        return Alive();
+    }
+
+    public static implicit operator Maybe<T>(T handle) => new(handle);
 }
