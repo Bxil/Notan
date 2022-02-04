@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Notan;
 
-public readonly struct Handle : IEquatable<Handle>
+public readonly record struct Handle
 {
     internal readonly Storage? Storage;
 
@@ -38,23 +38,10 @@ public readonly struct Handle : IEquatable<Handle>
         handle = default;
         return false;
     }
-
-    public static bool operator ==(Handle a, Handle b)
-    {
-        return a.Storage == b.Storage && a.Index == b.Index && a.Generation == b.Generation;
-    }
-
-    public static bool operator !=(Handle a, Handle b)
-    {
-        return a.Storage != b.Storage || a.Index != b.Index || a.Generation != b.Generation;
-    }
-
-    public bool Equals(Handle other) => this == other;
-    public override int GetHashCode() => Index;
 }
 
 //Beware of https://github.com/dotnet/runtime/issues/6924
-public readonly struct Handle<T> : IEquatable<Handle<T>> where T : struct, IEntity<T>
+public readonly record struct Handle<T> where T : struct, IEntity<T>
 {
     internal readonly Storage<T>? Storage;
 
@@ -85,22 +72,9 @@ public readonly struct Handle<T> : IEquatable<Handle<T>> where T : struct, IEnti
     }
 
     public static implicit operator Handle(Handle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
-
-    public static bool operator ==(Handle<T> a, Handle<T> b)
-    {
-        return a.Storage == b.Storage && a.Index == b.Index && a.Generation == b.Generation;
-    }
-
-    public static bool operator !=(Handle<T> a, Handle<T> b)
-    {
-        return a.Storage != b.Storage || a.Index != b.Index || a.Generation != b.Generation;
-    }
-
-    public bool Equals(Handle<T> other) => this == other;
-    public override int GetHashCode() => Index;
 }
 
-public readonly struct ServerHandle<T> : IEquatable<ServerHandle<T>> where T : struct, IEntity<T>
+public readonly record struct ServerHandle<T> : IEquatable<ServerHandle<T>> where T : struct, IEntity<T>
 {
     public readonly ServerStorage<T>? Storage;
 
@@ -139,16 +113,9 @@ public readonly struct ServerHandle<T> : IEquatable<ServerHandle<T>> where T : s
     public static implicit operator Handle(ServerHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
     public static implicit operator Handle<T>(ServerHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
-
-    public static bool operator ==(ServerHandle<T> a, ServerHandle<T> b) => (Handle<T>)a == b;
-
-    public static bool operator !=(ServerHandle<T> a, ServerHandle<T> b) => (Handle<T>)a != b;
-
-    public bool Equals(ServerHandle<T> other) => this == other;
-    public override int GetHashCode() => Index;
 }
 
-public readonly struct ClientHandle<T> : IEquatable<ClientHandle<T>> where T : struct, IEntity<T>
+public readonly record struct ClientHandle<T> : IEquatable<ClientHandle<T>> where T : struct, IEntity<T>
 {
     public readonly ClientStorage<T>? Storage;
 
@@ -177,11 +144,4 @@ public readonly struct ClientHandle<T> : IEquatable<ClientHandle<T>> where T : s
     public static implicit operator Handle(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
     public static implicit operator Handle<T>(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
-
-    public static bool operator ==(ClientHandle<T> a, ClientHandle<T> b) => (Handle<T>)a == b;
-
-    public static bool operator !=(ClientHandle<T> a, ClientHandle<T> b) => (Handle<T>)a != b;
-
-    public bool Equals(ClientHandle<T> other) => this == other;
-    public override int GetHashCode() => Index;
 }
