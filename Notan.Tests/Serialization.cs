@@ -31,7 +31,7 @@ public class Serialization
     {
         const string jsonsave = @"
 {
-    ""Notan.Tests.ByteEntity"": [
+    ""Notan.Tests.ByteEntityOnDestroy"": [
         {
             ""$gen"": 0,
             ""Value"": 2
@@ -84,11 +84,11 @@ public class Serialization
     {
         for (var i = 0; i < 1000; i++)
         {
-            _ = world.GetStorage<ByteEntity>().Create(new ByteEntity { Value = (byte)(i % 100) });
+            _ = world.GetStorage<ByteEntityOnDestroy>().Create(new ByteEntityOnDestroy { Value = (byte)(i % 100) });
         }
         for (var i = 0; i < 100; i++)
         {
-            _ = world.GetStorage<HandleEntity>().Create(new HandleEntity { Value = new() });
+            _ = world.GetStorage<ByteEntityOnDestroy>().Create(new ByteEntityOnDestroy { Value = new() });
         }
         var mem = new MemoryStream();
         using (var writer = new Utf8JsonWriter(mem))

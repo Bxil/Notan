@@ -9,11 +9,11 @@ public class Simple
 {
     private ServerWorld world;
 
-    private ServerStorage<ByteEntity> bytestorage;
+    private ServerStorage<ByteEntityOnDestroy> bytestorage;
 
     private ByteSystem system;
 
-    private readonly Maybe<ServerHandle<ByteEntity>>[] bytehandles = new Maybe<ServerHandle<ByteEntity>>[byte.MaxValue];
+    private readonly Maybe<ServerHandle<ByteEntityOnDestroy>>[] bytehandles = new Maybe<ServerHandle<ByteEntityOnDestroy>>[byte.MaxValue];
 
     private int SumBytes()
     {
@@ -33,11 +33,11 @@ public class Simple
     {
         world = new ServerWorld(0);
         world.AddStorages(Assembly.GetExecutingAssembly());
-        bytestorage = world.GetStorage<ByteEntity>();
+        bytestorage = world.GetStorage<ByteEntityOnDestroy>();
 
         for (byte i = 0; i < byte.MaxValue; i++)
         {
-            bytehandles[i] = bytestorage.Create(new ByteEntity { Value = i });
+            bytehandles[i] = bytestorage.Create(new ByteEntityOnDestroy { Value = i });
         }
 
         system = new();
@@ -98,7 +98,7 @@ public class Simple
 
         for (byte i = 0; i < bytehandles.Length / 2; i++)
         {
-            bytehandles[i * 2 + 1] = bytestorage.Create(new ByteEntity { Value = i });
+            bytehandles[i * 2 + 1] = bytestorage.Create(new ByteEntityOnDestroy { Value = i });
         }
 
         for (var i = 0; i < bytehandles.Length; i++)
@@ -134,13 +134,13 @@ public class Simple
         Assert.AreEqual(bytehandles.Length, system.Count);
     }
 
-    struct ByteSystem : IServerSystem<ByteEntity>
+    struct ByteSystem : IServerSystem<ByteEntityOnDestroy>
     {
         public int Sum;
 
         public int Count;
 
-        public void Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
+        public void Work(ServerHandle<ByteEntityOnDestroy> handle, ref ByteEntityOnDestroy entity)
         {
             Sum += entity.Value;
             Count += 1;

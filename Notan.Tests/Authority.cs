@@ -40,34 +40,34 @@ public class Authority
     [TestMethod]
     public void Updates()
     {
-        var storage1 = clientWorld1.GetStorage<ByteEntity>();
-        var storage2 = clientWorld2.GetStorage<ByteEntity>();
+        var storage1 = clientWorld1.GetStorage<ByteEntityPostUpdate>();
+        var storage2 = clientWorld2.GetStorage<ByteEntityPostUpdate>();
 
-        storage1.RequestCreate(new ByteEntity { Value = 1 });
-        storage2.RequestCreate(new ByteEntity { Value = 3 });
-        //Note that the value of the ByteEntities are raised by 1 each time they are deserialized by their LateDeserialize.
-
-        _ = clientWorld1.Tick();
-        _ = clientWorld2.Tick();
-
-        _ = serverWorld.Tick();
-
-        Assert.AreEqual(6, serverWorld.GetStorage<ByteEntity>().Run(new SumSystem()).Sum);
+        storage1.RequestCreate(new ByteEntityPostUpdate { Value = 1 });
+        storage2.RequestCreate(new ByteEntityPostUpdate { Value = 3 });
+        //Note ByteEntityPostUpdate's PostUpdate.
 
         _ = clientWorld1.Tick();
         _ = clientWorld2.Tick();
 
-        _ = storage1.Run(new IncSystem());
-        _ = storage2.Run(new IncSystem());
+        _ = serverWorld.Tick(); //2, 4
+
+        Assert.AreEqual(6, serverWorld.GetStorage<ByteEntityPostUpdate>().Run(new SumSystem()).Sum);
+
+        _ = clientWorld1.Tick(); //3
+        _ = clientWorld2.Tick(); //5
+
+        _ = storage1.Run(new IncSystem()); //4
+        _ = storage2.Run(new IncSystem()); //6
 
         _ = clientWorld1.Tick();
         _ = clientWorld2.Tick();
 
-        _ = serverWorld.Tick();
+        _ = serverWorld.Tick(); //5, 7
 
-        Assert.AreEqual(10, serverWorld.GetStorage<ByteEntity>().Run(new SumSystem()).Sum);
+        Assert.AreEqual(12, serverWorld.GetStorage<ByteEntityPostUpdate>().Run(new SumSystem()).Sum);
 
-        _ = serverWorld.GetStorage<ByteEntity>().Run(new DestroySystem());
+        _ = serverWorld.GetStorage<ByteEntityPostUpdate>().Run(new DestroySystem());
 
         _ = serverWorld.Tick();
 
@@ -78,32 +78,32 @@ public class Authority
         Assert.AreEqual(0, storage2.Run(new SumSystem()).Sum);
     }
 
-    struct IncSystem : IClientSystem<ByteEntity>
+    struct IncSystem : IClientSystem<ByteEntityPostUpdate>
     {
-        void IClientSystem<ByteEntity>.Work(ClientHandle<ByteEntity> handle, ref ByteEntity entity)
+        void IClientSystem<ByteEntityPostUpdate>.Work(ClientHandle<ByteEntityPostUpdate> handle, ref ByteEntityPostUpdate entity)
         {
-            handle.RequestUpdate(new ByteEntity { Value = (byte)(entity.Value + 1) });
+            handle.RequestUpdate(new ByteEntityPostUpdate { Value = (byte)(entity.Value + 1) });
         }
     }
 
-    struct SumSystem : IServerSystem<ByteEntity>, IClientSystem<ByteEntity>
+    struct SumSystem : IServerSystem<ByteEntityPostUpdate>, IClientSystem<ByteEntityPostUpdate>
     {
         public int Sum;
 
-        void IServerSystem<ByteEntity>.Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
+        void IServerSystem<ByteEntityPostUpdate>.Work(ServerHandle<ByteEntityPostUpdate> handle, ref ByteEntityPostUpdate entity)
         {
             Sum += entity.Value;
         }
 
-        void IClientSystem<ByteEntity>.Work(ClientHandle<ByteEntity> handle, ref ByteEntity entity)
+        void IClientSystem<ByteEntityPostUpdate>.Work(ClientHandle<ByteEntityPostUpdate> handle, ref ByteEntityPostUpdate entity)
         {
             Sum += entity.Value;
         }
     }
 
-    struct DestroySystem : IServerSystem<ByteEntity>
+    struct DestroySystem : IServerSystem<ByteEntityPostUpdate>
     {
-        void IServerSystem<ByteEntity>.Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
+        void IServerSystem<ByteEntityPostUpdate>.Work(ServerHandle<ByteEntityPostUpdate> handle, ref ByteEntityPostUpdate entity)
         {
             handle.Destroy();
         }

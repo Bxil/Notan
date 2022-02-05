@@ -33,22 +33,22 @@ public class Observing
     [TestMethod]
     public void AddAndDisconnect()
     {
-        clientWorld.GetStorage<ByteEntity>().RequestCreate(new ByteEntity());
+        clientWorld.GetStorage<ByteEntityOnDestroy>().RequestCreate(new ByteEntityOnDestroy());
         _ = clientWorld.Tick();
         _ = serverWorld.Tick();
         var system = new ByteSystem();
-        serverWorld.GetStorage<ByteEntity>().Run(ref system);
+        serverWorld.GetStorage<ByteEntityOnDestroy>().Run(ref system);
         clientWorld.Exit();
         _ = clientWorld.Tick();
         _ = serverWorld.Tick();
-        serverWorld.GetStorage<ByteEntity>().Run(ref system);
+        serverWorld.GetStorage<ByteEntityOnDestroy>().Run(ref system);
         _ = serverWorld.Tick();
-        serverWorld.GetStorage<ByteEntity>().Run(ref system);
+        serverWorld.GetStorage<ByteEntityOnDestroy>().Run(ref system);
     }
 
-    struct ByteSystem : IServerSystem<ByteEntity>
+    struct ByteSystem : IServerSystem<ByteEntityOnDestroy>
     {
-        public void Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
+        public void Work(ServerHandle<ByteEntityOnDestroy> handle, ref ByteEntityOnDestroy entity)
         {
             handle.UpdateObservers();
         }

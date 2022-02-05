@@ -97,12 +97,13 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         entityToIndex.Add(hndind);
 
         var handle = new ServerHandle<T>(this, hndind, generations[hndind]);
-        Get(hndind, generations[hndind]).LateCreate(handle);
+        Get(hndind, generations[hndind]).PostUpdate(handle);
         return handle;
     }
 
     internal void Destroy(int index, int generation)
     {
+        Get(index, generation).PreUpdate(new(this, index, generation));
         Get(index, generation).OnDestroy(new(this, index, generation));
 
         foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
@@ -308,7 +309,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         var i = 0;
         foreach (ref var entity in entities.AsSpan())
         {
-            entity.LateDeserialize(new(this, entityToIndex[i], generations[entityToIndex[i]]));
+            entity.PostUpdate(new(this, entityToIndex[i], generations[entityToIndex[i]]));
             i++;
         }
     }
@@ -324,7 +325,6 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
                     client.ReadIntoEntity(ref entity);
                     var handle = Create(entity);
                     SetAuthority(handle.Index, handle.Generation, client);
-                    Get(handle.Index, handle.Generation).LateDeserialize(handle);
                 }
                 else
                 {
@@ -336,8 +336,9 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
                 if (Alive(index, generation) && entityToAuthority[indexToEntity[index]] == client)
                 {
                     ref var entity = ref Get(index, generation);
+                    entity.PreUpdate(new(this, index, generation));
                     client.ReadIntoEntity(ref entity);
-                    entity.LateDeserialize(new(this, index, generation));
+                    entity.PostUpdate(new(this, index, generation));
                 }
                 else
                 {
@@ -423,15 +424,16 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
                     indexToEntity[index] = entid;
                     generations.EnsureSize(index + 1);
                     generations[index] = generation;
-                    Get(index, generation).LateDeserialize(new(this, index, generation));
+                    Get(index, generation).PostUpdate(new(this, index, generation));
                 }
                 break;
             case MessageType.Update:
                 if (Alive(index, generation))
                 {
                     ref var entity = ref Get(index, generation);
+                    entity.PreUpdate(new(this, index, generation));
                     client.ReadIntoEntity(ref entity);
-                    entity.LateDeserialize(new(this, index, generation));
+                    entity.PostUpdate(new(this, index, generation));
                 }
                 else
                 {
@@ -442,6 +444,7 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
             case MessageType.Destroy:
                 if (Alive(index, generation))
                 {
+                    Get(index, generation).PreUpdate(new(this, index, generation));
                     generations[index] = -1;
                     DestroyInternal(index);
                 }
