@@ -324,7 +324,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
                     client.ReadIntoEntity(ref entity);
                     var handle = Create(entity);
                     SetAuthority(handle.Index, handle.Generation, client);
-                    Get(index, generation).LateDeserialize(handle);
+                    Get(handle.Index, handle.Generation).LateDeserialize(handle);
                 }
                 else
                 {
