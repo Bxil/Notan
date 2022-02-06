@@ -25,11 +25,19 @@ public struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
 
     public byte GetByte() => reader.ReadByte();
 
+    public sbyte GetSByte() => reader.ReadSByte();
+
     public short GetInt16() => reader.ReadInt16();
+
+    public ushort GetUInt16() => reader.ReadUInt16();
 
     public int GetInt32() => reader.ReadInt32();
 
+    public uint GetUInt32() => reader.ReadUInt32();
+
     public long GetInt64() => reader.ReadInt64();
+
+    public ulong GetUInt64() => reader.ReadUInt64();
 
     public float GetSingle() => reader.ReadSingle();
 

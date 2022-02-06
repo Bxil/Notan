@@ -9,9 +9,13 @@ public interface IDeserializer<T> where T : IDeserializer<T>
 
     bool GetBool();
     byte GetByte();
+    sbyte GetSByte();
     short GetInt16();
+    ushort GetUInt16();
     int GetInt32();
+    uint GetUInt32();
     long GetInt64();
+    ulong GetUInt64();
     float GetSingle();
     double GetDouble();
     string GetString();

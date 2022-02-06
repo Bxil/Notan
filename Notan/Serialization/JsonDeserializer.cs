@@ -21,13 +21,21 @@ public struct JsonDeserializer : IDeserializer<JsonDeserializer>
 
     public byte GetByte() => stream.Read().GetByte();
 
+    public sbyte GetSByte() => stream.Read().GetSByte();
+
     public double GetDouble() => stream.Read().GetDouble();
 
     public short GetInt16() => stream.Read().GetInt16();
 
+    public ushort GetUInt16() => stream.Read().GetUInt16();
+
     public int GetInt32() => stream.Read().GetInt32();
 
+    public uint GetUInt32() => stream.Read().GetUInt32();
+
     public long GetInt64() => stream.Read().GetInt64();
+
+    public ulong GetUInt64() => stream.Read().GetUInt64();
 
     public float GetSingle() => stream.Read().GetSingle();
 

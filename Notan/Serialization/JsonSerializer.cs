@@ -11,15 +11,23 @@ public struct JsonSerializer : ISerializer<JsonSerializer>
 
     public void Write(byte value) => writer.WriteNumberValue(value);
 
+    public void Write(sbyte value) => writer.WriteNumberValue(value);
+
     public void Write(string value) => writer.WriteStringValue(value);
 
     public void Write(bool value) => writer.WriteBooleanValue(value);
 
     public void Write(short value) => writer.WriteNumberValue(value);
 
+    public void Write(ushort value) => writer.WriteNumberValue(value);
+
     public void Write(int value) => writer.WriteNumberValue(value);
 
+    public void Write(uint value) => writer.WriteNumberValue(value);
+
     public void Write(long value) => writer.WriteNumberValue(value);
+
+    public void Write(ulong value) => writer.WriteNumberValue(value);
 
     public void Write(float value) => writer.WriteNumberValue(value);
 
