@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -7,8 +8,8 @@ namespace Notan;
 
 internal struct FastList<T>
 {
-    private T[] array;
-    public int Count { get; private set; }
+    private T[] array = Array.Empty<T>();
+    public int Count { get; private set; } = 0;
 
     public void Add(T t)
     {
@@ -19,7 +20,7 @@ internal struct FastList<T>
 
     public void EnsureCapacity(int capacity)
     {
-        int currentcapacity = array?.Length ?? 0;
+        int currentcapacity = array.Length;
 
         if (currentcapacity >= capacity)
         {
@@ -37,7 +38,10 @@ internal struct FastList<T>
                 currentcapacity *= 2;
             }
         }
-        Array.Resize(ref array, currentcapacity);
+        var newarray = ArrayPool<T>.Shared.Rent(currentcapacity);
+        array.AsSpan(0, Count).CopyTo(newarray.AsSpan());
+        ArrayPool<T>.Shared.Return(array);
+        array = newarray;
     }
 
     public void EnsureSize(int size)
@@ -64,6 +68,11 @@ internal struct FastList<T>
         this[index] = this[Count - 1];
         this[Count - 1] = default!;
         Count--;
+        if (Count == 0)
+        {
+            ArrayPool<T>.Shared.Return(array);
+            array = Array.Empty<T>();
+        }
     }
 
     public bool Remove(T value)
