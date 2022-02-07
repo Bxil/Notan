@@ -1,6 +1,7 @@
 ﻿using Notan.Reflection;
 using Notan.Serialization;
 using System;
+using System.IO;
 
 namespace Notan.Tests;
 
@@ -11,7 +12,7 @@ partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
 
     void IEntity<ByteEntityOnDestroy>.Deserialize<T>(Key key, T entry)
     {
-        Value = key == nameof(Value) ? entry.GetByte() : throw new Exception();
+        Value = key == nameof(Value) ? entry.GetByte() : throw new IOException();
     }
 
     void IEntity<ByteEntityOnDestroy>.Serialize<T>(T serializer)
@@ -33,7 +34,7 @@ partial struct ByteEntityPreUpdate : IEntity<ByteEntityPreUpdate>
 
     void IEntity<ByteEntityPreUpdate>.Deserialize<T>(Key key, T entry)
     {
-        Value = key == nameof(Value) ? entry.GetByte() : throw new Exception();
+        Value = key == nameof(Value) ? entry.GetByte() : throw new IOException();
     }
 
     void IEntity<ByteEntityPreUpdate>.Serialize<T>(T serializer)
@@ -54,7 +55,7 @@ partial struct ByteEntityPostUpdate : IEntity<ByteEntityPostUpdate>
 
     void IEntity<ByteEntityPostUpdate>.Deserialize<T>(Key key, T entry)
     {
-        Value = key == nameof(Value) ? entry.GetByte() : throw new Exception();
+        Value = key == nameof(Value) ? entry.GetByte() : throw new IOException();
     }
 
     void IEntity<ByteEntityPostUpdate>.Serialize<T>(T serializer)

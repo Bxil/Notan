@@ -126,7 +126,7 @@ public sealed class ServerWorld : World
             {
                 client.Flush();
             }
-            catch
+            catch (IOException)
             {
                 DeleteClient(client);
             }
