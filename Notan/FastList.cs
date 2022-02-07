@@ -12,24 +12,32 @@ internal struct FastList<T>
 
     public void Add(T t)
     {
-        if (array == null)
-        {
-            array = new T[8];
-        }
-        if (array.Length == Count)
-        {
-            Array.Resize(ref array, Count * 2);
-        }
+        EnsureCapacity(Count + 1);
         array[Count] = t;
         Count++;
     }
 
     public void EnsureCapacity(int capacity)
     {
-        if (capacity > (array?.Length ?? 0))
+        int currentcapacity = array?.Length ?? 0;
+
+        if (currentcapacity >= capacity)
         {
-            Array.Resize(ref array, capacity);
+            return;
         }
+        
+        if (currentcapacity == 0)
+        {
+            currentcapacity = 8;
+        }
+        else
+        {
+            while (capacity > currentcapacity)
+            {
+                currentcapacity *= 2;
+            }
+        }
+        Array.Resize(ref array, currentcapacity);
     }
 
     public void EnsureSize(int size)
