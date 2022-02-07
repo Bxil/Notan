@@ -137,6 +137,21 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         }
     }
 
+    internal void AddObservers(int index, int generation, ReadOnlySpan<Client> clients)
+    {
+        Debug.Assert(Alive(index, generation));
+        ref var list = ref entityToObservers[indexToEntity[index]];
+        list.EnsureCapacity(list.Count + clients.Length);
+        foreach (var client in clients)
+        {
+            if (list.IndexOf(client) == -1)
+            {
+                list.Add(client);
+                client.Send(Id, MessageType.Create, index, generation, ref Get(index, generation));
+            }
+        }
+    }
+
     internal void RemoveObserver(int index, int generation, Client client)
     {
         Debug.Assert(Alive(index, generation));
