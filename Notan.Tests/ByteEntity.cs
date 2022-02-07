@@ -1,6 +1,5 @@
 ﻿using Notan.Reflection;
 using Notan.Serialization;
-using System;
 using System.IO;
 
 namespace Notan.Tests;
@@ -25,7 +24,6 @@ partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
         Value -= 1;
     }
 }
-
 
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
 partial struct ByteEntityPreUpdate : IEntity<ByteEntityPreUpdate>
