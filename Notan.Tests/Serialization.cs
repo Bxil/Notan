@@ -3,6 +3,7 @@ using Notan.Reflection;
 using Notan.Serialization;
 using System.IO;
 using System.Reflection;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace Notan.Tests;
@@ -91,7 +92,7 @@ public class Serialization
             _ = world.GetStorage<ByteEntityOnDestroy>().Create(new ByteEntityOnDestroy { Value = new() });
         }
         var mem = new MemoryStream();
-        using (var writer = new Utf8JsonWriter(mem))
+        using (var writer = new Utf8JsonWriter(mem, new JsonWriterOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }))
         {
             world.Serialize(new Notan.Serialization.JsonSerializer(writer));
         }

@@ -73,32 +73,33 @@ public class Observing
             handle.UpdateObservers();
         }
     }
-}
 
-[StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
-public struct MalformedEntity : IEntity<MalformedEntity>
-{
-    void IEntity<MalformedEntity>.Deserialize<TDeser>(Key key, TDeser deserializer)
+    [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
+    public struct MalformedEntity : IEntity<MalformedEntity>
     {
-        throw new IOException();
+        void IEntity<MalformedEntity>.Deserialize<TDeser>(Key key, TDeser deserializer)
+        {
+            throw new IOException();
+        }
+
+        void IEntity<MalformedEntity>.Serialize<TSer>(TSer serializer)
+        {
+            serializer.ObjectNext("a").Write("b");
+        }
     }
 
-    void IEntity<MalformedEntity>.Serialize<TSer>(TSer serializer)
+    [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
+    public struct MalformedEntityWrong : IEntity<MalformedEntityWrong>
     {
-        serializer.ObjectNext("a").Write("b");
-    }
-}
+        void IEntity<MalformedEntityWrong>.Deserialize<TDeser>(Key key, TDeser deserializer)
+        {
+            throw new Exception();
+        }
 
-[StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
-public struct MalformedEntityWrong : IEntity<MalformedEntityWrong>
-{
-    void IEntity<MalformedEntityWrong>.Deserialize<TDeser>(Key key, TDeser deserializer)
-    {
-        throw new Exception();
+        void IEntity<MalformedEntityWrong>.Serialize<TSer>(TSer serializer)
+        {
+            serializer.ObjectNext("a").Write("b");
+        }
     }
 
-    void IEntity<MalformedEntityWrong>.Serialize<TSer>(TSer serializer)
-    {
-        serializer.ObjectNext("a").Write("b");
-    }
 }
