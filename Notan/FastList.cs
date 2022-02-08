@@ -31,16 +31,16 @@ internal struct FastList<T>
         {
             currentcapacity = 8;
         }
-        else
+        while (capacity > currentcapacity)
         {
-            while (capacity > currentcapacity)
-            {
-                currentcapacity *= 2;
-            }
+            currentcapacity *= 2;
         }
         var newarray = ArrayPool<T>.Shared.Rent(currentcapacity);
-        array.AsSpan(0, Count).CopyTo(newarray.AsSpan());
-        ArrayPool<T>.Shared.Return(array);
+        if (array.Length > 0)
+        {
+            array.AsSpan(0, Count).CopyTo(newarray.AsSpan());
+            ArrayPool<T>.Shared.Return(array);
+        }
         array = newarray;
     }
 
