@@ -106,11 +106,11 @@ public class Simple
             var bytehandle = bytehandles[i].Unwrap();
             if (i % 2 == 1)
             {
-                Assert.AreEqual(1, bytehandle.Generation);
+                Assert.AreEqual(2, bytehandle.Generation);
             }
             else
             {
-                Assert.AreEqual(0, bytehandle.Generation);
+                Assert.AreEqual(1, bytehandle.Generation);
             }
         }
 
