@@ -1,32 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>Notan.Generators</RootNamespace>
-    <LangVersion>9.0</LangVersion>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
-    <Nullable>enable</Nullable>
-    <Version>0.1.0</Version>
-    <Authors>Bxil</Authors>
-    <PackageProjectUrl>https://github.com/Bxil/Notan</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/Bxil/Notan.git</RepositoryUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryType>git</RepositoryType>
-    <PackageOutputPath>../pkg</PackageOutputPath>
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-    <PackageId>Notan.Generators</PackageId>
-    <Description>Generators for Notan.</Description>
+	<TargetFramework>netstandard2.0</TargetFramework>
+	<RootNamespace>Notan.Generators</RootNamespace>
+	<LangVersion>9.0</LangVersion>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<IncludeBuildOutput>false</IncludeBuildOutput>
+	<Nullable>enable</Nullable>
+	<Version>0.1.0</Version>
+	<Authors>Bxil</Authors>
+	<PackageProjectUrl>https://github.com/Bxil/Notan</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/Bxil/Notan.git</RepositoryUrl>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<RepositoryType>git</RepositoryType>
+	<PackageOutputPath>../pkg</PackageOutputPath>
+	<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+	<PackageId>Notan.Generators</PackageId>
+	<Description>Generators for Notan.</Description>
 	<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+	<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
 	<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
+	<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
