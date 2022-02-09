@@ -17,6 +17,7 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <PackageId>Notan.Generators</PackageId>
     <Description>Generators for Notan.</Description>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
   </PropertyGroup>
 
   <ItemGroup>

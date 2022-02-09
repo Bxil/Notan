@@ -75,7 +75,7 @@ public partial struct {entity.Name}
                     }
                     _ = builder.Append($"        else ");
                 }
-                _ = builder.Append($"throw new IOException($\"{entity.Name} has no such field: {{key}}.\");");
+                _ = builder.Append($"throw new IOException($\"{entity.Name} has no such field: {{key.ToString()}}.\");");
                 _ = builder.Append($@"
     }}
 
