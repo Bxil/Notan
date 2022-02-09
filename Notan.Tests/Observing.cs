@@ -81,7 +81,7 @@ public class Observing
         handle1.AddObserver(serverWorld.Clients[0]);
         handle2.AddObserver(serverWorld.Clients[0]);
         Assert.IsTrue(new Maybe<Handle>(handle2).Alive());
-        handle1.Get().Value.Server<ByteEntityOnDestroy>().AddObserver(serverWorld.Clients[0]);
+        handle1.Get().Value.Server().AddObserver(serverWorld.Clients[0]);
         _ = serverWorld.Tick();
         _ = clientWorld.Tick();
         Assert.AreEqual(1, clientWorld.GetStorage<HandleEntity>().Run(new AliveCountSystem()).Count);

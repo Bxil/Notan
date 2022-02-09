@@ -1,23 +1,14 @@
 ﻿using Notan.Reflection;
 using Notan.Serialization;
-using System.IO;
 
 namespace Notan.Tests;
 
+[AutoSerialize]
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
-partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
+public partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
 {
+    [AutoSerialize]
     public byte Value;
-
-    void IEntity<ByteEntityOnDestroy>.Deserialize<T>(Key key, T entry)
-    {
-        Value = key == nameof(Value) ? entry.GetByte() : throw new IOException();
-    }
-
-    void IEntity<ByteEntityOnDestroy>.Serialize<T>(T serializer)
-    {
-        serializer.ObjectNext(nameof(Value)).Write(Value);
-    }
 
     void IEntity<ByteEntityOnDestroy>.OnDestroy(ServerHandle<ByteEntityOnDestroy> handle)
     {
@@ -25,20 +16,12 @@ partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
     }
 }
 
+[AutoSerialize]
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
-partial struct ByteEntityPreUpdate : IEntity<ByteEntityPreUpdate>
+public partial struct ByteEntityPreUpdate : IEntity<ByteEntityPreUpdate>
 {
-    public byte Value;
-
-    void IEntity<ByteEntityPreUpdate>.Deserialize<T>(Key key, T entry)
-    {
-        Value = key == nameof(Value) ? entry.GetByte() : throw new IOException();
-    }
-
-    void IEntity<ByteEntityPreUpdate>.Serialize<T>(T serializer)
-    {
-        serializer.ObjectNext(nameof(Value)).Write(Value);
-    }
+    [AutoSerialize]
+    public byte Value { get; set; }
 
     void IEntity<ByteEntityPreUpdate>.PreUpdate(Handle<ByteEntityPreUpdate> handle)
     {
@@ -46,20 +29,12 @@ partial struct ByteEntityPreUpdate : IEntity<ByteEntityPreUpdate>
     }
 }
 
+[AutoSerialize]
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
-partial struct ByteEntityPostUpdate : IEntity<ByteEntityPostUpdate>
+public partial struct ByteEntityPostUpdate : IEntity<ByteEntityPostUpdate>
 {
-    public byte Value;
-
-    void IEntity<ByteEntityPostUpdate>.Deserialize<T>(Key key, T entry)
-    {
-        Value = key == nameof(Value) ? entry.GetByte() : throw new IOException();
-    }
-
-    void IEntity<ByteEntityPostUpdate>.Serialize<T>(T serializer)
-    {
-        serializer.ObjectNext(nameof(Value)).Write(Value);
-    }
+    [AutoSerialize]
+    public byte Value { get; set; }
 
     void IEntity<ByteEntityPostUpdate>.PostUpdate(Handle<ByteEntityPostUpdate> handle)
     {

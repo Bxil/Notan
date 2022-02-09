@@ -31,8 +31,7 @@ public interface IDeserializer<T> where T : IDeserializer<T>
 
 public static class DeserializerExtensions
 {
-    public static HandleDeserializer<T> GetHandle<T>(this T deserializer)
-        where T : IDeserializer<T>
+    public static HandleDeserializer<T> GetHandle<T>(this T deserializer) where T : IDeserializer<T>
         => new(deserializer);
 
     public struct HandleDeserializer<T> where T : IDeserializer<T>

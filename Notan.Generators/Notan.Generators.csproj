@@ -4,9 +4,19 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Notan.Generators</RootNamespace>
     <LangVersion>9.0</LangVersion>
-    <!--<GeneratePackageOnBuild>true</GeneratePackageOnBuild>-->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <Nullable>enable</Nullable>
+    <Version>0.1.0</Version>
+    <Authors>Bxil</Authors>
+    <PackageProjectUrl>https://github.com/Bxil/Notan</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Bxil/Notan.git</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <PackageOutputPath>../pkg</PackageOutputPath>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <PackageId>Notan.Generators</PackageId>
+    <Description>Generators for Notan.</Description>
   </PropertyGroup>
 
   <ItemGroup>
