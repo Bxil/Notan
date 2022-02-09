@@ -50,7 +50,7 @@ public partial struct {entity.Name}
     void IEntity<{entity.Name}>.Deserialize<T>(Key key, T entry)
     {{
 ");
-                _ = builder.Append("		");
+                _ = builder.Append("        ");
                 foreach (var field in entity.GetMembers().Where(x => HasAutoSerialize(x)))
                 {
                     INamedTypeSymbol type = null!;
