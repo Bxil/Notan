@@ -17,7 +17,7 @@ public struct JsonDeserializer : IDeserializer<JsonDeserializer>
         this.stream = new(stream);
     }
 
-    public bool GetBool() => stream.Read().GetBoolean();
+    public bool GetBoolean() => stream.Read().GetBoolean();
 
     public byte GetByte() => stream.Read().GetByte();
 

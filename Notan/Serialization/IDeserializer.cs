@@ -7,7 +7,7 @@ public interface IDeserializer<T> where T : IDeserializer<T>
 {
     public World World { get; }
 
-    bool GetBool();
+    bool GetBoolean();
     byte GetByte();
     sbyte GetSByte();
     short GetInt16();
@@ -32,6 +32,12 @@ public interface IDeserializer<T> where T : IDeserializer<T>
 public static class DeserializerExtensions
 {
     public static HandleDeserializer<T> GetHandle<T>(this T deserializer) where T : IDeserializer<T>
+        => new(deserializer);
+
+    public static HandleDeserializer<T> GetServerHandle<T>(this T deserializer) where T : IDeserializer<T>
+        => new(deserializer);
+
+    public static HandleDeserializer<T> GetClientHandle<T>(this T deserializer) where T : IDeserializer<T>
         => new(deserializer);
 
     public struct HandleDeserializer<T> where T : IDeserializer<T>

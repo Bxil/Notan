@@ -25,14 +25,7 @@ $@"using System;
 namespace Notan.Serialization;
 
 [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field)]
-sealed class AutoSerializeAttribute : Attribute
-{{
-    public Type? Generic {{ get; }}
-    public AutoSerializeAttribute(Type? generic = null)
-    {{
-        Generic = generic;
-    }}
-}}");
+sealed class AutoSerializeAttribute : Attribute {{}}");
 
             var builder = new StringBuilder();
             foreach (var entity in receiver.Entities)
@@ -80,7 +73,8 @@ public partial struct {entity.Name}
     }}
 
     void IEntity<{entity.Name}>.Serialize<T>(T serializer)
-    {{");
+    {{
+");
 
                 foreach (var field in entity.GetMembers().Where(x => HasAutoSerialize(x)))
                 {
@@ -94,10 +88,10 @@ public partial struct {entity.Name}
                         type = (INamedTypeSymbol)propertySymbol.Type;
                     }
 
-                    _ = builder.AppendLine().Append($"        serializer.ObjectNext(nameof({field.Name})).");
+                    _ = builder.Append($"        serializer.ObjectNext(nameof({field.Name})).");
                     if (type.IsGenericType)
                     {
-                        _ = builder.AppendLine($"Write().As({field.Name});");
+                        _ = builder.AppendLine($"Write{type.Name}().As({field.Name});");
                     }
                     else
                     {

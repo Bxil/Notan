@@ -34,7 +34,13 @@ public static class SerializerExtensions
         serializer.ArrayEnd();
     }
 
-    public static HandleSerializer<T> Write<T>(this T serializer) where T : ISerializer<T>
+    public static HandleSerializer<T> WriteHandle<T>(this T serializer) where T : ISerializer<T>
+        => new(serializer);
+
+    public static HandleSerializer<T> WriteServerHandle<T>(this T serializer) where T : ISerializer<T>
+        => new(serializer);
+
+    public static HandleSerializer<T> WriteClientHandle<T>(this T serializer) where T : ISerializer<T>
         => new(serializer);
 
     public struct HandleSerializer<T> where T : ISerializer<T>

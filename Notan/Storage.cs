@@ -293,7 +293,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
                 }
                 else if (key == "$dead")
                 {
-                    _ = deserializer.GetBool();
+                    _ = deserializer.GetBoolean();
                     dead = true;
                 }
                 else

@@ -21,7 +21,7 @@ public struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
         this.encoding = encoding;
     }
 
-    public bool GetBool() => reader.ReadBoolean();
+    public bool GetBoolean() => reader.ReadBoolean();
 
     public byte GetByte() => reader.ReadByte();
 
