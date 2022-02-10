@@ -38,7 +38,7 @@ sealed class AutoSerializeAttribute : Attribute {{}}");
                     .AppendLine($"namespace {entity.ContainingNamespace.ToDisplayString()};");
 
                 _ = builder.Append($@"
-public partial struct {entity.Name}
+public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
 {{
     void IEntity<{entity.Name}>.Deserialize<T>(Key key, T entry)
     {{
