@@ -97,6 +97,8 @@ public readonly record struct ServerHandle<T> : IHandle where T : struct, IEntit
 
     public void AddObserver(Client client) => Storage!.AddObserver(Index, Generation, client);
 
+    public void AddObservers(ReadOnlySpan<Client> clients) => Storage!.AddObservers(Index, Generation, clients);
+
     public void RemoveObserver(Client client) => Storage!.RemoveObserver(Index, Generation, client);
 
     public void UpdateObservers() => Storage!.UpdateObservers(Index, Generation);
