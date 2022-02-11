@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Notan.Serialization;
+using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Notan;
 
-public readonly record struct Handle : IHandle
+public readonly record struct Handle
 {
     internal readonly Storage? Storage;
-    Storage? IHandle.Storage => Storage;
 
     public int Index { get; }
     public int Generation { get; }
@@ -39,13 +39,28 @@ public readonly record struct Handle : IHandle
         handle = default;
         return false;
     }
+
+    public void Serialize<T>(T serializer) where T : ISerializer<T>
+    {
+        serializer.ArrayBegin();
+        serializer.ArrayNext().Write(Index);
+        serializer.ArrayNext().Write(Generation);
+        serializer.ArrayEnd();
+    }
+
+    public static Handle Deserialize<T>(T deserializer, Type type) where T : IDeserializer<T>
+    {
+        deserializer.ArrayBegin();
+        var handle = new Handle(type == null ? null : deserializer.World.GetStorageBase(type), deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
+        _ = deserializer.ArrayTryNext(); //consume the end marker
+        return handle;
+    }
 }
 
 //Beware of https://github.com/dotnet/runtime/issues/6924
-public readonly record struct Handle<T> : IHandle where T : struct, IEntity<T>
+public readonly record struct Handle<T> where T : struct, IEntity<T>
 {
     internal readonly Storage<T>? Storage;
-    Storage? IHandle.Storage => Storage;
 
     public int Index { get; }
     public int Generation { get; }
@@ -74,12 +89,17 @@ public readonly record struct Handle<T> : IHandle where T : struct, IEntity<T>
     }
 
     public static implicit operator Handle(Handle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
+
+    public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
+        => ((Handle)this).Serialize(serializer);
+
+    public static Handle<T> Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
+        => Handle.Deserialize(deserializer, typeof(T)).Strong<T>();
 }
 
-public readonly record struct ServerHandle<T> : IHandle where T : struct, IEntity<T>
+public readonly record struct ServerHandle<T> where T : struct, IEntity<T>
 {
     public readonly ServerStorage<T>? Storage;
-    Storage? IHandle.Storage => Storage;
 
     public int Index { get; }
     public int Generation { get; }
@@ -116,12 +136,17 @@ public readonly record struct ServerHandle<T> : IHandle where T : struct, IEntit
     public static implicit operator Handle(ServerHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
     public static implicit operator Handle<T>(ServerHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
+
+    public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
+    => ((Handle)this).Serialize(serializer);
+
+    public static ServerHandle<T> Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
+        => Handle.Deserialize(deserializer, typeof(T)).Server<T>();
 }
 
-public readonly record struct ClientHandle<T> : IHandle where T : struct, IEntity<T>
+public readonly record struct ClientHandle<T> where T : struct, IEntity<T>
 {
     public readonly ClientStorage<T>? Storage;
-    Storage? IHandle.Storage => Storage;
 
     public int Index { get; }
     public int Generation { get; }
@@ -146,30 +171,47 @@ public readonly record struct ClientHandle<T> : IHandle where T : struct, IEntit
     public static implicit operator Handle(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
     public static implicit operator Handle<T>(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
+
+    public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
+        => ((Handle)this).Serialize(serializer);
+
+    public static ClientHandle<T> Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
+        => Handle.Deserialize(deserializer, typeof(T)).Client<T>();
 }
 
-public interface IHandle
+public readonly struct Maybe<T> where T : struct, IEntity<T>
 {
-    Storage? Storage { get; }
-    int Index { get; }
-    int Generation { get; }
-}
+    private readonly Handle<T> handle;
 
-public readonly struct Maybe<T> where T : IHandle
-{
-    private readonly T handle;
-
-    public Maybe(T handle) => this.handle = handle;
-
-    public T Unwrap() => handle;
+    public Maybe(Handle<T> handle) => this.handle = handle;
 
     public bool Alive() => handle.Storage?.Alive(handle.Index, handle.Generation) ?? false;
 
-    public bool Alive(out T handle)
+    public bool Alive(out Handle<T> handle)
     {
         handle = this.handle;
         return Alive();
     }
+    
+    public bool AliveServer(out ServerHandle<T> handle)
+    {
+        handle = this.handle.Server();
+        return Alive();
+    }
 
-    public static implicit operator Maybe<T>(T handle) => new(handle);
+    public bool AliveClient(out ClientHandle<T> handle)
+    {
+        handle = this.handle.Client();
+        return Alive();
+    }
+
+    public static implicit operator Maybe<T>(Handle<T> handle) => new(handle);
+    public static implicit operator Maybe<T>(ServerHandle<T> handle) => new(handle);
+    public static implicit operator Maybe<T>(ClientHandle<T> handle) => new(handle);
+
+    public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
+        => handle.Serialize(serializer);
+
+    public static Maybe<T> Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
+        => Handle<T>.Deserialize(deserializer);
 }

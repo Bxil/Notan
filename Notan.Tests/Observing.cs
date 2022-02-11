@@ -71,17 +71,18 @@ public class Observing
     {
         var byteStorage = serverWorld.GetStorage<ByteEntityOnDestroy>();
         var handleStorage = serverWorld.GetStorage<HandleEntity>();
-        var handle1 = handleStorage.Create(new HandleEntity { Value = byteStorage.Create(new()) });
+        var byteEntity = byteStorage.Create(new());
+        byteEntity.AddObserver(serverWorld.Clients[0]);
+        var handle1 = handleStorage.Create(new HandleEntity { Value = (Handle<ByteEntityOnDestroy>)byteEntity });
         Assert.AreEqual(0, handle1.Index);
         Assert.AreEqual(1, handle1.Generation);
-        Assert.IsTrue(new Maybe<Handle>(handle1).Alive());
+        Assert.IsTrue(new Maybe<HandleEntity>(handle1).Alive());
         var handle2 = handleStorage.Create(new HandleEntity { Value = default });
         Assert.AreEqual(1, handle2.Index);
         Assert.AreEqual(1, handle2.Generation);
         handle1.AddObserver(serverWorld.Clients[0]);
         handle2.AddObserver(serverWorld.Clients[0]);
-        Assert.IsTrue(new Maybe<Handle>(handle2).Alive());
-        handle1.Get().Value.Server().AddObserver(serverWorld.Clients[0]);
+        Assert.IsTrue(new Maybe<HandleEntity>(handle2).Alive());
         _ = serverWorld.Tick();
         _ = clientWorld.Tick();
         Assert.AreEqual(1, clientWorld.GetStorage<HandleEntity>().Run(new AliveCountSystem()).Count);
@@ -101,7 +102,7 @@ public class Observing
 
         void IClientSystem<HandleEntity>.Work(ClientHandle<HandleEntity> handle, ref HandleEntity entity)
         {
-            if (new Maybe<Handle>(entity.Value).Alive())
+            if (entity.Value.Alive())
             {
                 Count++;
             }

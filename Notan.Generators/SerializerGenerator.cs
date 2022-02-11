@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,16 +27,19 @@ namespace Notan.Serialization;
 
 [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field)]
 sealed class AutoSerializeAttribute : Attribute {{}}");
-
             var builder = new StringBuilder();
             foreach (var entity in receiver.Entities)
             {
                 _ = builder
                     .AppendLine("using Notan;")
                     .AppendLine("using Notan.Serialization;")
-                    .AppendLine("using System.IO;")
-                    .AppendLine()
-                    .AppendLine($"namespace {entity.ContainingNamespace.ToDisplayString()};");
+                    .AppendLine("using System.IO;");
+                if (entity.ContainingNamespace != null)
+                {
+                    _ = builder
+                        .AppendLine()
+                        .AppendLine($"namespace {entity.ContainingNamespace};");
+                }
 
                 _ = builder.Append($@"
 public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
@@ -46,25 +50,19 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
                 _ = builder.Append("        ");
                 foreach (var field in entity.GetMembers().Where(x => HasAutoSerialize(x)))
                 {
-                    INamedTypeSymbol type = null!;
-                    if (field is IFieldSymbol fieldSymbol)
-                    {
-                        type = (INamedTypeSymbol)fieldSymbol.Type;
-                    }
-                    else if (field is IPropertySymbol propertySymbol)
-                    {
-                        type = (INamedTypeSymbol)propertySymbol.Type;
-                    }
-
+                    var type = GetTypeOfMember(field);
                     _ = builder.Append($"if (key == nameof({field.Name})) {field.Name} = ");
-                    if (type.IsGenericType)
+                    if (IsBuiltin(type))
                     {
-                        //Todo: only append the namespace if it's not already included
-                        _ = builder.AppendLine($"entry.Get{type.Name}().As<{string.Join(",", type.TypeArguments.Select(x => x.ContainingNamespace + "." + x.Name))}>();");
+                        _ = builder.AppendLine($"entry.Get{type.Name}();");
+                    }
+                    else if (type.TypeKind == TypeKind.Enum)
+                    {
+                        _ = builder.AppendLine($"({type.ToDisplayString()})entry.Get{type.EnumUnderlyingType!.Name}();");
                     }
                     else
                     {
-                        _ = builder.AppendLine($"entry.Get{type.Name}();");
+                        _ = builder.AppendLine($"{type.ToDisplayString()}.Deserialize(entry);");
                     }
                     _ = builder.Append($"        else ");
                 }
@@ -78,24 +76,20 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
 
                 foreach (var field in entity.GetMembers().Where(x => HasAutoSerialize(x)))
                 {
-                    INamedTypeSymbol type = null!;
-                    if (field is IFieldSymbol fieldSymbol)
-                    {
-                        type = (INamedTypeSymbol)fieldSymbol.Type;
-                    }
-                    else if (field is IPropertySymbol propertySymbol)
-                    {
-                        type = (INamedTypeSymbol)propertySymbol.Type;
-                    }
+                    var type = GetTypeOfMember(field);
 
-                    _ = builder.Append($"        serializer.ObjectNext(nameof({field.Name})).");
-                    if (type.IsGenericType)
+                    _ = builder.Append($"        ");
+                    if (IsBuiltin(type))
                     {
-                        _ = builder.AppendLine($"Write{type.Name}().As({field.Name});");
+                        _ = builder.AppendLine($"serializer.ObjectNext(nameof({field.Name})).Write({field.Name});");
+                    }
+                    else if (type.TypeKind == TypeKind.Enum)
+                    {
+                        _ = builder.AppendLine($"serializer.ObjectNext(nameof({field.Name})).Write(({type.EnumUnderlyingType}){field.Name});");
                     }
                     else
                     {
-                        _ = builder.AppendLine($"Write({field.Name});");
+                        _ = builder.AppendLine($"{field.Name}.Serialize(serializer.ObjectNext(nameof({field.Name})));");
                     }
                 }
                 _ = builder.Append($@"    }}
@@ -107,6 +101,29 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
         }
 
         private static bool HasAutoSerialize(ISymbol syntax) => syntax.GetAttributes().Any(x => x.AttributeClass!.Name == "AutoSerialize");
+
+        private static INamedTypeSymbol GetTypeOfMember(ISymbol symbol)
+        {
+            if (symbol is IFieldSymbol fieldSymbol)
+            {
+                return (INamedTypeSymbol)fieldSymbol.Type;
+            }
+            else if (symbol is IPropertySymbol propertySymbol)
+            {
+                return (INamedTypeSymbol)propertySymbol.Type;
+            }
+            throw new Exception();
+        }
+
+        private static bool IsBuiltin(INamedTypeSymbol symbol)
+            => symbol.ToDisplayString() is
+                "bool" or
+                "byte" or "sbyte" or
+                "short" or "ushort" or
+                "int" or "uint" or
+                "long" or "ulong" or
+                "float" or "double" or
+                "string";
 
         private class SyntaxReceiver : ISyntaxContextReceiver
         {

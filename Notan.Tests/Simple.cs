@@ -13,7 +13,7 @@ public class Simple
 
     private ByteSystem system;
 
-    private readonly Maybe<ServerHandle<ByteEntityOnDestroy>>[] bytehandles = new Maybe<ServerHandle<ByteEntityOnDestroy>>[byte.MaxValue];
+    private readonly Maybe<ByteEntityOnDestroy>[] bytehandles = new Maybe<ByteEntityOnDestroy>[byte.MaxValue];
 
     private int SumBytes()
     {
@@ -68,7 +68,7 @@ public class Simple
 
         ref var entity = ref handle.Get();
 
-        handle.Destroy();
+        handle.Server().Destroy();
 
         Assert.AreEqual(49, entity.Value);
 
@@ -87,7 +87,8 @@ public class Simple
         {
             if (i % 2 == 1)
             {
-                bytehandles[i].Unwrap().Destroy();
+                _ = bytehandles[i].Alive(out var handle);
+                handle.Server().Destroy();
             }
         }
 
@@ -103,7 +104,7 @@ public class Simple
 
         for (var i = 0; i < bytehandles.Length; i++)
         {
-            var bytehandle = bytehandles[i].Unwrap();
+            bytehandles[i].Alive(out var bytehandle);
             if (i % 2 == 1)
             {
                 Assert.AreEqual(2, bytehandle.Generation);

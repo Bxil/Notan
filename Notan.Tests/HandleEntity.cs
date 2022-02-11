@@ -1,6 +1,5 @@
 ﻿using Notan.Reflection;
 using Notan.Serialization;
-using System;
 
 namespace Notan.Tests;
 
@@ -9,5 +8,5 @@ namespace Notan.Tests;
 partial struct HandleEntity : IEntity<HandleEntity>
 {
     [AutoSerialize]
-    public Handle<ByteEntityOnDestroy> Value;
+    public Maybe<ByteEntityOnDestroy> Value;
 }
