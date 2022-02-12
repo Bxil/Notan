@@ -12,13 +12,7 @@ namespace Notan.Generators
         public void Initialize(GeneratorInitializationContext context)
         {
             context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
-        }
-
-        public void Execute(GeneratorExecutionContext context)
-        {
-            if (context.SyntaxContextReceiver is not SyntaxReceiver receiver) return;
-
-            context.AddSource("AutoSerializeAttribute.g.cs",
+            context.RegisterForPostInitialization(context => context.AddSource("AutoSerializeAttribute.g.cs",
 $@"using System;
 
 #nullable enable
@@ -26,7 +20,23 @@ $@"using System;
 namespace Notan.Serialization;
 
 [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field)]
-sealed class AutoSerializeAttribute : Attribute {{}}");
+internal sealed class AutoSerializeAttribute : Attribute
+{{
+    public string? Name {{ get; }}
+
+    public AutoSerializeAttribute(string? name = null)
+    {{
+        Name = name;
+    }}
+}}"));
+        }
+
+        public void Execute(GeneratorExecutionContext context)
+        {
+            if (context.SyntaxContextReceiver is not SyntaxReceiver receiver) return;
+
+            var attribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.AutoSerializeAttribute")!;
+
             var builder = new StringBuilder();
             foreach (var entity in receiver.Entities)
             {
@@ -48,7 +58,7 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
     {{
 ");
                 _ = builder.Append("        ");
-                foreach (var field in entity.GetMembers().Where(x => HasAutoSerialize(x)))
+                foreach (var field in entity.GetMembers().Where(x => HasAttribute(x, attribute)))
                 {
                     var type = GetTypeOfMember(field);
                     _ = builder.Append($"if (key == nameof({field.Name})) {field.Name} = ");
@@ -74,7 +84,7 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
     {{
 ");
 
-                foreach (var field in entity.GetMembers().Where(x => HasAutoSerialize(x)))
+                foreach (var field in entity.GetMembers().Where(x => HasAttribute(x, attribute)))
                 {
                     var type = GetTypeOfMember(field);
 
@@ -100,7 +110,7 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
             }
         }
 
-        private static bool HasAutoSerialize(ISymbol syntax) => syntax.GetAttributes().Any(x => x.AttributeClass!.Name == "AutoSerialize");
+        private static bool HasAttribute(ISymbol symbol, INamedTypeSymbol attribute) => symbol.GetAttributes().Any(x => attribute.Equals(x.AttributeClass, SymbolEqualityComparer.Default));
 
         private static INamedTypeSymbol GetTypeOfMember(ISymbol symbol)
         {
@@ -128,14 +138,14 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
         private class SyntaxReceiver : ISyntaxContextReceiver
         {
             public List<INamedTypeSymbol> Entities = new();
-            public INamedTypeSymbol IEntitySymbol = null!;
 
             public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
             {
+                var attribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.AutoSerializeAttribute")!;
                 var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node)!;
                 if (symbol is INamedTypeSymbol namedTypeSymbol)
                 {
-                    if (HasAutoSerialize(namedTypeSymbol))
+                    if (HasAttribute(namedTypeSymbol, attribute))
                     {
                         Entities.Add(namedTypeSymbol);
                     }
