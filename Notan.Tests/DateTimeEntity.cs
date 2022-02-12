@@ -3,7 +3,7 @@ using System;
 
 namespace Notan.Tests;
 
-[AutoSerialize]
+[AutoSerialized]
 public partial struct DateTimeEntity : IEntity<DateTimeEntity>
 {
     [AutoSerialize("Timestamp")]

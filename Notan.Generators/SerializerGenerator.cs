@@ -24,7 +24,10 @@ $@"using System;
 
 namespace Notan.Serialization;
 
-[AttributeUsage(AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field)]
+[AttributeUsage(AttributeTargets.Struct)]
+internal sealed class AutoSerializedAttribute : Attribute {{}}
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 internal sealed class AutoSerializeAttribute : Attribute
 {{
     public string? Name {{ get; }}
@@ -53,33 +56,60 @@ internal sealed class SerializesAttribute : Attribute
 
             var autoSerializeAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.AutoSerializeAttribute")!;
             var deserializerAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.DeserializerAttribute")!;
+            var ientity = context.Compilation.GetTypeByMetadataName("Notan.IEntity`1")!;
 
             var builder = new StringBuilder();
-            foreach (var entity in receiver.Entities)
+            foreach (var serialized in receiver.Serialized)
             {
+                bool isEntity = serialized.AllInterfaces.Contains(ientity.Construct(serialized));
+
                 _ = builder
                     .AppendLine("using Notan;")
                     .AppendLine("using Notan.Serialization;")
                     .AppendLine("using System.IO;");
-                if (entity.ContainingNamespace != null)
+                if (serialized.ContainingNamespace != null)
                 {
                     _ = builder
                         .AppendLine()
-                        .AppendLine($"namespace {entity.ContainingNamespace};");
+                        .AppendLine($"namespace {serialized.ContainingNamespace};");
                 }
 
                 _ = builder.Append($@"
-public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
-{{
-    void IEntity<{entity.Name}>.Deserialize<T>(Key key, T entry)
+public partial{(serialized.IsRecord ? " record " : " ")}struct {serialized.Name}
+{{");
+
+                string deserPrefix = isEntity ? "" : "x.";
+
+                if (!isEntity)
+                {
+                    _ = builder.Append(
+$@"
+    public static {serialized.Name} Deserialize<T>(T deserializer) where T : IDeserializer<T>
+    {{
+        var x = new {serialized.Name}();
+        deserializer.ObjectBegin();
+        while (deserializer.ObjectTryNext(out var key))
+        {{
+            var entry = deserializer;
+
+");
+                }
+                else
+                {
+                    _ = builder.Append(
+$@"
+    void IEntity<{serialized.Name}>.Deserialize<T>(Key key, T entry)
     {{
 ");
-                _ = builder.Append("        ");
-                foreach (var field in entity.GetMembers().Where(x => HasAttribute(x, autoSerializeAttribute)))
+                }
+
+                string depth = isEntity ? "        " : "            ";
+                _ = builder.Append(depth);
+                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, autoSerializeAttribute)))
                 {
                     var name = '"' + ((string?)GetAttribute(field, autoSerializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
                     var type = GetTypeOfMember(field);
-                    _ = builder.Append($"if (key == {name}) {field.Name} = ");
+                    _ = builder.Append($"if (key == {name}) {deserPrefix}{field.Name} = ");
                     if (receiver.Serializes.TryGetValue(type, out var deserializer))
                     {
                         _ = builder.AppendLine($"{deserializer.ToDisplayString()}.Deserialize(entry);");
@@ -96,17 +126,42 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
                     {
                         _ = builder.AppendLine($"{type.ToDisplayString()}.Deserialize(entry);");
                     }
-                    _ = builder.Append($"        else ");
+                    _ = builder.Append(depth).Append($"else ");
                 }
-                _ = builder.Append($"throw new IOException($\"{entity.Name} has no such field: {{key.ToString()}}.\");");
-                _ = builder.Append($@"
+                _ = builder.Append($"throw new IOException($\"{serialized.Name} has no such field: {{key.ToString()}}.\");");
+
+                if (!isEntity)
+                {
+                    _ = builder.AppendLine();
+                    _ = builder.Append("        }");
+                }
+
+                if (!isEntity)
+                {
+                    _ = builder.Append(@"
+        return x;
+    }
+
+    public void Serialize<T>(T serializer) where T : ISerializer<T>
+    {
+");
+                }
+                else
+                {
+                    _ = builder.Append($@"
     }}
 
-    void IEntity<{entity.Name}>.Serialize<T>(T serializer)
+    void IEntity<{serialized.Name}>.Serialize<T>(T serializer)
     {{
 ");
+                }
 
-                foreach (var field in entity.GetMembers().Where(x => HasAttribute(x, autoSerializeAttribute)))
+                if (!isEntity)
+                {
+                    _ = builder.AppendLine("        serializer.ObjectBegin();");
+                }
+
+                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, autoSerializeAttribute)))
                 {
                     var name = '"' + ((string?)GetAttribute(field, autoSerializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
                     var type = GetTypeOfMember(field);
@@ -129,10 +184,16 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
                         _ = builder.AppendLine($"{field.Name}.Serialize(serializer.ObjectNext({name}));");
                     }
                 }
+
+                if (!isEntity)
+                {
+                    _ = builder.AppendLine($"        serializer.ObjectEnd();");
+                }
+
                 _ = builder.Append($@"    }}
 }}");
 
-                context.AddSource($"{entity.Name}.g.cs", builder.ToString());
+                context.AddSource($"{serialized.Name}.g.cs", builder.ToString());
                 _ = builder.Clear();
             }
         }
@@ -166,19 +227,19 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
 
         private class SyntaxReceiver : ISyntaxContextReceiver
         {
-            public List<INamedTypeSymbol> Entities = new();
+            public List<INamedTypeSymbol> Serialized = new();
             public Dictionary<INamedTypeSymbol, INamedTypeSymbol> Serializes = new(SymbolEqualityComparer.Default);
 
             public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
             {
-                var autoSerializeAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.AutoSerializeAttribute")!;
+                var autoSerializedAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.AutoSerializedAttribute")!;
                 var serializesAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.SerializesAttribute")!;
                 var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node)!;
                 if (symbol is INamedTypeSymbol namedTypeSymbol)
                 {
-                    if (HasAttribute(namedTypeSymbol, autoSerializeAttribute))
+                    if (HasAttribute(namedTypeSymbol, autoSerializedAttribute))
                     {
-                        Entities.Add(namedTypeSymbol);
+                        Serialized.Add(namedTypeSymbol);
                     }
                     if (HasAttribute(namedTypeSymbol, serializesAttribute))
                     {

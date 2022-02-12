@@ -3,7 +3,7 @@ using Notan.Serialization;
 
 namespace Notan.Tests;
 
-[AutoSerialize]
+[AutoSerialized]
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
 partial struct HandleEntity : IEntity<HandleEntity>
 {

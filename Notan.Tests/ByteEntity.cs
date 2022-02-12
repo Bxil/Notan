@@ -3,7 +3,7 @@ using Notan.Serialization;
 
 namespace Notan.Tests;
 
-[AutoSerialize]
+[AutoSerialized]
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
 public partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
 {
@@ -16,7 +16,7 @@ public partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
     }
 }
 
-[AutoSerialize]
+[AutoSerialized]
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
 public partial struct ByteEntityPreUpdate : IEntity<ByteEntityPreUpdate>
 {
@@ -29,7 +29,7 @@ public partial struct ByteEntityPreUpdate : IEntity<ByteEntityPreUpdate>
     }
 }
 
-[AutoSerialize]
+[AutoSerialized]
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
 public partial struct ByteEntityPostUpdate : IEntity<ByteEntityPostUpdate>
 {
