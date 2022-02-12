@@ -6,7 +6,7 @@ namespace Notan.Tests;
 [AutoSerialize]
 public partial struct DateTimeEntity : IEntity<DateTimeEntity>
 {
-    [AutoSerialize]
+    [AutoSerialize("Timestamp")]
     public DateTime DateTime;
 }
 

@@ -77,8 +77,9 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
                 _ = builder.Append("        ");
                 foreach (var field in entity.GetMembers().Where(x => HasAttribute(x, autoSerializeAttribute)))
                 {
+                    var name = '"' + ((string?)GetAttribute(field, autoSerializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
                     var type = GetTypeOfMember(field);
-                    _ = builder.Append($"if (key == nameof({field.Name})) {field.Name} = ");
+                    _ = builder.Append($"if (key == {name}) {field.Name} = ");
                     if (receiver.Serializes.TryGetValue(type, out var deserializer))
                     {
                         _ = builder.AppendLine($"{deserializer.ToDisplayString()}.Deserialize(entry);");
@@ -107,24 +108,25 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
 
                 foreach (var field in entity.GetMembers().Where(x => HasAttribute(x, autoSerializeAttribute)))
                 {
+                    var name = '"' + ((string?)GetAttribute(field, autoSerializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
                     var type = GetTypeOfMember(field);
 
                     _ = builder.Append($"        ");
                     if (receiver.Serializes.TryGetValue(type, out var serializer))
                     {
-                        _ = builder.AppendLine($"{serializer.ToDisplayString()}.Serialize({field.Name}, serializer.ObjectNext(nameof({field.Name})));");
+                        _ = builder.AppendLine($"{serializer.ToDisplayString()}.Serialize({field.Name}, serializer.ObjectNext({name}));");
                     }
                     else if (IsBuiltin(type))
                     {
-                        _ = builder.AppendLine($"serializer.ObjectNext(nameof({field.Name})).Write({field.Name});");
+                        _ = builder.AppendLine($"serializer.ObjectNext({name}).Write({field.Name});");
                     }
                     else if (type.TypeKind == TypeKind.Enum)
                     {
-                        _ = builder.AppendLine($"serializer.ObjectNext(nameof({field.Name})).Write(({type.EnumUnderlyingType}){field.Name});");
+                        _ = builder.AppendLine($"serializer.ObjectNext({name}).Write(({type.EnumUnderlyingType}){field.Name});");
                     }
                     else
                     {
-                        _ = builder.AppendLine($"{field.Name}.Serialize(serializer.ObjectNext(nameof({field.Name})));");
+                        _ = builder.AppendLine($"{field.Name}.Serialize(serializer.ObjectNext({name}));");
                     }
                 }
                 _ = builder.Append($@"    }}
