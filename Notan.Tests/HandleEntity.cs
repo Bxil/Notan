@@ -3,10 +3,10 @@ using Notan.Serialization;
 
 namespace Notan.Tests;
 
-[AutoSerialized]
+[GenerateSerialization]
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
 partial struct HandleEntity : IEntity<HandleEntity>
 {
-    [AutoSerialize]
+    [Serialize]
     public Maybe<ByteEntityOnDestroy> Value;
 }

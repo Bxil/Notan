@@ -25,14 +25,14 @@ $@"using System;
 namespace Notan.Serialization;
 
 [AttributeUsage(AttributeTargets.Struct)]
-internal sealed class AutoSerializedAttribute : Attribute {{}}
+internal sealed class GenerateSerializationAttribute : Attribute {{}}
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-internal sealed class AutoSerializeAttribute : Attribute
+internal sealed class SerializeAttribute : Attribute
 {{
     public string? Name {{ get; }}
 
-    public AutoSerializeAttribute(string? name = null)
+    public SerializeAttribute(string? name = null)
     {{
         Name = name;
     }}
@@ -54,7 +54,7 @@ internal sealed class SerializesAttribute : Attribute
         {
             if (context.SyntaxContextReceiver is not SyntaxReceiver receiver) return;
 
-            var autoSerializeAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.AutoSerializeAttribute")!;
+            var serializeAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.SerializeAttribute")!;
             var deserializerAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.DeserializerAttribute")!;
             var ientity = context.Compilation.GetTypeByMetadataName("Notan.IEntity`1")!;
 
@@ -105,9 +105,9 @@ $@"
 
                 string depth = isEntity ? "        " : "            ";
                 _ = builder.Append(depth);
-                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, autoSerializeAttribute)))
+                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, serializeAttribute)))
                 {
-                    var name = '"' + ((string?)GetAttribute(field, autoSerializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
+                    var name = '"' + ((string?)GetAttribute(field, serializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
                     var type = GetTypeOfMember(field);
                     _ = builder.Append($"if (key == {name}) {deserPrefix}{field.Name} = ");
                     if (receiver.Serializes.TryGetValue(type, out var deserializer))
@@ -161,9 +161,9 @@ $@"
                     _ = builder.AppendLine("        serializer.ObjectBegin();");
                 }
 
-                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, autoSerializeAttribute)))
+                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, serializeAttribute)))
                 {
-                    var name = '"' + ((string?)GetAttribute(field, autoSerializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
+                    var name = '"' + ((string?)GetAttribute(field, serializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
                     var type = GetTypeOfMember(field);
 
                     _ = builder.Append($"        ");
@@ -232,12 +232,12 @@ $@"
 
             public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
             {
-                var autoSerializedAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.AutoSerializedAttribute")!;
+                var generateSerializationAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.GenerateSerializationAttribute")!;
                 var serializesAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.SerializesAttribute")!;
                 var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node)!;
                 if (symbol is INamedTypeSymbol namedTypeSymbol)
                 {
-                    if (HasAttribute(namedTypeSymbol, autoSerializedAttribute))
+                    if (HasAttribute(namedTypeSymbol, generateSerializationAttribute))
                     {
                         Serialized.Add(namedTypeSymbol);
                     }

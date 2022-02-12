@@ -3,11 +3,11 @@ using Notan.Serialization;
 
 namespace Notan.Tests;
 
-[AutoSerialized]
+[GenerateSerialization]
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
 public partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
 {
-    [AutoSerialize]
+    [Serialize]
     public byte Value;
 
     void IEntity<ByteEntityOnDestroy>.OnDestroy(ServerHandle<ByteEntityOnDestroy> handle)
@@ -16,11 +16,11 @@ public partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
     }
 }
 
-[AutoSerialized]
+[GenerateSerialization]
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
 public partial struct ByteEntityPreUpdate : IEntity<ByteEntityPreUpdate>
 {
-    [AutoSerialize]
+    [Serialize]
     public byte Value { get; set; }
 
     void IEntity<ByteEntityPreUpdate>.PreUpdate(Handle<ByteEntityPreUpdate> handle)
@@ -29,11 +29,11 @@ public partial struct ByteEntityPreUpdate : IEntity<ByteEntityPreUpdate>
     }
 }
 
-[AutoSerialized]
+[GenerateSerialization]
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
 public partial struct ByteEntityPostUpdate : IEntity<ByteEntityPostUpdate>
 {
-    [AutoSerialize]
+    [Serialize]
     public byte Value { get; set; }
 
     void IEntity<ByteEntityPostUpdate>.PostUpdate(Handle<ByteEntityPostUpdate> handle)

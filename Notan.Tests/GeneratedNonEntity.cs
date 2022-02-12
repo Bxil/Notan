@@ -2,11 +2,11 @@
 
 namespace Notan.Tests;
 
-[AutoSerialized]
+[GenerateSerialization]
 public partial struct GeneratedNonEntity
 {
-    [AutoSerialize]
+    [Serialize]
     public int X;
-    [AutoSerialize("Z")]
+    [Serialize("Z")]
     public string Y;
 }
