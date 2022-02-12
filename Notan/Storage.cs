@@ -283,7 +283,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
             deserializer.ObjectBegin();
 
             var dead = false;
-            T t = default;
+            var t = new T();
             var gen = -1;
             while (deserializer.ObjectTryNext(out var key))
             {
@@ -339,7 +339,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
             case MessageType.Create:
                 if (authority == ClientAuthority.Unauthenticated || (authority == ClientAuthority.Authenticated && client.Authenticated))
                 {
-                    T entity = default;
+                    var entity = new T();
                     client.ReadIntoEntity(ref entity);
                     var handle = Create(entity);
                     SetAuthority(handle.Index, handle.Generation, client);
@@ -434,7 +434,7 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
                 {
                     var entid = entityToIndex.Count;
                     entityToIndex.Add(index);
-                    T entity = default;
+                    var entity = new T();
                     client.ReadIntoEntity(ref entity);
                     entities.Add(entity);
                     entityIsForgotten.Add(false);
