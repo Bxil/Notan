@@ -12,7 +12,12 @@ namespace Notan.Generators
         public void Initialize(GeneratorInitializationContext context)
         {
             context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
-            context.RegisterForPostInitialization(context => context.AddSource("AutoSerializeAttribute.g.cs",
+            context.RegisterForPostInitialization(PostInitialize);
+        }
+
+        private static void PostInitialize(GeneratorPostInitializationContext context)
+        {
+            context.AddSource("Attributes.g.cs",
 $@"using System;
 
 #nullable enable
@@ -28,14 +33,26 @@ internal sealed class AutoSerializeAttribute : Attribute
     {{
         Name = name;
     }}
-}}"));
+}}
+
+[AttributeUsage(AttributeTargets.Class)]
+internal sealed class SerializesAttribute : Attribute
+{{
+    public Type Type {{ get; }}
+
+    public SerializesAttribute(Type type)
+    {{
+        Type = type;
+    }}
+}}");
         }
 
         public void Execute(GeneratorExecutionContext context)
         {
             if (context.SyntaxContextReceiver is not SyntaxReceiver receiver) return;
 
-            var attribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.AutoSerializeAttribute")!;
+            var autoSerializeAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.AutoSerializeAttribute")!;
+            var deserializerAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.DeserializerAttribute")!;
 
             var builder = new StringBuilder();
             foreach (var entity in receiver.Entities)
@@ -58,11 +75,15 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
     {{
 ");
                 _ = builder.Append("        ");
-                foreach (var field in entity.GetMembers().Where(x => HasAttribute(x, attribute)))
+                foreach (var field in entity.GetMembers().Where(x => HasAttribute(x, autoSerializeAttribute)))
                 {
                     var type = GetTypeOfMember(field);
                     _ = builder.Append($"if (key == nameof({field.Name})) {field.Name} = ");
-                    if (IsBuiltin(type))
+                    if (receiver.Serializes.TryGetValue(type, out var deserializer))
+                    {
+                        _ = builder.AppendLine($"{deserializer.ToDisplayString()}.Deserialize(entry);");
+                    }
+                    else if (IsBuiltin(type))
                     {
                         _ = builder.AppendLine($"entry.Get{type.Name}();");
                     }
@@ -84,12 +105,16 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
     {{
 ");
 
-                foreach (var field in entity.GetMembers().Where(x => HasAttribute(x, attribute)))
+                foreach (var field in entity.GetMembers().Where(x => HasAttribute(x, autoSerializeAttribute)))
                 {
                     var type = GetTypeOfMember(field);
 
                     _ = builder.Append($"        ");
-                    if (IsBuiltin(type))
+                    if (receiver.Serializes.TryGetValue(type, out var serializer))
+                    {
+                        _ = builder.AppendLine($"{serializer.ToDisplayString()}.Serialize({field.Name}, serializer.ObjectNext(nameof({field.Name})));");
+                    }
+                    else if (IsBuiltin(type))
                     {
                         _ = builder.AppendLine($"serializer.ObjectNext(nameof({field.Name})).Write({field.Name});");
                     }
@@ -111,6 +136,8 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
         }
 
         private static bool HasAttribute(ISymbol symbol, INamedTypeSymbol attribute) => symbol.GetAttributes().Any(x => attribute.Equals(x.AttributeClass, SymbolEqualityComparer.Default));
+
+        private static AttributeData GetAttribute(ISymbol symbol, INamedTypeSymbol attribute) => symbol.GetAttributes().Single(x => attribute.Equals(x.AttributeClass, SymbolEqualityComparer.Default));
 
         private static INamedTypeSymbol GetTypeOfMember(ISymbol symbol)
         {
@@ -138,16 +165,22 @@ public partial{(entity.IsRecord ? " record " : " ")}struct {entity.Name}
         private class SyntaxReceiver : ISyntaxContextReceiver
         {
             public List<INamedTypeSymbol> Entities = new();
+            public Dictionary<INamedTypeSymbol, INamedTypeSymbol> Serializes = new(SymbolEqualityComparer.Default);
 
             public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
             {
-                var attribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.AutoSerializeAttribute")!;
+                var autoSerializeAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.AutoSerializeAttribute")!;
+                var serializesAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.SerializesAttribute")!;
                 var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node)!;
                 if (symbol is INamedTypeSymbol namedTypeSymbol)
                 {
-                    if (HasAttribute(namedTypeSymbol, attribute))
+                    if (HasAttribute(namedTypeSymbol, autoSerializeAttribute))
                     {
                         Entities.Add(namedTypeSymbol);
+                    }
+                    if (HasAttribute(namedTypeSymbol, serializesAttribute))
+                    {
+                        Serializes.Add((INamedTypeSymbol)GetAttribute(namedTypeSymbol, serializesAttribute).ConstructorArguments[0].Value!, namedTypeSymbol);
                     }
                 }
             }

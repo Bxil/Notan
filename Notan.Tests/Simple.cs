@@ -104,7 +104,7 @@ public class Simple
 
         for (var i = 0; i < bytehandles.Length; i++)
         {
-            bytehandles[i].Alive(out var bytehandle);
+            _ = bytehandles[i].Alive(out var bytehandle);
             if (i % 2 == 1)
             {
                 Assert.AreEqual(2, bytehandle.Generation);
