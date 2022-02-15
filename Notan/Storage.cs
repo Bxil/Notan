@@ -223,6 +223,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     public void Run<TSystem>(ref TSystem system) where TSystem : IServerSystem<T>
     {
+        system.PreWork();
         var i = entities.Count;
         while (i > 0)
         {
@@ -233,6 +234,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
                 system.Work(new(this, index, generations[index]), ref entities[i]);
             }
         }
+        system.PostWork();
     }
 
     public TSystem Run<TSystem>(TSystem system) where TSystem : IServerSystem<T>
@@ -481,6 +483,7 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     public void Run<TSystem>(ref TSystem system) where TSystem : IClientSystem<T>
     {
+        system.PreWork();
         var i = entities.Count;
         while (i > 0)
         {
@@ -491,6 +494,7 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
                 system.Work(new(this, index, generations[index]), ref entities[i]);
             }
         }
+        system.PostWork();
     }
 
     public TSystem Run<TSystem>(TSystem system) where TSystem : IClientSystem<T>
