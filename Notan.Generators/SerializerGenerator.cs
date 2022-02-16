@@ -27,7 +27,7 @@ namespace Notan.Serialization;
 [AttributeUsage(AttributeTargets.Struct)]
 internal sealed class GenerateSerializationAttribute : Attribute {{}}
 
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+[AttributeUsage(AttributeTargets.Field)]
 internal sealed class SerializeAttribute : Attribute
 {{
     public string? Name {{ get; }}
@@ -104,10 +104,10 @@ $@"
 
                 string depth = isEntity ? "        " : "            ";
                 _ = builder.Append(depth);
-                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, serializeAttribute)))
+                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, serializeAttribute)).Cast<IFieldSymbol>())
                 {
                     var name = '"' + ((string?)GetAttribute(field, serializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
-                    var type = GetTypeOfMember(field);
+                    var type = (INamedTypeSymbol)field.Type;
                     _ = builder.Append($"if (key == {name}) ");
                     if (receiver.Serializes.TryGetValue(type, out var deserializer))
                     {
@@ -159,10 +159,10 @@ $@"
                     _ = builder.AppendLine("        serializer.ObjectBegin();");
                 }
 
-                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, serializeAttribute)))
+                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, serializeAttribute)).Cast<IFieldSymbol>())
                 {
                     var name = '"' + ((string?)GetAttribute(field, serializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
-                    var type = GetTypeOfMember(field);
+                    var type = (INamedTypeSymbol)field.Type;
 
                     _ = builder.Append($"        ");
                     if (receiver.Serializes.TryGetValue(type, out var serializer))
@@ -199,19 +199,6 @@ $@"
         private static bool HasAttribute(ISymbol symbol, INamedTypeSymbol attribute) => symbol.GetAttributes().Any(x => attribute.Equals(x.AttributeClass, SymbolEqualityComparer.Default));
 
         private static AttributeData GetAttribute(ISymbol symbol, INamedTypeSymbol attribute) => symbol.GetAttributes().Single(x => attribute.Equals(x.AttributeClass, SymbolEqualityComparer.Default));
-
-        private static INamedTypeSymbol GetTypeOfMember(ISymbol symbol)
-        {
-            if (symbol is IFieldSymbol fieldSymbol)
-            {
-                return (INamedTypeSymbol)fieldSymbol.Type;
-            }
-            else if (symbol is IPropertySymbol propertySymbol)
-            {
-                return (INamedTypeSymbol)propertySymbol.Type;
-            }
-            throw new Exception();
-        }
 
         private static bool IsBuiltin(INamedTypeSymbol symbol)
             => symbol.ToDisplayString() is

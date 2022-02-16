@@ -21,7 +21,7 @@ public partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
 public partial struct ByteEntityPreUpdate : IEntity<ByteEntityPreUpdate>
 {
     [Serialize]
-    public byte Value { get; set; }
+    public byte Value;
 
     void IEntity<ByteEntityPreUpdate>.PreUpdate(Handle<ByteEntityPreUpdate> handle)
     {
@@ -34,7 +34,7 @@ public partial struct ByteEntityPreUpdate : IEntity<ByteEntityPreUpdate>
 public partial struct ByteEntityPostUpdate : IEntity<ByteEntityPostUpdate>
 {
     [Serialize]
-    public byte Value { get; set; }
+    public byte Value;
 
     void IEntity<ByteEntityPostUpdate>.PostUpdate(Handle<ByteEntityPostUpdate> handle)
     {
