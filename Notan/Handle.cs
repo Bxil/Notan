@@ -93,8 +93,8 @@ public readonly record struct Handle<T> where T : struct, IEntity<T>
     public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
         => ((Handle)this).Serialize(serializer);
 
-    public static Handle<T> Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
-        => Handle.Deserialize(deserializer, typeof(T)).Strong<T>();
+    public static void Deserialize<TDeserializer>(ref Handle<T> handle, TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
+        => handle = Handle.Deserialize(deserializer, typeof(T)).Strong<T>();
 }
 
 public readonly record struct ServerHandle<T> where T : struct, IEntity<T>
@@ -140,8 +140,8 @@ public readonly record struct ServerHandle<T> where T : struct, IEntity<T>
     public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
     => ((Handle)this).Serialize(serializer);
 
-    public static ServerHandle<T> Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
-        => Handle.Deserialize(deserializer, typeof(T)).Server<T>();
+    public static void Deserialize<TDeserializer>(ref ServerHandle<T> handle, TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
+        => handle = Handle.Deserialize(deserializer, typeof(T)).Server<T>();
 }
 
 public readonly record struct ClientHandle<T> where T : struct, IEntity<T>
@@ -175,8 +175,8 @@ public readonly record struct ClientHandle<T> where T : struct, IEntity<T>
     public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
         => ((Handle)this).Serialize(serializer);
 
-    public static ClientHandle<T> Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
-        => Handle.Deserialize(deserializer, typeof(T)).Client<T>();
+    public static void Deserialize<TDeserializer>(ref ClientHandle<T> handle, TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
+        => handle = Handle.Deserialize(deserializer, typeof(T)).Client<T>();
 }
 
 public readonly struct Maybe<T> where T : struct, IEntity<T>
@@ -192,7 +192,7 @@ public readonly struct Maybe<T> where T : struct, IEntity<T>
         handle = this.handle;
         return Alive();
     }
-    
+
     public bool AliveServer(out ServerHandle<T> handle)
     {
         handle = this.handle.Server();
@@ -212,6 +212,10 @@ public readonly struct Maybe<T> where T : struct, IEntity<T>
     public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
         => handle.Serialize(serializer);
 
-    public static Maybe<T> Deserialize<TDeserializer>(TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
-        => Handle<T>.Deserialize(deserializer);
+    public static void Deserialize<TDeserializer>(ref Maybe<T> maybe, TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
+    {
+        Unsafe.SkipInit(out Handle<T> handle);
+        Handle<T>.Deserialize(ref handle, deserializer);
+        maybe = handle;
+    }
 }

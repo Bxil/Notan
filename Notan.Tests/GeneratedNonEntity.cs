@@ -1,4 +1,5 @@
 ﻿using Notan.Serialization;
+using System;
 
 namespace Notan.Tests;
 
@@ -9,4 +10,6 @@ public partial struct GeneratedNonEntity
     public int X;
     [Serialize("Z")]
     public string Y;
+    [Serialize]
+    public DateTime W;
 }

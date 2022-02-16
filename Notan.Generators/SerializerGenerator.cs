@@ -78,15 +78,14 @@ internal sealed class SerializesAttribute : Attribute
 public partial{(serialized.IsRecord ? " record " : " ")}struct {serialized.Name}
 {{");
 
-                string deserPrefix = isEntity ? "" : "x.";
+                string deserPrefix = isEntity ? "" : "self.";
 
                 if (!isEntity)
                 {
                     _ = builder.Append(
 $@"
-    public static {serialized.Name} Deserialize<T>(T deserializer) where T : IDeserializer<T>
+    public static void Deserialize<T>(ref {serialized.Name} self, T deserializer) where T : IDeserializer<T>
     {{
-        var x = new {serialized.Name}();
         deserializer.ObjectBegin();
         while (deserializer.ObjectTryNext(out var key))
         {{
@@ -109,22 +108,22 @@ $@"
                 {
                     var name = '"' + ((string?)GetAttribute(field, serializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
                     var type = GetTypeOfMember(field);
-                    _ = builder.Append($"if (key == {name}) {deserPrefix}{field.Name} = ");
+                    _ = builder.Append($"if (key == {name}) ");
                     if (receiver.Serializes.TryGetValue(type, out var deserializer))
                     {
-                        _ = builder.AppendLine($"{deserializer.ToDisplayString()}.Deserialize(entry);");
+                        _ = builder.AppendLine($"{deserializer.ToDisplayString()}.Deserialize(ref {deserPrefix}{field.Name}, entry);");
                     }
                     else if (IsBuiltin(type))
                     {
-                        _ = builder.AppendLine($"entry.Get{type.Name}();");
+                        _ = builder.AppendLine($"{deserPrefix}{field.Name} = entry.Get{type.Name}();");
                     }
                     else if (type.TypeKind == TypeKind.Enum)
                     {
-                        _ = builder.AppendLine($"({type.ToDisplayString()})entry.Get{type.EnumUnderlyingType!.Name}();");
+                        _ = builder.AppendLine($"{deserPrefix}{field.Name} = ({type.ToDisplayString()})entry.Get{type.EnumUnderlyingType!.Name}();");
                     }
                     else
                     {
-                        _ = builder.AppendLine($"{type.ToDisplayString()}.Deserialize(entry);");
+                        _ = builder.AppendLine($"{type.ToDisplayString()}.Deserialize(ref {deserPrefix}{field.Name}, entry);");
                     }
                     _ = builder.Append(depth).Append($"else ");
                 }
@@ -139,7 +138,6 @@ $@"
                 if (!isEntity)
                 {
                     _ = builder.Append(@"
-        return x;
     }
 
     public void Serialize<T>(T serializer) where T : ISerializer<T>

@@ -11,6 +11,8 @@ internal struct FastList<T>
     private T[] array = Array.Empty<T>();
     public int Count { get; private set; } = 0;
 
+    public FastList() { }
+
     public void Add(T t)
     {
         EnsureCapacity(Count + 1);

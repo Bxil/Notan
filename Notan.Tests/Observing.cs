@@ -98,7 +98,9 @@ public class Observing
 
     struct AliveCountSystem : IClientSystem<HandleEntity>
     {
-        public int Count = 0;
+        public int Count;
+
+        void IClientSystem<HandleEntity>.PreWork() => Count = 0;
 
         void IClientSystem<HandleEntity>.Work(ClientHandle<HandleEntity> handle, ref HandleEntity entity)
         {
