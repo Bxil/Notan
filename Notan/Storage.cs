@@ -106,6 +106,11 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     internal void Destroy(int index, int generation)
     {
+        if (!Alive(index, generation))
+        {
+            return;
+        }
+
         ref var entity = ref Get(index, generation);
         entity.PreUpdate(new(this, index, generation));
 
