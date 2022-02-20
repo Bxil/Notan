@@ -10,7 +10,7 @@ public partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
     [Serialize]
     public byte Value;
 
-    void IEntity<ByteEntityOnDestroy>.OnDestroy(ServerHandle<ByteEntityOnDestroy> handle)
+    void IEntity<ByteEntityOnDestroy>.OnDestroy()
     {
         Value -= 1;
     }

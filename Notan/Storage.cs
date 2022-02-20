@@ -106,8 +106,8 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     internal void Destroy(int index, int generation)
     {
-        Get(index, generation).PreUpdate(new(this, index, generation));
-        Get(index, generation).OnDestroy(new(this, index, generation));
+        ref var entity = ref Get(index, generation);
+        entity.PreUpdate(new(this, index, generation));
 
         foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
         {
@@ -117,6 +117,8 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         entityIsDead[indexToEntity[index]] = true;
         generations[index]++;
         destroyedEntityIndices.Add(index);
+
+        entity.OnDestroy();
     }
 
     private void Recycle(int index)
