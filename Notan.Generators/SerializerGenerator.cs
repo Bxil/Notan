@@ -42,10 +42,12 @@ internal sealed class SerializeAttribute : Attribute
 internal sealed class HandleIsAttribute : Attribute
 {{
     public Type Type {{ get; }}
+    public bool MakeProperty {{ get; }}
 
-    public HandleIsAttribute(Type type)
+    public HandleIsAttribute(Type type, bool makeProperty = false)
     {{
         Type = type;
+        MakeProperty = makeProperty;
     }}
 }}
 
@@ -89,7 +91,20 @@ internal sealed class SerializesAttribute : Attribute
 
                 _ = builder.Append($@"
 public partial{(serialized.IsRecord ? " record " : " ")}struct {serialized.Name}
-{{");
+{{
+");
+
+                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, serializeAttribute) && HasAttribute(x, handleIsAttribute)).Cast<IFieldSymbol>().Where(x => x.Type.Equals(handleType, SymbolEqualityComparer.Default)))
+                {
+                    var attribute = GetAttribute(field, handleIsAttribute);
+                    if (!(bool)attribute.ConstructorArguments[1].Value!)
+                    {
+                        continue;
+                    }
+                    string propertyName = (string)GetAttribute(field, serializeAttribute).ConstructorArguments[0].Value!;
+                    var typeString = ((INamedTypeSymbol)GetAttribute(field, handleIsAttribute).ConstructorArguments[0].Value!).ToDisplayString();
+                    _ = builder.AppendLine($"    public Handle<{typeString}> {propertyName} {{ get => {field.Name}.Strong<{typeString}>(); set => {field.Name} = value; }}");
+                }
 
                 string deserPrefix = isEntity ? "" : "self.";
 
@@ -206,6 +221,7 @@ $@"
                 }
 
                 _ = builder.Append($@"    }}
+
 }}");
 
                 context.AddSource($"{serialized.ToDisplayString()}.g.cs", builder.ToString());
