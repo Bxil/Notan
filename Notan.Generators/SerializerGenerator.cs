@@ -38,6 +38,17 @@ internal sealed class SerializeAttribute : Attribute
     }}
 }}
 
+[AttributeUsage(AttributeTargets.Field)]
+internal sealed class HandleIsAttribute : Attribute
+{{
+    public Type Type {{ get; }}
+
+    public HandleIsAttribute(Type type)
+    {{
+        Type = type;
+    }}
+}}
+
 [AttributeUsage(AttributeTargets.Class)]
 internal sealed class SerializesAttribute : Attribute
 {{
@@ -56,12 +67,14 @@ internal sealed class SerializesAttribute : Attribute
 
             var serializeAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.SerializeAttribute")!;
             var deserializerAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.DeserializerAttribute")!;
-            var ientity = context.Compilation.GetTypeByMetadataName("Notan.IEntity`1")!;
+            var handleIsAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.HandleIsAttribute")!;
+            var ientityType = context.Compilation.GetTypeByMetadataName("Notan.IEntity`1")!;
+            var handleType = context.Compilation.GetTypeByMetadataName("Notan.Handle")!;
 
             var builder = new StringBuilder();
             foreach (var serialized in receiver.Serialized)
             {
-                bool isEntity = serialized.AllInterfaces.Contains(ientity.Construct(serialized));
+                bool isEntity = serialized.AllInterfaces.Contains(ientityType.Construct(serialized));
 
                 _ = builder
                     .AppendLine("using Notan;")
@@ -120,6 +133,10 @@ $@"
                     else if (type.TypeKind == TypeKind.Enum)
                     {
                         _ = builder.AppendLine($"{deserPrefix}{field.Name} = ({type.ToDisplayString()})entry.Get{type.EnumUnderlyingType!.Name}();");
+                    }
+                    else if (type.Equals(handleType, SymbolEqualityComparer.Default) && HasAttribute(field, handleIsAttribute))
+                    {
+                        _ = builder.AppendLine($"{deserPrefix}{field.Name} = Handle.Deserialize(entry, typeof({((INamedTypeSymbol)GetAttribute(field, handleIsAttribute).ConstructorArguments[0].Value!).ToDisplayString()}));");
                     }
                     else
                     {
@@ -191,7 +208,7 @@ $@"
                 _ = builder.Append($@"    }}
 }}");
 
-                context.AddSource($"{serialized.Name}.g.cs", builder.ToString());
+                context.AddSource($"{serialized.ToDisplayString()}.g.cs", builder.ToString());
                 _ = builder.Clear();
             }
         }
