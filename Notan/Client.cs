@@ -80,9 +80,7 @@ public class Client
         {
             case MessageType.Create:
             case MessageType.Update:
-                serializer.ObjectBegin();
                 entity.Serialize(serializer);
-                serializer.ObjectEnd();
                 break;
             case MessageType.Destroy:
                 break;
@@ -125,10 +123,6 @@ public class Client
 
     internal void ReadIntoEntity<T>(ref T entity) where T : struct, IEntity<T>
     {
-        deserializer.ObjectBegin();
-        while (deserializer.ObjectTryNext(out var key))
-        {
-            entity.Deserialize(key, deserializer);
-        }
+        entity.Deserialize(deserializer);
     }
 }

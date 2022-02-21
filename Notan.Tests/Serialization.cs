@@ -34,24 +34,24 @@ public class Serialization
 {
     ""Notan.Tests.ByteEntityOnDestroy"": [
         {
-            ""$gen"": 0,
-            ""Value"": 2
+            ""gen"": 0,
+            ""entity"": 2
         },
         {
-            ""$gen"": 42,
-            ""$dead"": true
+            ""gen"": 42,
+            ""dead"": true
         },
         {
-            ""$gen"": 12,
-            ""Value"": 3
+            ""gen"": 12,
+            ""entity"": 3
         },
         {
-            ""$gen"": 12,
-            ""Value"": 5
+            ""gen"": 12,
+            ""entity"": 5
         },
         {
-            ""$gen"": 12,
-            ""$dead"": true
+            ""gen"": 12,
+            ""dead"": true
         }
     ]
 }

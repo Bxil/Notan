@@ -1,268 +1,148 @@
 ﻿using Microsoft.CodeAnalysis;
-using System;
+using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
+using System.Reflection;
 using System.Text;
 
-namespace Notan.Generators
+namespace Notan.Generators;
+
+[Generator]
+public class SerializerGenerator : ISourceGenerator
 {
-    [Generator]
-    public class SerializerGenerator : ISourceGenerator
+    public void Initialize(GeneratorInitializationContext context)
     {
-        public void Initialize(GeneratorInitializationContext context)
-        {
-            context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
-            context.RegisterForPostInitialization(PostInitialize);
-        }
-
-        private static void PostInitialize(GeneratorPostInitializationContext context)
-        {
-            context.AddSource("Attributes.g.cs",
-$@"using System;
-
-#nullable enable
-
-namespace Notan.Serialization;
-
-[AttributeUsage(AttributeTargets.Struct)]
-internal sealed class GenerateSerializationAttribute : Attribute {{}}
-
-[AttributeUsage(AttributeTargets.Field)]
-internal sealed class SerializeAttribute : Attribute
-{{
-    public string? Name {{ get; }}
-
-    public SerializeAttribute(string? name = null)
-    {{
-        Name = name;
-    }}
-}}
-
-[AttributeUsage(AttributeTargets.Field)]
-internal sealed class HandleIsAttribute : Attribute
-{{
-    public Type Type {{ get; }}
-    public bool MakeProperty {{ get; }}
-
-    public HandleIsAttribute(Type type, bool makeProperty = false)
-    {{
-        Type = type;
-        MakeProperty = makeProperty;
-    }}
-}}
-
-[AttributeUsage(AttributeTargets.Class)]
-internal sealed class SerializesAttribute : Attribute
-{{
-    public Type Type {{ get; }}
-
-    public SerializesAttribute(Type type)
-    {{
-        Type = type;
-    }}
-}}");
-        }
-
-        public void Execute(GeneratorExecutionContext context)
-        {
-            if (context.SyntaxContextReceiver is not SyntaxReceiver receiver) return;
-
-            var serializeAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.SerializeAttribute")!;
-            var deserializerAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.DeserializerAttribute")!;
-            var handleIsAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.HandleIsAttribute")!;
-            var ientityType = context.Compilation.GetTypeByMetadataName("Notan.IEntity`1")!;
-            var handleType = context.Compilation.GetTypeByMetadataName("Notan.Handle")!;
-
-            var builder = new StringBuilder();
-            foreach (var serialized in receiver.Serialized)
-            {
-                bool isEntity = serialized.AllInterfaces.Contains(ientityType.Construct(serialized));
-
-                _ = builder
-                    .AppendLine("using Notan;")
-                    .AppendLine("using Notan.Serialization;")
-                    .AppendLine("using System.IO;");
-                if (serialized.ContainingNamespace != null)
-                {
-                    _ = builder
-                        .AppendLine()
-                        .AppendLine($"namespace {serialized.ContainingNamespace};");
-                }
-
-                _ = builder.Append($@"
-partial{(serialized.IsRecord ? " record " : " ")}struct {serialized.Name}
-{{
-");
-
-                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, serializeAttribute) && HasAttribute(x, handleIsAttribute)).Cast<IFieldSymbol>().Where(x => x.Type.Equals(handleType, SymbolEqualityComparer.Default)))
-                {
-                    var attribute = GetAttribute(field, handleIsAttribute);
-                    if (!(bool)attribute.ConstructorArguments[1].Value!)
-                    {
-                        continue;
-                    }
-                    string propertyName = (string)GetAttribute(field, serializeAttribute).ConstructorArguments[0].Value!;
-                    var typeString = ((INamedTypeSymbol)GetAttribute(field, handleIsAttribute).ConstructorArguments[0].Value!).ToDisplayString();
-                    _ = builder.AppendLine($"    public Handle<{typeString}> {propertyName} {{ get => {field.Name}.Strong<{typeString}>(); set => {field.Name} = value; }}");
-                }
-
-                string deserPrefix = isEntity ? "" : "self.";
-
-                if (!isEntity)
-                {
-                    _ = builder.Append(
-$@"
-    public static void Deserialize<T>(ref {serialized.Name} self, T deserializer) where T : IDeserializer<T>
-    {{
-        deserializer.ObjectBegin();
-        while (deserializer.ObjectTryNext(out var key))
-        {{
-            var entry = deserializer;
-
-");
-                }
-                else
-                {
-                    _ = builder.Append(
-$@"
-    void IEntity<{serialized.Name}>.Deserialize<T>(Key key, T entry)
-    {{
-");
-                }
-
-                string depth = isEntity ? "        " : "            ";
-                _ = builder.Append(depth);
-                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, serializeAttribute)).Cast<IFieldSymbol>())
-                {
-                    var name = '"' + ((string?)GetAttribute(field, serializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
-                    var type = (INamedTypeSymbol)field.Type;
-                    _ = builder.Append($"if (key == {name}) ");
-                    if (receiver.Serializes.TryGetValue(type, out var deserializer))
-                    {
-                        _ = builder.AppendLine($"{deserializer.ToDisplayString()}.Deserialize(ref {deserPrefix}{field.Name}, entry);");
-                    }
-                    else if (IsBuiltin(type))
-                    {
-                        _ = builder.AppendLine($"{deserPrefix}{field.Name} = entry.Get{type.Name}();");
-                    }
-                    else if (type.TypeKind == TypeKind.Enum)
-                    {
-                        _ = builder.AppendLine($"{deserPrefix}{field.Name} = ({type.ToDisplayString()})entry.Get{type.EnumUnderlyingType!.Name}();");
-                    }
-                    else if (type.Equals(handleType, SymbolEqualityComparer.Default) && HasAttribute(field, handleIsAttribute))
-                    {
-                        _ = builder.AppendLine($"{deserPrefix}{field.Name} = Handle.Deserialize(entry, typeof({((INamedTypeSymbol)GetAttribute(field, handleIsAttribute).ConstructorArguments[0].Value!).ToDisplayString()}));");
-                    }
-                    else
-                    {
-                        _ = builder.AppendLine($"{type.ToDisplayString()}.Deserialize(ref {deserPrefix}{field.Name}, entry);");
-                    }
-                    _ = builder.Append(depth).Append($"else ");
-                }
-                _ = builder.Append($"throw new IOException($\"{serialized.Name} has no such field: {{key.ToString()}}.\");");
-
-                if (!isEntity)
-                {
-                    _ = builder.AppendLine();
-                    _ = builder.Append("        }");
-                }
-
-                if (!isEntity)
-                {
-                    _ = builder.Append(@"
+        context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
+        context.RegisterForPostInitialization(PostInitialize);
     }
 
-    public void Serialize<T>(T serializer) where T : ISerializer<T>
+    private static void PostInitialize(GeneratorPostInitializationContext context)
     {
-");
+        context.AddSource("Attributes.g.cs", SourceText.From(Assembly.GetExecutingAssembly()
+            .GetManifestResourceStream("Notan.Generators.EmbeddedResources.Attributes.cs"), canBeEmbedded: true));
+    }
+
+    public void Execute(GeneratorExecutionContext context)
+    {
+        if (context.SyntaxContextReceiver is not SyntaxReceiver receiver) return;
+
+        var serializeAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.SerializeAttribute")!;
+        var handleIsAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.HandleIsAttribute")!;
+        var ientityType = context.Compilation.GetTypeByMetadataName("Notan.IEntity`1")!;
+        var handleType = context.Compilation.GetTypeByMetadataName("Notan.Handle")!;
+
+        var text = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("Notan.Generators.EmbeddedResources.Serialized.cs")).ReadToEnd();
+
+        var propertiesBuilder = new StringBuilder();
+        var serializeBuilder = new StringBuilder();
+        var deserializeBuilder = new StringBuilder();
+        foreach (var serialized in receiver.Serialized)
+        {
+            string nspace = serialized.ContainingNamespace != null ? $"namespace {serialized.ContainingNamespace};" : "";
+
+            string structtype = serialized.IsRecord ? "record struct" : "struct";
+
+            bool isEntity = serialized.AllInterfaces.Contains(ientityType.Construct(serialized));
+
+            string serializesSignature = isEntity
+                ? "void IEntity<__TYPENAME__>.Serialize<T>(T serializer)"
+                : "public void Serialize<T>(T serializer) where T : ISerializer<T>";
+
+            string deserializesSignature = isEntity
+                ? "void IEntity<__TYPENAME__>.Deserialize<T>(T deserializer)"
+                : "public static void Deserialize<T>(ref __TYPENAME__ self, T deserializer) where T : IDeserializer<T>";
+
+            string deserPrefix = isEntity ? "" : "self.";
+
+            _ = serializeBuilder.AppendLine("serializer.ObjectBegin();").Append("        ");
+            _ = deserializeBuilder.AppendLine("while (deserializer.ObjectTryNext(out var key))")
+                .AppendLine("        {")
+                .Append("            ");
+            foreach (var field in serialized.GetMembers().OfType<IFieldSymbol>())
+            {
+                if (!field.TryGetAttribute(serializeAttribute, out var serializeData))
+                {
+                    continue;
+                }
+
+                if (field.TryGetAttribute(handleIsAttribute, out var handleIsData) && (bool)handleIsData.ConstructorArguments[1].Value! && field.Type.Equals(handleType, SymbolEqualityComparer.Default))
+                {
+                    string propertyName = (string)serializeData.ConstructorArguments[0].Value!;
+                    var typeString = ((INamedTypeSymbol)handleIsData.ConstructorArguments[0].Value!).ToDisplayString();
+                    _ = propertiesBuilder.AppendLine().AppendLine($"    public Handle<{typeString}> {propertyName} {{ get => {field.Name}.Strong<{typeString}>(); set => {field.Name} = value; }}");
+                }
+
+                var name = $"\"{(string?)serializeData.ConstructorArguments[0].Value ?? field.Name}\"";
+                var type = (INamedTypeSymbol)field.Type;
+                _ = deserializeBuilder.Append($"if (key == {name}) ");
+                if (receiver.Serializes.TryGetValue(type, out var serializer))
+                {
+                    _ = serializeBuilder.AppendLine($"{serializer.ToDisplayString()}.Serialize({field.Name}, serializer.ObjectNext({name}));");
+                    _ = deserializeBuilder.AppendLine($"{serializer.ToDisplayString()}.Deserialize(ref {deserPrefix}{field.Name}, deserializer);");
+                }
+                else if (type.IsBuiltin())
+                {
+                    _ = serializeBuilder.AppendLine($"serializer.ObjectNext({name}).Write({field.Name});");
+                    _ = deserializeBuilder.AppendLine($"{deserPrefix}{field.Name} = deserializer.Get{type.Name}();");
+                }
+                else if (type.TypeKind == TypeKind.Enum)
+                {
+                    _ = serializeBuilder.AppendLine($"serializer.ObjectNext({name}).Write(({type.EnumUnderlyingType}){field.Name});");
+                    _ = deserializeBuilder.AppendLine($"{deserPrefix}{field.Name} = ({type.ToDisplayString()})deserializer.Get{type.EnumUnderlyingType!.Name}();");
+                }
+                else if (type.Equals(handleType, SymbolEqualityComparer.Default) && handleIsData != null)
+                {
+                    _ = serializeBuilder.AppendLine($"{field.Name}.Serialize(serializer.ObjectNext({name}));");
+                    _ = deserializeBuilder.AppendLine($"{deserPrefix}{field.Name} = Handle.Deserialize(deserializer, typeof({((INamedTypeSymbol)handleIsData.ConstructorArguments[0].Value!).ToDisplayString()}));");
                 }
                 else
                 {
-                    _ = builder.Append($@"
-    }}
-
-    void IEntity<{serialized.Name}>.Serialize<T>(T serializer)
-    {{
-");
+                    _ = serializeBuilder.AppendLine($"{field.Name}.Serialize(serializer.ObjectNext({name}));");
+                    _ = deserializeBuilder.AppendLine($"{type.ToDisplayString()}.Deserialize(ref {deserPrefix}{field.Name}, deserializer);");
                 }
-
-                if (!isEntity)
-                {
-                    _ = builder.AppendLine("        serializer.ObjectBegin();");
-                }
-
-                foreach (var field in serialized.GetMembers().Where(x => HasAttribute(x, serializeAttribute)).Cast<IFieldSymbol>())
-                {
-                    var name = '"' + ((string?)GetAttribute(field, serializeAttribute).ConstructorArguments[0].Value ?? field.Name) + '"';
-                    var type = (INamedTypeSymbol)field.Type;
-
-                    _ = builder.Append($"        ");
-                    if (receiver.Serializes.TryGetValue(type, out var serializer))
-                    {
-                        _ = builder.AppendLine($"{serializer.ToDisplayString()}.Serialize({field.Name}, serializer.ObjectNext({name}));");
-                    }
-                    else if (IsBuiltin(type))
-                    {
-                        _ = builder.AppendLine($"serializer.ObjectNext({name}).Write({field.Name});");
-                    }
-                    else if (type.TypeKind == TypeKind.Enum)
-                    {
-                        _ = builder.AppendLine($"serializer.ObjectNext({name}).Write(({type.EnumUnderlyingType}){field.Name});");
-                    }
-                    else
-                    {
-                        _ = builder.AppendLine($"{field.Name}.Serialize(serializer.ObjectNext({name}));");
-                    }
-                }
-
-                if (!isEntity)
-                {
-                    _ = builder.AppendLine($"        serializer.ObjectEnd();");
-                }
-
-                _ = builder.Append($@"    }}
-
-}}");
-
-                context.AddSource($"{serialized.ToDisplayString()}.g.cs", builder.ToString());
-                _ = builder.Clear();
+                _ = serializeBuilder.Append($"        ");
+                _ = deserializeBuilder.Append($"            else ");
             }
+            _ = serializeBuilder.Append($"serializer.ObjectEnd();");
+            _ = deserializeBuilder.AppendLine($"throw new IOException($\"{serialized.Name} has no such field: {{key.ToString()}}.\");")
+                .Append("        }");
+
+            var formatted = text
+                .Replace("__NAMESPACE__", nspace)
+                .Replace("__STRUCTTYPE__", structtype)
+                .Replace("__SERIALIZESIGNATURE__", serializesSignature)
+                .Replace("__DESERIALIZESIGNATURE__", deserializesSignature)
+                .Replace("__PROPERTIES__", propertiesBuilder.ToString())
+                .Replace("__SERIALIZE__", serializeBuilder.ToString())
+                .Replace("__DESERIALIZE__", deserializeBuilder.ToString())
+                .Replace("__TYPENAME__", serialized.Name);
+
+            context.AddSource($"{serialized.ToDisplayString()}.g.cs", formatted);
+            _ = propertiesBuilder.Clear();
+            _ = serializeBuilder.Clear();
+            _ = deserializeBuilder.Clear();
         }
+    }
 
-        private static bool HasAttribute(ISymbol symbol, INamedTypeSymbol attribute) => symbol.GetAttributes().Any(x => attribute.Equals(x.AttributeClass, SymbolEqualityComparer.Default));
+    private class SyntaxReceiver : ISyntaxContextReceiver
+    {
+        public List<INamedTypeSymbol> Serialized = new();
+        public Dictionary<INamedTypeSymbol, INamedTypeSymbol> Serializes = new(SymbolEqualityComparer.Default);
 
-        private static AttributeData GetAttribute(ISymbol symbol, INamedTypeSymbol attribute) => symbol.GetAttributes().Single(x => attribute.Equals(x.AttributeClass, SymbolEqualityComparer.Default));
-
-        private static bool IsBuiltin(INamedTypeSymbol symbol)
-            => symbol.ToDisplayString() is
-                "bool" or
-                "byte" or "sbyte" or
-                "short" or "ushort" or
-                "int" or "uint" or
-                "long" or "ulong" or
-                "float" or "double" or
-                "string";
-
-        private class SyntaxReceiver : ISyntaxContextReceiver
+        public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
         {
-            public List<INamedTypeSymbol> Serialized = new();
-            public Dictionary<INamedTypeSymbol, INamedTypeSymbol> Serializes = new(SymbolEqualityComparer.Default);
-
-            public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
+            var generateSerializationAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.GenerateSerializationAttribute")!;
+            var serializesAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.SerializesAttribute")!;
+            var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node)!;
+            if (symbol is INamedTypeSymbol namedTypeSymbol)
             {
-                var generateSerializationAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.GenerateSerializationAttribute")!;
-                var serializesAttribute = context.SemanticModel.Compilation.GetTypeByMetadataName("Notan.Serialization.SerializesAttribute")!;
-                var symbol = context.SemanticModel.GetDeclaredSymbol(context.Node)!;
-                if (symbol is INamedTypeSymbol namedTypeSymbol)
+                if (namedTypeSymbol.TryGetAttribute(generateSerializationAttribute, out _))
                 {
-                    if (HasAttribute(namedTypeSymbol, generateSerializationAttribute))
-                    {
-                        Serialized.Add(namedTypeSymbol);
-                    }
-                    if (HasAttribute(namedTypeSymbol, serializesAttribute))
-                    {
-                        Serializes.Add((INamedTypeSymbol)GetAttribute(namedTypeSymbol, serializesAttribute).ConstructorArguments[0].Value!, namedTypeSymbol);
-                    }
+                    Serialized.Add(namedTypeSymbol);
+                }
+                if (namedTypeSymbol.TryGetAttribute(serializesAttribute, out var serializesData))
+                {
+                    Serializes.Add((INamedTypeSymbol)serializesData.ConstructorArguments[0].Value!, namedTypeSymbol);
                 }
             }
         }

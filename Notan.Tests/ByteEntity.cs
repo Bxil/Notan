@@ -3,16 +3,24 @@ using Notan.Serialization;
 
 namespace Notan.Tests;
 
-[GenerateSerialization]
 [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
 public partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
 {
-    [Serialize]
     public byte Value;
 
     void IEntity<ByteEntityOnDestroy>.OnDestroy()
     {
         Value -= 1;
+    }
+
+    void IEntity<ByteEntityOnDestroy>.Serialize<TSer>(TSer serializer)
+    {
+        serializer.Write(Value);
+    }
+
+    void IEntity<ByteEntityOnDestroy>.Deserialize<TDeser>(TDeser deserializer)
+    {
+        Value = deserializer.GetByte();
     }
 }
 

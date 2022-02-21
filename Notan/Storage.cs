@@ -2,6 +2,7 @@
 using Notan.Serialization;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace Notan;
@@ -257,14 +258,14 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         foreach (var index in indexToEntity.AsSpan())
         {
             serializer.ArrayNext().ObjectBegin();
-            serializer.ObjectNext("$gen").Write(generations[i]);
+            serializer.ObjectNext("gen").Write(generations[i]);
             if (entityToIndex.Count > index && entityToIndex[index] == i)
             {
-                entities[index].Serialize(serializer);
+                entities[index].Serialize(serializer.ObjectNext("entity"));
             }
             else
             {
-                serializer.ObjectNext("$dead").Write(true);
+                serializer.ObjectNext("dead").Write(true);
             }
             serializer.ObjectEnd();
             i++;
@@ -296,18 +297,22 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
             var gen = -1;
             while (deserializer.ObjectTryNext(out var key))
             {
-                if (key == "$gen")
+                if (key == "gen")
                 {
                     gen = deserializer.GetInt32();
                 }
-                else if (key == "$dead")
+                else if (key == "dead")
                 {
                     _ = deserializer.GetBoolean();
                     dead = true;
                 }
+                else if (key == "entity")
+                {
+                    t.Deserialize(deserializer);
+                }
                 else
                 {
-                    t.Deserialize(key, deserializer);
+                    throw new IOException();
                 }
             }
 

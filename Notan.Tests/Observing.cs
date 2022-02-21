@@ -114,7 +114,7 @@ public class Observing
     [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
     public struct MalformedEntity : IEntity<MalformedEntity>
     {
-        void IEntity<MalformedEntity>.Deserialize<TDeser>(Key key, TDeser deserializer)
+        void IEntity<MalformedEntity>.Deserialize<TDeser>(TDeser deserializer)
         {
             throw new IOException();
         }
@@ -128,7 +128,7 @@ public class Observing
     [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
     public struct MalformedEntityWrong : IEntity<MalformedEntityWrong>
     {
-        void IEntity<MalformedEntityWrong>.Deserialize<TDeser>(Key key, TDeser deserializer)
+        void IEntity<MalformedEntityWrong>.Deserialize<TDeser>(TDeser deserializer)
         {
             throw new Exception();
         }
