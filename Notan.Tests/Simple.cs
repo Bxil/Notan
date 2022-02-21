@@ -135,6 +135,12 @@ public class Simple
         Assert.AreEqual(bytehandles.Length, system.Count);
     }
 
+    [TestMethod]
+    public void DestroyCyclic()
+    {
+        world.GetStorage<CyclicEntity>().Create(new()).Destroy();
+    }
+
     struct ByteSystem : IServerSystem<ByteEntityOnDestroy>
     {
         public int Sum;
