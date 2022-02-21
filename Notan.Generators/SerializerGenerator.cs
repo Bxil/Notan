@@ -90,7 +90,7 @@ internal sealed class SerializesAttribute : Attribute
                 }
 
                 _ = builder.Append($@"
-public partial{(serialized.IsRecord ? " record " : " ")}struct {serialized.Name}
+partial{(serialized.IsRecord ? " record " : " ")}struct {serialized.Name}
 {{
 ");
 
