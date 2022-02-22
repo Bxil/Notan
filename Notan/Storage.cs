@@ -16,8 +16,11 @@ public abstract class Storage
 
     internal readonly int Id;
 
-    private protected Storage(int id, bool impermanent)
+    public Type EntityType { get; }
+
+    private protected Storage(Type entityType, int id, bool impermanent)
     {
+        EntityType = entityType;
         Id = id;
         Impermanent = impermanent;
     }
@@ -48,7 +51,7 @@ public abstract class Storage<T> : Storage where T : struct, IEntity<T>
     private protected int nextIndex;
     private protected int remaniningHandles = 0;
 
-    internal Storage(int id, bool impermanent) : base(id, impermanent) { }
+    internal Storage(int id, bool impermanent) : base(typeof(T), id, impermanent) { }
 
     internal ref T Get(int index, int generation)
     {

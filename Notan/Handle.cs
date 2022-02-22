@@ -7,10 +7,10 @@ namespace Notan;
 
 public readonly record struct Handle
 {
-    internal readonly Storage? Storage;
+    public readonly Storage? Storage;
 
-    public int Index { get; }
-    public int Generation { get; }
+    public readonly int Index;
+    public readonly int Generation;
 
     internal Handle(Storage? storage, int index, int generation)
     {
@@ -61,7 +61,9 @@ public readonly record struct Handle
     public static void Deserialize<T>(ref Handle handle, T deserializer) where T : IDeserializer<T>
     {
         deserializer.ArrayBegin();
-        handle = new Handle(deserializer.World.IdToStorage[deserializer.ArrayNext().GetInt32()], deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
+        int storageid = deserializer.ArrayNext().GetInt32();
+        var storages = deserializer.World.IdToStorage.AsSpan();
+        handle = new Handle(storageid >= 0 && storageid < storages.Length ? storages[storageid] : null, deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
         _ = deserializer.ArrayTryNext(); //consume the end marker
     }
 }
@@ -69,10 +71,10 @@ public readonly record struct Handle
 //Beware of https://github.com/dotnet/runtime/issues/6924
 public readonly record struct Handle<T> where T : struct, IEntity<T>
 {
-    internal readonly Storage<T>? Storage;
+    public readonly Storage<T>? Storage;
 
-    public int Index { get; }
-    public int Generation { get; }
+    public readonly int Index;
+    public readonly int Generation;
 
     public bool IsServer => Storage is ServerStorage<T>;
 
@@ -114,8 +116,8 @@ public readonly record struct ServerHandle<T> where T : struct, IEntity<T>
 {
     public readonly ServerStorage<T>? Storage;
 
-    public int Index { get; }
-    public int Generation { get; }
+    public readonly int Index;
+    public readonly int Generation;
 
     internal ServerHandle(ServerStorage<T>? storage, int index, int generation)
     {
@@ -165,8 +167,8 @@ public readonly record struct ClientHandle<T> where T : struct, IEntity<T>
 {
     public readonly ClientStorage<T>? Storage;
 
-    public int Index { get; }
-    public int Generation { get; }
+    public readonly int Index;
+    public readonly int Generation;
 
     internal ClientHandle(ClientStorage<T>? storage, int index, int generation)
     {
