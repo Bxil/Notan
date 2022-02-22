@@ -27,11 +27,6 @@ public abstract class World
         return Unsafe.As<Storage<T>>(TypeNameToStorage[typeof(T).ToString()]);
     }
 
-    internal Storage GetStorageBase(Type type)
-    {
-        return TypeNameToStorage[type.ToString()];
-    }
-
     private protected volatile bool exit = false;
     public void Exit() => exit = true;
 
@@ -145,6 +140,16 @@ public sealed class ServerWorld : World
     public void Serialize<T>(T serializer) where T : ISerializer<T>
     {
         serializer.ObjectBegin();
+        serializer.ObjectNext("HandleIdentifiers").ObjectBegin();
+        foreach (var pair in TypeNameToStorage)
+        {
+            if (!pair.Value.Impermanent)
+            {
+                serializer.ObjectNext(pair.Key).Write(pair.Value.Id);
+            }
+        }
+        serializer.ObjectEnd();
+        serializer.ObjectNext("Entities").ObjectBegin();
         foreach (var pair in TypeNameToStorage)
         {
             if (!pair.Value.Impermanent)
@@ -153,19 +158,48 @@ public sealed class ServerWorld : World
             }
         }
         serializer.ObjectEnd();
+        serializer.ObjectEnd();
     }
 
     public void Deserialize<T>(T deserializer) where T : IDeserializer<T>
     {
+        var idToStorageSaved = IdToStorage;
+
+        IdToStorage = new();
+
         deserializer.ObjectBegin();
         while (deserializer.ObjectTryNext(out var key))
         {
-            TypeNameToStorage[key.ToString()!].Deserialize(deserializer);
+            if (key == "HandleIdentifiers")
+            {
+                deserializer.ObjectBegin();
+                while (deserializer.ObjectTryNext(out key))
+                {
+                    var storage = TypeNameToStorage[key.ToString()];
+                    int id = deserializer.GetInt32();
+                    IdToStorage.EnsureSize(id + 1);
+                    IdToStorage[id] = storage;
+                }
+            }
+            else if (key == "Entities")
+            {
+                deserializer.ObjectBegin();
+                while (deserializer.ObjectTryNext(out key))
+                {
+                    TypeNameToStorage[key.ToString()!].Deserialize(deserializer);
+                }
+                foreach (var pair in TypeNameToStorage)
+                {
+                    pair.Value.LateDeserialize();
+                }
+            }
+            else
+            {
+                throw new IOException();
+            }
         }
-        foreach (var pair in TypeNameToStorage)
-        {
-            pair.Value.LateDeserialize();
-        }
+
+        IdToStorage = idToStorageSaved;
     }
 }
 

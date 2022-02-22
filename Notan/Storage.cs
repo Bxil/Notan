@@ -14,7 +14,7 @@ public abstract class Storage
 
     internal readonly bool Impermanent;
 
-    public int Id { get; }
+    internal readonly int Id;
 
     private protected Storage(int id, bool impermanent)
     {

@@ -32,28 +32,41 @@ public class Serialization
     {
         const string jsonsave = @"
 {
-    ""Notan.Tests.ByteEntityOnDestroy"": [
-        {
-            ""gen"": 0,
-            ""entity"": 2
-        },
-        {
-            ""gen"": 42,
-            ""dead"": true
-        },
-        {
-            ""gen"": 12,
-            ""entity"": 3
-        },
-        {
-            ""gen"": 12,
-            ""entity"": 5
-        },
-        {
-            ""gen"": 12,
-            ""dead"": true
-        }
-    ]
+    ""HandleIdentifiers"": {
+        ""Notan.Tests.ByteEntityOnDestroy"": 0
+    },
+    ""Entities"": {
+        ""Notan.Tests.ByteEntityOnDestroy"": [
+            {
+                ""gen"": 0,
+                ""entity"": 2
+            },
+            {
+                ""gen"": 42,
+                ""dead"": true
+            },
+            {
+                ""gen"": 12,
+                ""entity"": 3
+            },
+            {
+                ""gen"": 12,
+                ""entity"": 5
+            },
+            {
+                ""gen"": 12,
+                ""dead"": true
+            }
+        ],
+        ""Notan.Tests.HandleEntity"": [
+            {
+                ""gen"": 1,
+                ""entity"": {
+                    ""Value"": [0, 0, 0]
+                }
+            }
+        ]
+    }
 }
 ";
 

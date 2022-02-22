@@ -55,7 +55,9 @@ public class SerializerGenerator : ISourceGenerator
             string deserPrefix = isEntity ? "" : "self.";
 
             _ = serializeBuilder.AppendLine("serializer.ObjectBegin();").Append("        ");
-            _ = deserializeBuilder.AppendLine("while (deserializer.ObjectTryNext(out var key))")
+            _ = deserializeBuilder
+                .AppendLine("deserializer.ObjectBegin();")
+                .AppendLine("        while (deserializer.ObjectTryNext(out var key))")
                 .AppendLine("        {")
                 .Append("            ");
             foreach (var field in serialized.GetMembers().OfType<IFieldSymbol>())
@@ -89,11 +91,6 @@ public class SerializerGenerator : ISourceGenerator
                 {
                     _ = serializeBuilder.AppendLine($"serializer.ObjectNext({name}).Write(({type.EnumUnderlyingType}){field.Name});");
                     _ = deserializeBuilder.AppendLine($"{deserPrefix}{field.Name} = ({type.ToDisplayString()})deserializer.Get{type.EnumUnderlyingType!.Name}();");
-                }
-                else if (type.Equals(handleType, SymbolEqualityComparer.Default) && handleIsData != null)
-                {
-                    _ = serializeBuilder.AppendLine($"{field.Name}.Serialize(serializer.ObjectNext({name}));");
-                    _ = deserializeBuilder.AppendLine($"{deserPrefix}{field.Name} = Handle.Deserialize(deserializer, typeof({((INamedTypeSymbol)handleIsData.ConstructorArguments[0].Value!).ToDisplayString()}));");
                 }
                 else
                 {

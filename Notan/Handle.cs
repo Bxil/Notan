@@ -43,17 +43,26 @@ public readonly record struct Handle
     public void Serialize<T>(T serializer) where T : ISerializer<T>
     {
         serializer.ArrayBegin();
-        serializer.ArrayNext().Write(Index);
-        serializer.ArrayNext().Write(Generation);
+        if (Storage == null)
+        {
+            serializer.ArrayNext().Write(0);
+            serializer.ArrayNext().Write(0);
+            serializer.ArrayNext().Write(0);
+        }
+        else
+        {
+            serializer.ArrayNext().Write(Storage.Id);
+            serializer.ArrayNext().Write(Index);
+            serializer.ArrayNext().Write(Generation);
+        }
         serializer.ArrayEnd();
     }
 
-    public static Handle Deserialize<T>(T deserializer, Type type) where T : IDeserializer<T>
+    public static void Deserialize<T>(ref Handle handle, T deserializer) where T : IDeserializer<T>
     {
         deserializer.ArrayBegin();
-        var handle = new Handle(type == null ? null : deserializer.World.GetStorageBase(type), deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
+        handle = new Handle(deserializer.World.IdToStorage[deserializer.ArrayNext().GetInt32()], deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
         _ = deserializer.ArrayTryNext(); //consume the end marker
-        return handle;
     }
 }
 
@@ -94,7 +103,11 @@ public readonly record struct Handle<T> where T : struct, IEntity<T>
         => ((Handle)this).Serialize(serializer);
 
     public static void Deserialize<TDeserializer>(ref Handle<T> handle, TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
-        => handle = Handle.Deserialize(deserializer, typeof(T)).Strong<T>();
+    {
+        Unsafe.SkipInit(out Handle weak);
+        Handle.Deserialize(ref weak, deserializer);
+        handle = weak.Strong<T>();
+    }
 }
 
 public readonly record struct ServerHandle<T> where T : struct, IEntity<T>
@@ -141,7 +154,11 @@ public readonly record struct ServerHandle<T> where T : struct, IEntity<T>
     => ((Handle)this).Serialize(serializer);
 
     public static void Deserialize<TDeserializer>(ref ServerHandle<T> handle, TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
-        => handle = Handle.Deserialize(deserializer, typeof(T)).Server<T>();
+    {
+        Unsafe.SkipInit(out Handle weak);
+        Handle.Deserialize(ref weak, deserializer);
+        handle = weak.Server<T>();
+    }
 }
 
 public readonly record struct ClientHandle<T> where T : struct, IEntity<T>
@@ -176,7 +193,11 @@ public readonly record struct ClientHandle<T> where T : struct, IEntity<T>
         => ((Handle)this).Serialize(serializer);
 
     public static void Deserialize<TDeserializer>(ref ClientHandle<T> handle, TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
-        => handle = Handle.Deserialize(deserializer, typeof(T)).Client<T>();
+    {
+        Unsafe.SkipInit(out Handle weak);
+        Handle.Deserialize(ref weak, deserializer);
+        handle = weak.Client<T>();
+    }
 }
 
 public readonly struct Maybe<T> where T : struct, IEntity<T>

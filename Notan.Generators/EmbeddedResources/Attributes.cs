@@ -14,9 +14,7 @@ internal sealed class SerializeAttribute : Attribute
 
     public SerializeAttribute(string? name = null)
     {
-        {
-            Name = name;
-        }
+        Name = name;
     }
 }
 
@@ -28,10 +26,8 @@ internal sealed class HandleIsAttribute : Attribute
 
     public HandleIsAttribute(Type type, bool makeProperty = false)
     {
-        {
-            Type = type;
-            MakeProperty = makeProperty;
-        }
+        Type = type;
+        MakeProperty = makeProperty;
     }
 }
 
@@ -42,8 +38,6 @@ internal sealed class SerializesAttribute : Attribute
 
     public SerializesAttribute(Type type)
     {
-        {
-            Type = type;
-        }
+        Type = type;
     }
 }
