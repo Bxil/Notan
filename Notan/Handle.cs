@@ -63,7 +63,7 @@ public readonly record struct Handle
         deserializer.ArrayBegin();
         int storageid = deserializer.ArrayNext().GetInt32();
         var storages = deserializer.World.IdToStorage.AsSpan();
-        handle = new Handle(storageid >= 0 && storageid < storages.Length ? storages[storageid] : null, deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
+        handle = new Handle(storageid > 0 && storageid < storages.Length ? storages[storageid] : null, deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
         _ = deserializer.ArrayTryNext(); //consume the end marker
     }
 }

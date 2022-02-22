@@ -75,11 +75,11 @@ public class Observing
         byteEntity.AddObserver(serverWorld.Clients[0]);
         var handle1 = handleStorage.Create(new HandleEntity { Value = (Handle<ByteEntityOnDestroy>)byteEntity });
         Assert.AreEqual(0, handle1.Index);
-        Assert.AreEqual(1, handle1.Generation);
+        Assert.AreEqual(0, handle1.Generation);
         Assert.IsTrue(new Maybe<HandleEntity>(handle1).Alive());
         var handle2 = handleStorage.Create(new HandleEntity { Value = default });
         Assert.AreEqual(1, handle2.Index);
-        Assert.AreEqual(1, handle2.Generation);
+        Assert.AreEqual(0, handle2.Generation);
         handle1.AddObserver(serverWorld.Clients[0]);
         handle2.AddObserver(serverWorld.Clients[0]);
         Assert.IsTrue(new Maybe<HandleEntity>(handle2).Alive());

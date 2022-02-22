@@ -94,10 +94,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         {
             hndind = indexToEntity.Count;
             indexToEntity.Add(entind);
-            generations.Add(1);
-            //We start from 1 so generation 0 is always invalid.
-            //This is necessary to make [0,0] invalid:
-            //Even if Storage was null it might become non-null when deserializing.
+            generations.Add(0);
         }
 
         entities.Add(entity);

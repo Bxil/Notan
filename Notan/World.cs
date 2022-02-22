@@ -13,13 +13,13 @@ namespace Notan;
 public abstract class World
 {
     private protected readonly Dictionary<string, Storage> TypeNameToStorage = new();
-    internal FastList<Storage> IdToStorage = new();
+    internal FastList<Storage> IdToStorage = new(); //Element 0 is always null.
 
-    public IPEndPoint EndPoint { get; protected set; }
+    public IPEndPoint EndPoint { get; protected set; } = null!;
 
     private protected World()
     {
-        EndPoint = null!;
+        IdToStorage.Add(null!);
     }
 
     private protected Storage<T> GetStorageBase<T>() where T : struct, IEntity<T>
@@ -64,7 +64,7 @@ public sealed class ServerWorld : World
 
     public bool Tick()
     {
-        foreach (var storage in IdToStorage.AsSpan())
+        foreach (var storage in IdToStorage.AsSpan()[1..])
         {
             storage.FinalizeFrame();
         }
@@ -97,7 +97,7 @@ public sealed class ServerWorld : World
                 while (messagesRead < messageReadMaximum && client.CanRead())
                 {
                     var id = client.ReadHeader(out var type, out var index, out var generation);
-                    if (id < 0 || id >= IdToStorage.Count)
+                    if (id <= 0 || id >= IdToStorage.Count)
                     {
                         throw new IOException();
                     }
@@ -234,7 +234,7 @@ public sealed class ClientWorld : World
 
     public bool Tick()
     {
-        foreach (var storage in IdToStorage.AsSpan())
+        foreach (var storage in IdToStorage.AsSpan()[1..])
         {
             storage.FinalizeFrame();
         }

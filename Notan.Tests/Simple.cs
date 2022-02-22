@@ -107,11 +107,11 @@ public class Simple
             _ = bytehandles[i].Alive(out var bytehandle);
             if (i % 2 == 1)
             {
-                Assert.AreEqual(2, bytehandle.Generation);
+                Assert.AreEqual(1, bytehandle.Generation);
             }
             else
             {
-                Assert.AreEqual(1, bytehandle.Generation);
+                Assert.AreEqual(0, bytehandle.Generation);
             }
         }
 

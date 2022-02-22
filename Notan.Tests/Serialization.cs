@@ -33,7 +33,7 @@ public class Serialization
         const string jsonsave = @"
 {
     ""HandleIdentifiers"": {
-        ""Notan.Tests.ByteEntityOnDestroy"": 0
+        ""Notan.Tests.ByteEntityOnDestroy"": 1
     },
     ""Entities"": {
         ""Notan.Tests.ByteEntityOnDestroy"": [
@@ -62,7 +62,7 @@ public class Serialization
             {
                 ""gen"": 1,
                 ""entity"": {
-                    ""Value"": [0, 0, 0]
+                    ""Value"": [1, 0, 0]
                 }
             }
         ]
