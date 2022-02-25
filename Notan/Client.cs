@@ -40,6 +40,7 @@ public class Client
 
         stream = tcpClient.GetStream();
         tcpClient.Client.Blocking = false; //Blocking cannot be false before the acquisiton of a stream.
+        tcpClient.NoDelay = true;
 
         writer = new BinaryWriter(outgoing, encoding, true);
         reader = new BinaryReader(stream, encoding, true);
