@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Notan.Generators;
@@ -10,6 +11,11 @@ public static class SymbolExtensions
         var attributes = symbol.GetAttributes();
         data = attributes.FirstOrDefault(x => attribute.Equals(x.AttributeClass, SymbolEqualityComparer.Default))!;
         return data != null;
+    }
+
+    public static IEnumerable<AttributeData> GetAttributes(this ISymbol symbol, INamedTypeSymbol attribute)
+    {
+        return symbol.GetAttributes().Where(x => attribute.Equals(x.AttributeClass, SymbolEqualityComparer.Default));
     }
 
     public static bool IsBuiltin(this INamedTypeSymbol symbol)

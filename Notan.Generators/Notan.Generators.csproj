@@ -7,7 +7,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <Nullable>enable</Nullable>
-    <Version>0.11.0</Version>
+    <Version>0.11.1</Version>
     <Authors>Bxil</Authors>
     <PackageProjectUrl>https://github.com/Bxil/Notan</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Bxil/Notan.git</RepositoryUrl>

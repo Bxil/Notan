@@ -137,7 +137,7 @@ public class SerializerGenerator : ISourceGenerator
                 {
                     Serialized.Add(namedTypeSymbol);
                 }
-                if (namedTypeSymbol.TryGetAttribute(serializesAttribute, out var serializesData))
+                foreach (var serializesData in namedTypeSymbol.GetAttributes(serializesAttribute))
                 {
                     Serializes.Add((INamedTypeSymbol)serializesData.ConstructorArguments[0].Value!, namedTypeSymbol);
                 }

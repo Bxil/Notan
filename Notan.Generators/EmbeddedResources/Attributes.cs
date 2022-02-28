@@ -31,7 +31,7 @@ internal sealed class HandleIsAttribute : Attribute
     }
 }
 
-[AttributeUsage(AttributeTargets.Class)]
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 internal sealed class SerializesAttribute : Attribute
 {
     public Type Type { get; }
