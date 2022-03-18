@@ -146,6 +146,10 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
             list.Add(client);
             client.Send(Id, MessageType.Create, index, generation, ref Get(index, generation));
         }
+        else
+        {
+            client.Send(Id, MessageType.Update, index, generation, ref Get(index, generation));
+        }
     }
 
     internal void AddObservers(int index, int generation, ReadOnlySpan<Client> clients)
