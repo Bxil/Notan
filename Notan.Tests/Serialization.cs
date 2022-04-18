@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Notan.Reflection;
-using Notan.Serialization;
+using Notan.Serialization.Json;
 using System.IO;
 using System.Reflection;
 using System.Text.Encodings.Web;
@@ -86,7 +86,7 @@ public class Serialization
         var mem = new MemoryStream();
         {
             using var writer = new Utf8JsonWriter(mem, new JsonWriterOptions { Indented = true });
-            world.Serialize(new Notan.Serialization.JsonSerializer(writer));
+            world.Serialize(new Notan.Serialization.Json.JsonSerializer(writer));
         }
         mem.Position = 0;
         _ = new StreamReader(mem).ReadToEnd();
@@ -107,7 +107,7 @@ public class Serialization
         var mem = new MemoryStream();
         using (var writer = new Utf8JsonWriter(mem, new JsonWriterOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }))
         {
-            world.Serialize(new Notan.Serialization.JsonSerializer(writer));
+            world.Serialize(new Notan.Serialization.Json.JsonSerializer(writer));
         }
         mem.Position = 0;
         world.Deserialize(new JsonDeserializer(world, mem));

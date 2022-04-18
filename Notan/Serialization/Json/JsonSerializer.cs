@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json;
 
-namespace Notan.Serialization;
+namespace Notan.Serialization.Json;
 
 public struct JsonSerializer : ISerializer<JsonSerializer>
 {

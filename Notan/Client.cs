@@ -1,4 +1,4 @@
-﻿using Notan.Serialization;
+﻿using Notan.Serialization.Binary;
 using System;
 using System.IO;
 using System.Net;

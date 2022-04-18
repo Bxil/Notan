@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 
-namespace Notan.Serialization;
+namespace Notan.Serialization.Json;
 
 public struct JsonDeserializer : IDeserializer<JsonDeserializer>
 {

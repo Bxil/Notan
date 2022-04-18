@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 
-namespace Notan.Serialization;
+namespace Notan.Serialization.Binary;
 
 public struct BinarySerializer : ISerializer<BinarySerializer>
 {

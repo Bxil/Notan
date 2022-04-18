@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace Notan.Serialization;
+namespace Notan.Serialization.Binary;
 
 public struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
 {
