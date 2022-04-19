@@ -9,54 +9,110 @@ public struct BinarySerializer : ISerializer<BinarySerializer>
 
     public BinarySerializer(Stream stream, Encoding encoding) => writer = new BinaryWriter(stream, encoding, true);
 
-    public void Write(bool value) => writer.Write(value);
+    public void Write(bool value)
+    {
+        WriteTag(BinaryTag.Boolean);
+        writer.Write(value);
+    }
 
-    public void Write(byte value) => writer.Write(value);
+    public void Write(byte value)
+    {
+        WriteTag(BinaryTag.Byte);
+        writer.Write(value);
+    }
 
-    public void Write(sbyte value) => writer.Write(value);
+    public void Write(sbyte value)
+    {
+        WriteTag(BinaryTag.SByte);
+        writer.Write(value);
+    }
 
-    public void Write(short value) => writer.Write(value);
+    public void Write(short value)
+    {
+        WriteTag(BinaryTag.Int16);
+        writer.Write(value);
+    }
 
-    public void Write(ushort value) => writer.Write(value);
+    public void Write(ushort value)
+    {
+        WriteTag(BinaryTag.UInt16);
+        writer.Write(value);
+    }
 
-    public void Write(int value) => writer.Write(value);
+    public void Write(int value)
+    {
+        WriteTag(BinaryTag.Int32);
+        writer.Write(value);
+    }
 
-    public void Write(uint value) => writer.Write(value);
+    public void Write(uint value)
+    {
+        WriteTag(BinaryTag.UInt32);
+        writer.Write(value);
+    }
 
-    public void Write(long value) => writer.Write(value);
+    public void Write(long value)
+    {
+        WriteTag(BinaryTag.Int64);
+        writer.Write(value);
+    }
 
-    public void Write(ulong value) => writer.Write(value);
+    public void Write(ulong value)
+    {
+        WriteTag(BinaryTag.UInt64);
+        writer.Write(value);
+    }
 
-    public void Write(float value) => writer.Write(value);
+    public void Write(float value)
+    {
+        WriteTag(BinaryTag.Single);
+        writer.Write(value);
+    }
 
-    public void Write(double value) => writer.Write(value);
+    public void Write(double value)
+    {
+        WriteTag(BinaryTag.Double);
+        writer.Write(value);
+    }
 
-    public void Write(string value) => writer.Write(value);
+    public void Write(string value)
+    {
+        WriteTag(BinaryTag.String);
+        writer.Write(value);
+    }
 
-    public void ArrayBegin() { }
+    public void ArrayBegin()
+    {
+        WriteTag(BinaryTag.ArrayBegin);
+    }
 
     public BinarySerializer ArrayNext()
     {
-        writer.Write(true);
+        WriteTag(BinaryTag.ArrayNext);
         return this;
     }
 
     public void ArrayEnd()
     {
-        writer.Write(false);
+        WriteTag(BinaryTag.ArrayEnd);
     }
 
-    public void ObjectBegin() { }
+    public void ObjectBegin()
+    {
+        WriteTag(BinaryTag.ObjectBegin);
+    }
 
     public BinarySerializer ObjectNext(string key)
     {
-        writer.Write(true);
+        WriteTag(BinaryTag.ObjectNext);
         writer.Write(key);
         return this;
     }
 
     public void ObjectEnd()
     {
-        writer.Write(false);
+        WriteTag(BinaryTag.ObjectEnd);
     }
+
+    private void WriteTag(BinaryTag tag) => writer.Write((byte)tag);
 }

@@ -5,7 +5,7 @@
     <Nullable>Enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>Notan</RootNamespace>
-    <Version>0.54.3</Version>
+    <Version>0.55.0</Version>
     <Authors>Bxil</Authors>
     <PackageProjectUrl>https://github.com/Bxil/Notan</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Bxil/Notan.git</RepositoryUrl>
