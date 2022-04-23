@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Notan.Serialization.Binary;
 
-public struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
+public readonly struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
 {
     public World World { get; }
 
@@ -24,104 +24,105 @@ public struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
 
     public bool GetBoolean()
     {
-        AssertTag(BinaryTag.Boolean);
+        ConsumeTag(BinaryTag.Boolean);
         return reader.ReadBoolean();
     }
 
     public byte GetByte()
     {
-        AssertTag(BinaryTag.Byte);
+        ConsumeTag(BinaryTag.Byte);
         return reader.ReadByte();
     }
 
     public sbyte GetSByte()
     {
-        AssertTag(BinaryTag.SByte);
+        ConsumeTag(BinaryTag.SByte);
         return reader.ReadSByte();
     }
 
     public short GetInt16()
     {
-        AssertTag(BinaryTag.Int16);
+        ConsumeTag(BinaryTag.Int16);
         return reader.ReadInt16();
     }
 
     public ushort GetUInt16()
     {
-        AssertTag(BinaryTag.UInt16);
+        ConsumeTag(BinaryTag.UInt16);
         return reader.ReadUInt16();
     }
 
     public int GetInt32()
     {
-        AssertTag(BinaryTag.Int32);
+        ConsumeTag(BinaryTag.Int32);
         return reader.ReadInt32();
     }
 
     public uint GetUInt32()
     {
-        AssertTag(BinaryTag.UInt32);
+        ConsumeTag(BinaryTag.UInt32);
         return reader.ReadUInt32();
     }
 
     public long GetInt64()
     {
-        AssertTag(BinaryTag.Int64);
+        ConsumeTag(BinaryTag.Int64);
         return reader.ReadInt64();
     }
 
     public ulong GetUInt64()
     {
-        AssertTag(BinaryTag.UInt64);
+        ConsumeTag(BinaryTag.UInt64);
         return reader.ReadUInt64();
     }
 
     public float GetSingle()
     {
-        AssertTag(BinaryTag.Single);
+        ConsumeTag(BinaryTag.Single);
         return reader.ReadSingle();
     }
 
     public double GetDouble()
     {
-        AssertTag(BinaryTag.Double);
+        ConsumeTag(BinaryTag.Double);
         return reader.ReadDouble();
     }
 
     public string GetString()
     {
-        AssertTag(BinaryTag.String);
+        ConsumeTag(BinaryTag.String);
         return reader.ReadString();
     }
 
     public void ArrayBegin()
     {
-        AssertTag(BinaryTag.ArrayBegin);
+        ConsumeTag(BinaryTag.ArrayBegin);
     }
 
     public bool ArrayTryNext()
     {
-        return (BinaryTag)reader.ReadByte() == BinaryTag.ArrayNext;
+        return !TryConsumeTag(BinaryTag.ArrayEnd);
     }
 
     public BinaryDeserializer ArrayNext()
     {
-        AssertTag(BinaryTag.ArrayNext);
+        RejectTag(BinaryTag.ArrayEnd);
         return this;
     }
 
     public void ObjectBegin()
     {
-        AssertTag(BinaryTag.ObjectBegin);
+        ConsumeTag(BinaryTag.ObjectBegin);
     }
 
     public bool ObjectTryNext(out Key key)
     {
-        if ((BinaryTag)reader.ReadByte() != BinaryTag.ObjectNext)
+        if (TryConsumeTag(BinaryTag.ObjectEnd))
         {
             key = default;
             return false;
         }
+        ConsumeTag(BinaryTag.String);
         var keylength = reader.Read7BitEncodedInt();
         if (keylength > buffer.Value!.Length)
         {
@@ -134,7 +135,7 @@ public struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
 
     public BinaryDeserializer ObjectNext(out Key key)
     {
-        AssertTag(BinaryTag.ObjectNext);
+        ConsumeTag(BinaryTag.String);
         var keylength = reader.Read7BitEncodedInt();
         if (keylength > buffer.Value!.Length)
         {
@@ -145,9 +146,31 @@ public struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
         return this;
     }
 
-    private void AssertTag(BinaryTag tag)
+    private readonly StrongBox<BinaryTag?> tag = new(null);
+
+    private bool TryConsumeTag(BinaryTag tag)
     {
-        var read = (BinaryTag)reader.ReadByte();
-        Debug.Assert(read == tag);
+        if (this.tag.Value == null)
+        {
+            this.tag.Value = (BinaryTag)reader.ReadByte();
+        }
+        if (this.tag.Value == tag)
+        {
+            this.tag.Value = null;
+            return true;
+        }
+        return false;
+    }
+
+    private void ConsumeTag(BinaryTag tag)
+    {
+        bool success = TryConsumeTag(tag);
+        Debug.Assert(success);
+    }
+
+    private void RejectTag(BinaryTag tag)
+    {
+        bool success = TryConsumeTag(tag);
+        Debug.Assert(!success);
     }
 }

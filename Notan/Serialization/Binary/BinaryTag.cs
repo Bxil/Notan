@@ -16,9 +16,7 @@ internal enum BinaryTag : byte
     Double,
     String,
     ArrayBegin,
-    ArrayNext,
     ArrayEnd,
     ObjectBegin,
-    ObjectNext,
     ObjectEnd,
 }

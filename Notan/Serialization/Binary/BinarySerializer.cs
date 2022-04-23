@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Notan.Serialization.Binary;
 
-public struct BinarySerializer : ISerializer<BinarySerializer>
+public readonly struct BinarySerializer : ISerializer<BinarySerializer>
 {
     private readonly BinaryWriter writer;
 
@@ -88,7 +88,6 @@ public struct BinarySerializer : ISerializer<BinarySerializer>
 
     public BinarySerializer ArrayNext()
     {
-        WriteTag(BinaryTag.ArrayNext);
         return this;
     }
 
@@ -104,8 +103,7 @@ public struct BinarySerializer : ISerializer<BinarySerializer>
 
     public BinarySerializer ObjectNext(string key)
     {
-        WriteTag(BinaryTag.ObjectNext);
-        writer.Write(key);
+        Write(key);
         return this;
     }
 

@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace Notan.Serialization.Json;
 
-public struct JsonDeserializer : IDeserializer<JsonDeserializer>
+public readonly struct JsonDeserializer : IDeserializer<JsonDeserializer>
 {
     public World World { get; }
 
