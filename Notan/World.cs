@@ -117,11 +117,20 @@ public sealed class ServerWorld : World
         {
             i--;
             var client = clients[i];
-            try
+            bool delete = !client.Connected;
+            if (!delete)
             {
-                client.Flush();
+                try
+                {
+                    client.Flush();
+                }
+                catch (IOException)
+                {
+                    delete = true;
+                }
             }
-            catch (IOException)
+
+            if (delete)
             {
                 DeleteClient(client);
             }
