@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <Nullable>Enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>Notan</RootNamespace>
-    <Version>0.57.0</Version>
+    <Version>0.58.0</Version>
     <Authors>Bxil</Authors>
     <PackageProjectUrl>https://github.com/Bxil/Notan</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Bxil/Notan.git</RepositoryUrl>
@@ -15,10 +15,18 @@
     <PackageOutputPath>../pkg</PackageOutputPath>
     <PackageId>Notan</PackageId>
     <Description>Not an ECS: a simple and fast library designed for real-time applications, persistence, and networking.</Description>
+    <PackageIcon>Notan.png</PackageIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' != 'DEBUG'">
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\Notan.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
