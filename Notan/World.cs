@@ -117,7 +117,7 @@ public sealed class ServerWorld : World
         {
             i--;
             var client = clients[i];
-            bool delete = !client.Connected;
+            var delete = !client.Connected;
             if (!delete)
             {
                 try
@@ -185,7 +185,7 @@ public sealed class ServerWorld : World
                 while (deserializer.ObjectTryNext(out key))
                 {
                     var storage = TypeNameToStorage[key.ToString()];
-                    int id = deserializer.GetInt32();
+                    var id = deserializer.GetInt32();
                     IdToStorage.EnsureSize(id + 1);
                     IdToStorage[id] = storage;
                 }

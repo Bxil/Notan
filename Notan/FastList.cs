@@ -22,7 +22,7 @@ internal struct FastList<T>
 
     public void EnsureCapacity(int capacity)
     {
-        int currentcapacity = array.Length;
+        var currentcapacity = array.Length;
 
         if (currentcapacity >= capacity)
         {

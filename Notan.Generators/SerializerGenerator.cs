@@ -24,7 +24,10 @@ public class SerializerGenerator : ISourceGenerator
 
     public void Execute(GeneratorExecutionContext context)
     {
-        if (context.SyntaxContextReceiver is not SyntaxReceiver receiver) return;
+        if (context.SyntaxContextReceiver is not SyntaxReceiver receiver)
+        {
+            return;
+        }
 
         var serializeAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.SerializeAttribute")!;
         var handleIsAttribute = context.Compilation.GetTypeByMetadataName("Notan.Serialization.HandleIsAttribute")!;
@@ -38,21 +41,21 @@ public class SerializerGenerator : ISourceGenerator
         var deserializeBuilder = new StringBuilder();
         foreach (var serialized in receiver.Serialized)
         {
-            string nspace = serialized.ContainingNamespace != null ? $"namespace {serialized.ContainingNamespace};" : "";
+            var nspace = serialized.ContainingNamespace != null ? $"namespace {serialized.ContainingNamespace};" : "";
 
-            string structtype = serialized.IsRecord ? "record struct" : "struct";
+            var structtype = serialized.IsRecord ? "record struct" : "struct";
 
-            bool isEntity = serialized.AllInterfaces.Contains(ientityType.Construct(serialized));
+            var isEntity = serialized.AllInterfaces.Contains(ientityType.Construct(serialized));
 
-            string serializesSignature = isEntity
+            var serializesSignature = isEntity
                 ? "void IEntity<__TYPENAME__>.Serialize<T>(T serializer)"
                 : "public void Serialize<T>(T serializer) where T : ISerializer<T>";
 
-            string deserializesSignature = isEntity
+            var deserializesSignature = isEntity
                 ? "void IEntity<__TYPENAME__>.Deserialize<T>(T deserializer)"
                 : "public static void Deserialize<T>(ref __TYPENAME__ self, T deserializer) where T : IDeserializer<T>";
 
-            string deserPrefix = isEntity ? "" : "self.";
+            var deserPrefix = isEntity ? "" : "self.";
 
             _ = serializeBuilder.AppendLine("serializer.ObjectBegin();").Append("        ");
             _ = deserializeBuilder
@@ -69,7 +72,7 @@ public class SerializerGenerator : ISourceGenerator
 
                 if (field.TryGetAttribute(handleIsAttribute, out var handleIsData) && (bool)handleIsData.ConstructorArguments[1].Value! && field.Type.Equals(handleType, SymbolEqualityComparer.Default))
                 {
-                    string propertyName = (string)serializeData.ConstructorArguments[0].Value!;
+                    var propertyName = (string)serializeData.ConstructorArguments[0].Value!;
                     var typeString = ((INamedTypeSymbol)handleIsData.ConstructorArguments[0].Value!).ToDisplayString();
                     _ = propertiesBuilder.AppendLine().AppendLine($"    public Handle<{typeString}> {propertyName} {{ get => {field.Name}.Strong<{typeString}>(); set => {field.Name} = value; }}");
                 }

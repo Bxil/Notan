@@ -63,7 +63,7 @@ public readonly record struct Handle
     public static void Deserialize<T>(ref Handle handle, T deserializer) where T : IDeserializer<T>
     {
         deserializer.ArrayBegin();
-        int storageid = deserializer.ArrayNext().GetInt32();
+        var storageid = deserializer.ArrayNext().GetInt32();
         var storages = deserializer.World.IdToStorage.AsSpan();
         handle = new Handle(storageid > 0 && storageid < storages.Length ? storages[storageid] : null, deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
         _ = deserializer.ArrayTryNext(); //consume the end marker
