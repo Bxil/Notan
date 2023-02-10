@@ -18,7 +18,7 @@ public static class WorldExtensions
             {
                 if (!typeof(IEntity<>).MakeGenericType(type).IsAssignableFrom(type))
                 {
-                    throw new Exception($"{type} implements {typeof(IEntity<>)} but not for its own type.");
+                    NotanException.Throw($"{type} implements {typeof(IEntity<>)} but not for its own type.");
                 }
                 _ = world.GetType().GetMethod(nameof(world.AddStorage))!.MakeGenericMethod(type).Invoke(world, arr);
             }
@@ -26,7 +26,7 @@ public static class WorldExtensions
             {
                 if (arr[0] != null)
                 {
-                    throw new Exception($"{type} has {nameof(StorageOptionsAttribute)} without implementing {typeof(IEntity<>)}.");
+                    NotanException.Throw($"{type} has {nameof(StorageOptionsAttribute)} without implementing {typeof(IEntity<>)}.");
                 }
             }
         }

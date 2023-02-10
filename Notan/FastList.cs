@@ -57,10 +57,7 @@ internal struct FastList<T>
 
     public void Clear()
     {
-        for (var i = 0; i < Count; i++)
-        {
-            this[i] = default!;
-        }
+        array.AsSpan(..Count).Clear();
         Count = 0;
     }
 

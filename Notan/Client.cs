@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Notan;
 
-public class Client
+public sealed class Client
 {
     private readonly TcpClient tcpClient;
     private readonly MemoryStream outgoing;

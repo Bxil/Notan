@@ -1,6 +1,5 @@
 ﻿using Notan.Serialization;
 using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Notan;
@@ -25,7 +24,10 @@ public readonly record struct Handle
 
     public Handle<T> Strong<T>() where T : struct, IEntity<T>
     {
-        Debug.Assert(Storage is null or Storage<T>);
+        if (Storage is not null and not Storage<T>)
+        {
+            NotanException.Throw($"Expected backing storage to be {typeof(T)} but it is {Storage.GetType()}");
+        }
         return new(Unsafe.As<Storage<T>>(Storage), Index, Generation);
     }
 
@@ -89,13 +91,19 @@ public readonly record struct Handle<T> where T : struct, IEntity<T>
 
     public ServerHandle<T> Server()
     {
-        Debug.Assert(Storage is null or ServerStorage<T>);
+        if (Storage is not null and not ServerStorage<T>)
+        {
+            NotanException.Throw($"Expected backing storage to be {typeof(T)} but it is {Storage.GetType()}");
+        }
         return new(Unsafe.As<ServerStorage<T>>(Storage), Index, Generation);
     }
 
     public ClientHandle<T> Client()
     {
-        Debug.Assert(Storage is null or ClientStorage<T>);
+        if (Storage is not null and not ClientStorage<T>)
+        {
+            NotanException.Throw($"Expected backing storage to be {typeof(T)} but it is {Storage.GetType()}");
+        }
         return new(Unsafe.As<ClientStorage<T>>(Storage), Index, Generation);
     }
 

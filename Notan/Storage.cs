@@ -55,7 +55,10 @@ public abstract class Storage<T> : Storage where T : struct, IEntity<T>
 
     internal ref T Get(int index, int generation)
     {
-        Debug.Assert(Alive(index, generation));
+        if (!Alive(index, generation))
+        {
+            NotanException.Throw("Entity is not alive.");
+        }
         return ref entities[indexToEntity[index]];
     }
 }
@@ -139,7 +142,10 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     internal void AddObserver(int index, int generation, Client client)
     {
-        Debug.Assert(Alive(index, generation));
+        if (!Alive(index, generation))
+        {
+            NotanException.Throw("Entity is not alive.");
+        }
         ref var list = ref entityToObservers[indexToEntity[index]];
         if (list.IndexOf(client) == -1)
         {
@@ -150,7 +156,10 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     internal void AddObservers(int index, int generation, ReadOnlySpan<Client> clients)
     {
-        Debug.Assert(Alive(index, generation));
+        if (!Alive(index, generation))
+        {
+            NotanException.Throw("Entity is not alive.");
+        }
         ref var list = ref entityToObservers[indexToEntity[index]];
         list.EnsureCapacity(list.Count + clients.Length);
         foreach (var client in clients)
@@ -165,7 +174,10 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     internal void RemoveObserver(int index, int generation, Client client)
     {
-        Debug.Assert(Alive(index, generation));
+        if (!Alive(index, generation))
+        {
+            NotanException.Throw("Entity is not alive.");
+        }
         if (entityToObservers[indexToEntity[index]].Remove(client))
         {
             client.Send(Id, MessageType.Destroy, index, generation, ref Unsafe.NullRef<T>());
@@ -174,7 +186,10 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     internal void UpdateObservers(int index, int generation)
     {
-        Debug.Assert(Alive(index, generation));
+        if (!Alive(index, generation))
+        {
+            NotanException.Throw("Entity is not alive.");
+        }
         ref var entity = ref Get(index, generation);
         ref var list = ref entityToObservers[indexToEntity[index]];
         var span = list.AsSpan();
@@ -196,7 +211,10 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     internal void ClearObservers(int index, int generation)
     {
-        Debug.Assert(Alive(index, generation));
+        if (!Alive(index, generation))
+        {
+            NotanException.Throw("Entity is not alive.");
+        }
         ref var list = ref entityToObservers[indexToEntity[index]];
         var i = list.Count;
         while (i > 0)
@@ -209,13 +227,19 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     internal ReadOnlySpan<Client> GetObservers(int index, int generation)
     {
-        Debug.Assert(Alive(index, generation));
+        if (!Alive(index, generation))
+        {
+            NotanException.Throw("Entity is not alive.");
+        }
         return entityToObservers[indexToEntity[index]].AsSpan();
     }
 
     internal void SetAuthority(int index, int generation, Client? client)
     {
-        Debug.Assert(Alive(index, generation));
+        if (!Alive(index, generation))
+        {
+            NotanException.Throw("Entity is not alive.");
+        }
         entityToAuthority[indexToEntity[index]] = client;
         if (client != null)
         {
@@ -225,7 +249,10 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     internal Client? GetAuthority(int index, int generation)
     {
-        Debug.Assert(Alive(index, generation));
+        if (!Alive(index, generation))
+        {
+            NotanException.Throw("Entity is not alive.");
+        }
         return entityToAuthority[indexToEntity[index]];
     }
 
@@ -434,7 +461,10 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     internal void Forget(int index, int generation)
     {
-        Debug.Assert(Alive(index, generation));
+        if (!Alive(index, generation))
+        {
+            NotanException.Throw("Entity is not alive.");
+        }
         generations[index] = -1;
         entityIsForgotten[indexToEntity[index]] = true;
         forgottenEntityIndices.Add(index);

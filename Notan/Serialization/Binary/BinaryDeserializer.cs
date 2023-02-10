@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -150,10 +149,7 @@ public readonly struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
 
     private bool TryConsumeTag(BinaryTag tag)
     {
-        if (this.tag.Value == null)
-        {
-            this.tag.Value = (BinaryTag)reader.ReadByte();
-        }
+        this.tag.Value ??= (BinaryTag)reader.ReadByte();
         if (this.tag.Value == tag)
         {
             this.tag.Value = null;
@@ -164,13 +160,17 @@ public readonly struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
 
     private void ConsumeTag(BinaryTag tag)
     {
-        bool success = TryConsumeTag(tag);
-        Debug.Assert(success);
+        if (!TryConsumeTag(tag))
+        {
+            NotanException.Throw($"Expected tag '{tag}' but found '{this.tag}'");
+        }
     }
 
     private void RejectTag(BinaryTag tag)
     {
-        bool success = TryConsumeTag(tag);
-        Debug.Assert(!success);
+        if (TryConsumeTag(tag))
+        {
+            NotanException.Throw($"Expected different tag from '{tag}'");
+        }
     }
 }

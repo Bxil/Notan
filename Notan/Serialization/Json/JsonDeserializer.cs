@@ -45,7 +45,7 @@ public readonly struct JsonDeserializer : IDeserializer<JsonDeserializer>
     {
         if (stream.Read().TokenType != JsonTokenType.StartArray)
         {
-            throw new Exception("Excepted array start.");
+            NotanException.Throw("Excepted array start.");
         }
     }
 
@@ -62,14 +62,18 @@ public readonly struct JsonDeserializer : IDeserializer<JsonDeserializer>
 
     public JsonDeserializer ArrayNext()
     {
-        return ArrayTryNext() ? this : throw new IOException("Array has no more elements.");
+        if (!ArrayTryNext())
+        {
+            NotanException.Throw("Array has no more elements.");
+        }
+        return this;
     }
 
     public void ObjectBegin()
     {
         if (stream.Read().TokenType != JsonTokenType.StartObject)
         {
-            throw new Exception("Excepted object start.");
+            NotanException.Throw("Excepted object start.");
         }
     }
 
@@ -87,7 +91,11 @@ public readonly struct JsonDeserializer : IDeserializer<JsonDeserializer>
 
     public JsonDeserializer ObjectNext(out Key key)
     {
-        return ObjectTryNext(out key) ? this : throw new IOException("Array has no more elements.");
+        if (!ObjectTryNext(out key))
+        {
+            NotanException.Throw("Object has no more elements.");
+        }
+        return this;
     }
 
     private class JsonStream

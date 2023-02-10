@@ -5,7 +5,7 @@
     <Nullable>Enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>Notan</RootNamespace>
-    <Version>0.56.1</Version>
+    <Version>0.57.0</Version>
     <Authors>Bxil</Authors>
     <PackageProjectUrl>https://github.com/Bxil/Notan</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Bxil/Notan.git</RepositoryUrl>
@@ -13,17 +13,12 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>ecs entity-component-system networking</PackageTags>
     <PackageOutputPath>../pkg</PackageOutputPath>
+    <PackageId>Notan</PackageId>
+    <Description>Not an ECS: a simple and fast library designed for real-time applications, persistence, and networking.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' != 'DEBUG'">
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-    <PackageId>Notan</PackageId>
-    <Description>Not an ECS: a simple and fast library designed for real-time applications, persistence, and networking.</Description>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(Configuration)' == 'DEBUG'">
-    <PackageId>NotanSafe</PackageId>
-    <Description>A safe but slow version of Notan for debugging and testing. Not recommended for releases.</Description>
   </PropertyGroup>
 
 </Project>
