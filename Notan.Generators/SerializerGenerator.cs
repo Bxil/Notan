@@ -48,11 +48,11 @@ public class SerializerGenerator : ISourceGenerator
             var isEntity = serialized.AllInterfaces.Contains(ientityType.Construct(serialized));
 
             var serializesSignature = isEntity
-                ? "void IEntity<__TYPENAME__>.Serialize<T>(T serializer)"
+                ? "void ISerializable.Serialize<T>(T serializer)"
                 : "public void Serialize<T>(T serializer) where T : ISerializer<T>";
 
             var deserializesSignature = isEntity
-                ? "void IEntity<__TYPENAME__>.Deserialize<T>(T deserializer)"
+                ? "void ISerializable.Deserialize<T>(T deserializer)"
                 : "public static void Deserialize<T>(ref __TYPENAME__ self, T deserializer) where T : IDeserializer<T>";
 
             var deserPrefix = isEntity ? "" : "self.";

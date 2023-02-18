@@ -113,12 +113,12 @@ public class Observing
     [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
     public struct MalformedEntity : IEntity<MalformedEntity>
     {
-        void IEntity<MalformedEntity>.Deserialize<TDeser>(TDeser deserializer)
+        void ISerializable.Deserialize<TDeser>(TDeser deserializer)
         {
             throw new IOException();
         }
 
-        void IEntity<MalformedEntity>.Serialize<TSer>(TSer serializer)
+        void ISerializable.Serialize<TSer>(TSer serializer)
         {
             serializer.ObjectNext("a").Write("b");
         }
@@ -127,12 +127,12 @@ public class Observing
     [StorageOptions(ClientAuthority = ClientAuthority.Unauthenticated)]
     public struct MalformedEntityWrong : IEntity<MalformedEntityWrong>
     {
-        void IEntity<MalformedEntityWrong>.Deserialize<TDeser>(TDeser deserializer)
+        void ISerializable.Deserialize<TDeser>(TDeser deserializer)
         {
             throw new Exception();
         }
 
-        void IEntity<MalformedEntityWrong>.Serialize<TSer>(TSer serializer)
+        void ISerializable.Serialize<TSer>(TSer serializer)
         {
             serializer.ObjectNext("a").Write("b");
         }
