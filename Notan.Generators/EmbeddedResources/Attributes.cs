@@ -30,14 +30,3 @@ internal sealed class HandleIsAttribute : Attribute
         MakeProperty = makeProperty;
     }
 }
-
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-internal sealed class SerializesAttribute : Attribute
-{
-    public Type Type { get; }
-
-    public SerializesAttribute(Type type)
-    {
-        Type = type;
-    }
-}

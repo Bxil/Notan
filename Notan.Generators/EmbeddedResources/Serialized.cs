@@ -6,12 +6,12 @@ __NAMESPACE__
 
 partial __STRUCTTYPE__ __TYPENAME__
 {__PROPERTIES__
-    __SERIALIZESIGNATURE__
+    void ISerializable.Serialize<T>(T serializer)
     {
         __SERIALIZE__
     }
-    
-    __DESERIALIZESIGNATURE__
+
+    void ISerializable.Deserialize<T>(T deserializer)
     {
         __DESERIALIZE__
     }

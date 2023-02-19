@@ -41,33 +41,6 @@ public readonly record struct Handle
         handle = default;
         return false;
     }
-
-    public void Serialize<T>(T serializer) where T : ISerializer<T>
-    {
-        serializer.ArrayBegin();
-        if (Storage == null)
-        {
-            serializer.ArrayNext().Write(0);
-            serializer.ArrayNext().Write(0);
-            serializer.ArrayNext().Write(0);
-        }
-        else
-        {
-            serializer.ArrayNext().Write(Storage.Id);
-            serializer.ArrayNext().Write(Index);
-            serializer.ArrayNext().Write(Generation);
-        }
-        serializer.ArrayEnd();
-    }
-
-    public static void Deserialize<T>(ref Handle handle, T deserializer) where T : IDeserializer<T>
-    {
-        deserializer.ArrayBegin();
-        var storageid = deserializer.ArrayNext().GetInt32();
-        var storages = deserializer.World.IdToStorage.AsSpan();
-        handle = new Handle(storageid > 0 && storageid < storages.Length ? storages[storageid] : null, deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
-        _ = deserializer.ArrayTryNext(); //consume the end marker
-    }
 }
 
 //Beware of https://github.com/dotnet/runtime/issues/6924
@@ -108,16 +81,6 @@ public readonly record struct Handle<T> where T : struct, IEntity<T>
     }
 
     public static implicit operator Handle(Handle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
-
-    public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
-        => ((Handle)this).Serialize(serializer);
-
-    public static void Deserialize<TDeserializer>(ref Handle<T> handle, TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
-    {
-        Unsafe.SkipInit(out Handle weak);
-        Handle.Deserialize(ref weak, deserializer);
-        handle = weak.Strong<T>();
-    }
 }
 
 public readonly record struct ServerHandle<T> where T : struct, IEntity<T>
@@ -159,16 +122,6 @@ public readonly record struct ServerHandle<T> where T : struct, IEntity<T>
     public static implicit operator Handle(ServerHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
     public static implicit operator Handle<T>(ServerHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
-
-    public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
-    => ((Handle)this).Serialize(serializer);
-
-    public static void Deserialize<TDeserializer>(ref ServerHandle<T> handle, TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
-    {
-        Unsafe.SkipInit(out Handle weak);
-        Handle.Deserialize(ref weak, deserializer);
-        handle = weak.Server<T>();
-    }
 }
 
 public readonly record struct ClientHandle<T> where T : struct, IEntity<T>
@@ -198,55 +151,129 @@ public readonly record struct ClientHandle<T> where T : struct, IEntity<T>
     public static implicit operator Handle(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
     public static implicit operator Handle<T>(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
-
-    public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
-        => ((Handle)this).Serialize(serializer);
-
-    public static void Deserialize<TDeserializer>(ref ClientHandle<T> handle, TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
-    {
-        Unsafe.SkipInit(out Handle weak);
-        Handle.Deserialize(ref weak, deserializer);
-        handle = weak.Client<T>();
-    }
 }
 
 public readonly struct Maybe<T> where T : struct, IEntity<T>
 {
-    private readonly Handle<T> handle;
+    internal readonly Handle<T> Handle;
 
-    public Maybe(Handle<T> handle) => this.handle = handle;
+    public Maybe(Handle<T> handle) => Handle = handle;
 
-    public bool Alive() => handle.Storage?.Alive(handle.Index, handle.Generation) ?? false;
+    public bool Alive() => Handle.Storage?.Alive(Handle.Index, Handle.Generation) ?? false;
 
     public bool Alive(out Handle<T> handle)
     {
-        handle = this.handle;
+        handle = Handle;
         return Alive();
     }
 
     public bool AliveServer(out ServerHandle<T> handle)
     {
-        handle = this.handle.Server();
+        handle = Handle.Server();
         return Alive();
     }
 
     public bool AliveClient(out ClientHandle<T> handle)
     {
-        handle = this.handle.Client();
+        handle = Handle.Client();
         return Alive();
     }
 
     public static implicit operator Maybe<T>(Handle<T> handle) => new(handle);
     public static implicit operator Maybe<T>(ServerHandle<T> handle) => new(handle);
     public static implicit operator Maybe<T>(ClientHandle<T> handle) => new(handle);
+}
 
-    public void Serialize<TSerializer>(TSerializer serializer) where TSerializer : ISerializer<TSerializer>
-        => handle.Serialize(serializer);
-
-    public static void Deserialize<TDeserializer>(ref Maybe<T> maybe, TDeserializer deserializer) where TDeserializer : IDeserializer<TDeserializer>
+public static class HandleSerializer
+{
+    public static void Serialize<T>(this T serializer, Handle handle) where T : ISerializer<T>
     {
-        Unsafe.SkipInit(out Handle<T> handle);
-        Handle<T>.Deserialize(ref handle, deserializer);
-        maybe = handle;
+        serializer.ArrayBegin();
+        if (handle.Storage == null)
+        {
+            serializer.ArrayNext().Write(0);
+            serializer.ArrayNext().Write(0);
+            serializer.ArrayNext().Write(0);
+        }
+        else
+        {
+            serializer.ArrayNext().Write(handle.Storage.Id);
+            serializer.ArrayNext().Write(handle.Index);
+            serializer.ArrayNext().Write(handle.Generation);
+        }
+        serializer.ArrayEnd();
+    }
+
+    public static void Deserialize<T>(this T deserializer, ref Handle handle) where T : IDeserializer<T>
+    {
+        deserializer.ArrayBegin();
+        var storageid = deserializer.ArrayNext().GetInt32();
+        var storages = deserializer.World.IdToStorage.AsSpan();
+        handle = new Handle(storageid > 0 && storageid < storages.Length ? storages[storageid] : null, deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
+        _ = deserializer.ArrayTryNext(); //consume the end marker
+    }
+
+    public static void Serialize<TSer, T>(this TSer serializer, Handle<T> handle)
+        where TSer : ISerializer<TSer>
+        where T : struct, IEntity<T>
+    {
+        serializer.Serialize((Handle)handle);
+    }
+
+    public static void Deserialize<TDeser, T>(this TDeser deserializer, ref Handle<T> handle)
+        where TDeser : IDeserializer<TDeser>
+        where T : struct, IEntity<T>
+    {
+        Unsafe.SkipInit(out Handle weak);
+        deserializer.Deserialize(ref weak);
+        handle = weak.Strong<T>();
+    }
+
+    public static void Serialize<TSer, T>(this TSer serializer, ServerHandle<T> handle)
+    where TSer : ISerializer<TSer>
+    where T : struct, IEntity<T>
+    {
+        serializer.Serialize((Handle)handle);
+    }
+
+    public static void Deserialize<TDeser, T>(this TDeser deserializer, ref ServerHandle<T> handle)
+        where TDeser : IDeserializer<TDeser>
+        where T : struct, IEntity<T>
+    {
+        Unsafe.SkipInit(out Handle weak);
+        deserializer.Deserialize(ref weak);
+        handle = weak.Server<T>();
+    }
+
+    public static void Serialize<TSer, T>(this TSer serializer, ClientHandle<T> handle)
+    where TSer : ISerializer<TSer>
+    where T : struct, IEntity<T>
+    {
+        serializer.Serialize((Handle)handle);
+    }
+
+    public static void Deserialize<TDeser, T>(this TDeser deserializer, ref ClientHandle<T> handle)
+        where TDeser : IDeserializer<TDeser>
+        where T : struct, IEntity<T>
+    {
+        Unsafe.SkipInit(out Handle weak);
+        deserializer.Deserialize(ref weak);
+        handle = weak.Client<T>();
+    }
+
+    public static void Serialize<TSer, T>(this TSer serializer, Maybe<T> maybe)
+    where TSer : ISerializer<TSer>
+    where T : struct, IEntity<T>
+    {
+        serializer.Serialize((Handle)maybe.Handle);
+    }
+
+    public static void Deserialize<TDeser, T>(this TDeser deserializer, ref Maybe<T> maybe)
+        where TDeser : IDeserializer<TDeser>
+        where T : struct, IEntity<T>
+    {
+        Unsafe.SkipInit(out Handle<T> weak);
+        deserializer.Deserialize(ref weak);
+        maybe = weak;
     }
 }

@@ -25,3 +25,13 @@ public interface IDeserializer<T> where T : IDeserializer<T>
     bool ObjectTryNext(out Key key);
     T ObjectNext(out Key key);
 }
+
+public static class DeserializerExtensions
+{
+    public static void Deserialize<TDeser, T>(this TDeser deserializer, ref T value)
+        where TDeser : IDeserializer<TDeser>
+        where T : ISerializable
+    {
+        value.Deserialize(deserializer);
+    }
+}

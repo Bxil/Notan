@@ -10,15 +10,14 @@ public partial struct DateTimeEntity : IEntity<DateTimeEntity>
     public DateTime DateTime;
 }
 
-[Serializes(typeof(DateTime))]
 public static class DateTimeSerialization
 {
-    public static void Serialize<T>(in DateTime dateTime, T serializer) where T : ISerializer<T>
+    public static void Serialize<T>(this T serializer, DateTime dateTime) where T : ISerializer<T>
     {
         serializer.Write(dateTime.Ticks);
     }
 
-    public static void Deserialize<T>(ref DateTime dateTime, T deserializer) where T : IDeserializer<T>
+    public static void Deserialize<T>(this T deserializer, ref DateTime dateTime) where T : IDeserializer<T>
     {
         dateTime = new DateTime(deserializer.GetInt64());
     }

@@ -21,3 +21,13 @@ public interface ISerializer<T> where T : ISerializer<T>
     T ObjectNext(string key);
     void ObjectEnd();
 }
+
+public static class SerializerExtensions
+{
+    public static void Serialize<TSer, T>(this TSer serializer, T value)
+        where TSer : ISerializer<TSer>
+        where T : ISerializable
+    {
+        value.Serialize(serializer);
+    }
+}
