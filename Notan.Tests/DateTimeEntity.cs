@@ -20,8 +20,6 @@ public static class DateTimeSerialization
 
     public static void Deserialize<T>(this T deserializer, ref DateTime dateTime) where T : IDeserializer<T>
     {
-        Unsafe.SkipInit(out long ticks);
-        deserializer.Deserialize(ref ticks);
-        dateTime = new DateTime(ticks);
+        dateTime = new DateTime(deserializer.DeserializeInt64());
     }
 }

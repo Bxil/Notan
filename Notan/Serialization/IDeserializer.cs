@@ -64,3 +64,102 @@ public static class DeserailizerEnum
         }
     }
 }
+
+public static class DeserializerSugar
+{
+    public static bool DeserializeBool<T>(this T deserializer)
+        where T : IDeserializer<T>
+    {
+        Unsafe.SkipInit(out bool value);
+        deserializer.Deserialize(ref value);
+        return value;
+    }
+
+    public static byte DeserializeByte<T>(this T deserializer)
+        where T : IDeserializer<T>
+    {
+        Unsafe.SkipInit(out byte value);
+        deserializer.Deserialize(ref value);
+        return value;
+    }
+
+    public static sbyte DeserializeSByte<T>(this T deserializer)
+        where T : IDeserializer<T>
+    {
+        Unsafe.SkipInit(out sbyte value);
+        deserializer.Deserialize(ref value);
+        return value;
+    }
+
+    public static short DeserializeInt16<T>(this T deserializer)
+        where T : IDeserializer<T>
+    {
+        Unsafe.SkipInit(out short value);
+        deserializer.Deserialize(ref value);
+        return value;
+    }
+
+    public static ushort DeserializeUInt16<T>(this T deserializer)
+        where T : IDeserializer<T>
+    {
+        Unsafe.SkipInit(out ushort value);
+        deserializer.Deserialize(ref value);
+        return value;
+    }
+
+    public static int DeserializeInt32<T>(this T deserializer)
+        where T : IDeserializer<T>
+    {
+        Unsafe.SkipInit(out int value);
+        deserializer.Deserialize(ref value);
+        return value;
+    }
+
+    public static uint DeserializeUInt32<T>(this T deserializer)
+        where T : IDeserializer<T>
+    {
+        Unsafe.SkipInit(out uint value);
+        deserializer.Deserialize(ref value);
+        return value;
+    }
+
+    public static long DeserializeInt64<T>(this T deserializer)
+        where T : IDeserializer<T>
+    {
+        Unsafe.SkipInit(out long value);
+        deserializer.Deserialize(ref value);
+        return value;
+    }
+
+    public static ulong DeserializeUInt64<T>(this T deserializer)
+        where T : IDeserializer<T>
+    {
+        Unsafe.SkipInit(out ulong value);
+        deserializer.Deserialize(ref value);
+        return value;
+    }
+
+    public static float DeserializeSingle<T>(this T deserializer)
+        where T : IDeserializer<T>
+    {
+        Unsafe.SkipInit(out float value);
+        deserializer.Deserialize(ref value);
+        return value;
+    }
+
+    public static double DeserializeDouble<T>(this T deserializer)
+        where T : IDeserializer<T>
+    {
+        Unsafe.SkipInit(out double value);
+        deserializer.Deserialize(ref value);
+        return value;
+    }
+
+    public static string DeserializeString<T>(this T deserializer)
+        where T : IDeserializer<T>
+    {
+        Unsafe.SkipInit(out string value);
+        deserializer.Deserialize(ref value);
+        return value;
+    }
+}
