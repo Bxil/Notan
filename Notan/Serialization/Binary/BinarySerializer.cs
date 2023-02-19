@@ -9,73 +9,73 @@ public readonly struct BinarySerializer : ISerializer<BinarySerializer>
 
     public BinarySerializer(Stream stream, Encoding encoding) => writer = new BinaryWriter(stream, encoding, true);
 
-    public void Write(bool value)
+    public void Serialize(bool value)
     {
         WriteTag(BinaryTag.Boolean);
         writer.Write(value);
     }
 
-    public void Write(byte value)
+    public void Serialize(byte value)
     {
         WriteTag(BinaryTag.Byte);
         writer.Write(value);
     }
 
-    public void Write(sbyte value)
+    public void Serialize(sbyte value)
     {
         WriteTag(BinaryTag.SByte);
         writer.Write(value);
     }
 
-    public void Write(short value)
+    public void Serialize(short value)
     {
         WriteTag(BinaryTag.Int16);
         writer.Write(value);
     }
 
-    public void Write(ushort value)
+    public void Serialize(ushort value)
     {
         WriteTag(BinaryTag.UInt16);
         writer.Write(value);
     }
 
-    public void Write(int value)
+    public void Serialize(int value)
     {
         WriteTag(BinaryTag.Int32);
         writer.Write(value);
     }
 
-    public void Write(uint value)
+    public void Serialize(uint value)
     {
         WriteTag(BinaryTag.UInt32);
         writer.Write(value);
     }
 
-    public void Write(long value)
+    public void Serialize(long value)
     {
         WriteTag(BinaryTag.Int64);
         writer.Write(value);
     }
 
-    public void Write(ulong value)
+    public void Serialize(ulong value)
     {
         WriteTag(BinaryTag.UInt64);
         writer.Write(value);
     }
 
-    public void Write(float value)
+    public void Serialize(float value)
     {
         WriteTag(BinaryTag.Single);
         writer.Write(value);
     }
 
-    public void Write(double value)
+    public void Serialize(double value)
     {
         WriteTag(BinaryTag.Double);
         writer.Write(value);
     }
 
-    public void Write(string value)
+    public void Serialize(string value)
     {
         WriteTag(BinaryTag.String);
         writer.Write(value);
@@ -103,7 +103,7 @@ public readonly struct BinarySerializer : ISerializer<BinarySerializer>
 
     public BinarySerializer ObjectNext(string key)
     {
-        Write(key);
+        Serialize(key);
         return this;
     }
 

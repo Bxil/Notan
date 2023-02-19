@@ -191,15 +191,15 @@ public static class HandleSerializer
         serializer.ArrayBegin();
         if (handle.Storage == null)
         {
-            serializer.ArrayNext().Write(0);
-            serializer.ArrayNext().Write(0);
-            serializer.ArrayNext().Write(0);
+            serializer.ArrayNext().Serialize(0);
+            serializer.ArrayNext().Serialize(0);
+            serializer.ArrayNext().Serialize(0);
         }
         else
         {
-            serializer.ArrayNext().Write(handle.Storage.Id);
-            serializer.ArrayNext().Write(handle.Index);
-            serializer.ArrayNext().Write(handle.Generation);
+            serializer.ArrayNext().Serialize(handle.Storage.Id);
+            serializer.ArrayNext().Serialize(handle.Index);
+            serializer.ArrayNext().Serialize(handle.Generation);
         }
         serializer.ArrayEnd();
     }
@@ -207,9 +207,14 @@ public static class HandleSerializer
     public static void Deserialize<T>(this T deserializer, ref Handle handle) where T : IDeserializer<T>
     {
         deserializer.ArrayBegin();
-        var storageid = deserializer.ArrayNext().GetInt32();
+        Unsafe.SkipInit(out int storageid);
+        deserializer.ArrayNext().Deserialize(ref storageid);
+        Unsafe.SkipInit(out int index);
+        deserializer.ArrayNext().Deserialize(ref index);
+        Unsafe.SkipInit(out int generation);
+        deserializer.ArrayNext().Deserialize(ref generation);
         var storages = deserializer.World.IdToStorage.AsSpan();
-        handle = new Handle(storageid > 0 && storageid < storages.Length ? storages[storageid] : null, deserializer.ArrayNext().GetInt32(), deserializer.ArrayNext().GetInt32());
+        handle = new Handle(storageid > 0 && storageid < storages.Length ? storages[storageid] : null, index, generation);
         _ = deserializer.ArrayTryNext(); //consume the end marker
     }
 

@@ -65,23 +65,9 @@ public class SerializerGenerator : ISourceGenerator
                 }
 
                 var name = $"\"{(string?)serializeData.ConstructorArguments[0].Value ?? field.Name}\"";
-                var type = (INamedTypeSymbol)field.Type;
                 _ = deserializeBuilder.Append($"if (key == {name}) ");
-                if (type.IsBuiltin())
-                {
-                    _ = serializeBuilder.AppendLine($"serializer.ObjectNext({name}).Write({field.Name});");
-                    _ = deserializeBuilder.AppendLine($"{field.Name} = deserializer.Get{type.Name}();");
-                }
-                else if (type.TypeKind == TypeKind.Enum)
-                {
-                    _ = serializeBuilder.AppendLine($"serializer.ObjectNext({name}).Write(({type.EnumUnderlyingType}){field.Name});");
-                    _ = deserializeBuilder.AppendLine($"{field.Name} = ({type.ToDisplayString()})deserializer.Get{type.EnumUnderlyingType!.Name}();");
-                }
-                else
-                {
-                    _ = serializeBuilder.AppendLine($"serializer.ObjectNext({name}).Serialize({field.Name});");
-                    _ = deserializeBuilder.AppendLine($"deserializer.Deserialize(ref {field.Name});");
-                }
+                _ = serializeBuilder.AppendLine($"serializer.ObjectNext({name}).Serialize({field.Name});");
+                _ = deserializeBuilder.AppendLine($"deserializer.Deserialize(ref {field.Name});");
                 _ = serializeBuilder.Append($"        ");
                 _ = deserializeBuilder.Append($"            else ");
             }

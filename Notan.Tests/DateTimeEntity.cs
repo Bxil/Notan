@@ -1,5 +1,6 @@
 ﻿using Notan.Serialization;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Notan.Tests;
 
@@ -14,11 +15,13 @@ public static class DateTimeSerialization
 {
     public static void Serialize<T>(this T serializer, in DateTime dateTime) where T : ISerializer<T>
     {
-        serializer.Write(dateTime.Ticks);
+        serializer.Serialize(dateTime.Ticks);
     }
 
     public static void Deserialize<T>(this T deserializer, ref DateTime dateTime) where T : IDeserializer<T>
     {
-        dateTime = new DateTime(deserializer.GetInt64());
+        Unsafe.SkipInit(out long ticks);
+        deserializer.Deserialize(ref ticks);
+        dateTime = new DateTime(ticks);
     }
 }

@@ -17,29 +17,29 @@ public readonly struct JsonDeserializer : IDeserializer<JsonDeserializer>
         this.stream = new(stream);
     }
 
-    public bool GetBoolean() => stream.Read().GetBoolean();
+    public void Deserialize(ref bool value) => value = stream.Read().GetBoolean();
 
-    public byte GetByte() => stream.Read().GetByte();
+    public void Deserialize(ref byte value) => value = stream.Read().GetByte();
 
-    public sbyte GetSByte() => stream.Read().GetSByte();
+    public void Deserialize(ref sbyte value) => value = stream.Read().GetSByte();
 
-    public double GetDouble() => stream.Read().GetDouble();
+    public void Deserialize(ref double value) => value = stream.Read().GetDouble();
 
-    public short GetInt16() => stream.Read().GetInt16();
+    public void Deserialize(ref short value) => value = stream.Read().GetInt16();
 
-    public ushort GetUInt16() => stream.Read().GetUInt16();
+    public void Deserialize(ref ushort value) => value = stream.Read().GetUInt16();
 
-    public int GetInt32() => stream.Read().GetInt32();
+    public void Deserialize(ref int value) => value = stream.Read().GetInt32();
 
-    public uint GetUInt32() => stream.Read().GetUInt32();
+    public void Deserialize(ref uint value) => value = stream.Read().GetUInt32();
 
-    public long GetInt64() => stream.Read().GetInt64();
+    public void Deserialize(ref long value) => value = stream.Read().GetInt64();
 
-    public ulong GetUInt64() => stream.Read().GetUInt64();
+    public void Deserialize(ref ulong value) => value = stream.Read().GetUInt64();
 
-    public float GetSingle() => stream.Read().GetSingle();
+    public void Deserialize(ref float value) => value = stream.Read().GetSingle();
 
-    public string GetString() => stream.Read().GetString()!;
+    public void Deserialize(ref string value) => value = stream.Read().GetString()!;
 
     public void ArrayBegin()
     {

@@ -154,7 +154,7 @@ public sealed class ServerWorld : World
         {
             if (!pair.Value.Impermanent)
             {
-                serializer.ObjectNext(pair.Key).Write(pair.Value.Id);
+                serializer.ObjectNext(pair.Key).Serialize(pair.Value.Id);
             }
         }
         serializer.ObjectEnd();
@@ -185,7 +185,8 @@ public sealed class ServerWorld : World
                 while (deserializer.ObjectTryNext(out key))
                 {
                     var storage = TypeNameToStorage[key.ToString()];
-                    var id = deserializer.GetInt32();
+                    Unsafe.SkipInit(out int id);
+                    deserializer.Deserialize(ref id);
                     IdToStorage.EnsureSize(id + 1);
                     IdToStorage[id] = storage;
                 }

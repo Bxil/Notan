@@ -21,76 +21,76 @@ public readonly struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
         this.encoding = encoding;
     }
 
-    public bool GetBoolean()
+    public void Deserialize(ref bool value)
     {
         ConsumeTag(BinaryTag.Boolean);
-        return reader.ReadBoolean();
+        value = reader.ReadBoolean();
     }
 
-    public byte GetByte()
+    public void Deserialize(ref byte value)
     {
         ConsumeTag(BinaryTag.Byte);
-        return reader.ReadByte();
+        value = reader.ReadByte();
     }
 
-    public sbyte GetSByte()
+    public void Deserialize(ref sbyte value)
     {
         ConsumeTag(BinaryTag.SByte);
-        return reader.ReadSByte();
+        value = reader.ReadSByte();
     }
 
-    public short GetInt16()
+    public void Deserialize(ref short value)
     {
         ConsumeTag(BinaryTag.Int16);
-        return reader.ReadInt16();
+        value = reader.ReadInt16();
     }
 
-    public ushort GetUInt16()
+    public void Deserialize(ref ushort value)
     {
         ConsumeTag(BinaryTag.UInt16);
-        return reader.ReadUInt16();
+        value = reader.ReadUInt16();
     }
 
-    public int GetInt32()
+    public void Deserialize(ref int value)
     {
         ConsumeTag(BinaryTag.Int32);
-        return reader.ReadInt32();
+        value = reader.ReadInt32();
     }
 
-    public uint GetUInt32()
+    public void Deserialize(ref uint value)
     {
         ConsumeTag(BinaryTag.UInt32);
-        return reader.ReadUInt32();
+        value = reader.ReadUInt32();
     }
 
-    public long GetInt64()
+    public void Deserialize(ref long value)
     {
         ConsumeTag(BinaryTag.Int64);
-        return reader.ReadInt64();
+        value = reader.ReadInt64();
     }
 
-    public ulong GetUInt64()
+    public void Deserialize(ref ulong value)
     {
         ConsumeTag(BinaryTag.UInt64);
-        return reader.ReadUInt64();
+        value = reader.ReadUInt64();
     }
 
-    public float GetSingle()
+    public void Deserialize(ref float value)
     {
         ConsumeTag(BinaryTag.Single);
-        return reader.ReadSingle();
+        value = reader.ReadSingle();
     }
 
-    public double GetDouble()
+    public void Deserialize(ref double value)
     {
         ConsumeTag(BinaryTag.Double);
-        return reader.ReadDouble();
+        value = reader.ReadDouble();
     }
 
-    public string GetString()
+    public void Deserialize(ref string value)
     {
         ConsumeTag(BinaryTag.String);
-        return reader.ReadString();
+        value = reader.ReadString();
     }
 
     public void ArrayBegin()

@@ -9,29 +9,29 @@ public readonly struct JsonSerializer : ISerializer<JsonSerializer>
 
     public JsonSerializer(Utf8JsonWriter writer) => this.writer = writer;
 
-    public void Write(byte value) => writer.WriteNumberValue(value);
+    public void Serialize(byte value) => writer.WriteNumberValue(value);
 
-    public void Write(sbyte value) => writer.WriteNumberValue(value);
+    public void Serialize(sbyte value) => writer.WriteNumberValue(value);
 
-    public void Write(string value) => writer.WriteStringValue(value);
+    public void Serialize(string value) => writer.WriteStringValue(value);
 
-    public void Write(bool value) => writer.WriteBooleanValue(value);
+    public void Serialize(bool value) => writer.WriteBooleanValue(value);
 
-    public void Write(short value) => writer.WriteNumberValue(value);
+    public void Serialize(short value) => writer.WriteNumberValue(value);
 
-    public void Write(ushort value) => writer.WriteNumberValue(value);
+    public void Serialize(ushort value) => writer.WriteNumberValue(value);
 
-    public void Write(int value) => writer.WriteNumberValue(value);
+    public void Serialize(int value) => writer.WriteNumberValue(value);
 
-    public void Write(uint value) => writer.WriteNumberValue(value);
+    public void Serialize(uint value) => writer.WriteNumberValue(value);
 
-    public void Write(long value) => writer.WriteNumberValue(value);
+    public void Serialize(long value) => writer.WriteNumberValue(value);
 
-    public void Write(ulong value) => writer.WriteNumberValue(value);
+    public void Serialize(ulong value) => writer.WriteNumberValue(value);
 
-    public void Write(float value) => writer.WriteNumberValue(value);
+    public void Serialize(float value) => writer.WriteNumberValue(value);
 
-    public void Write(double value) => writer.WriteNumberValue(value);
+    public void Serialize(double value) => writer.WriteNumberValue(value);
 
     public void ArrayBegin() => writer.WriteStartArray();
 

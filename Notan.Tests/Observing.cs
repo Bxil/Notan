@@ -120,7 +120,7 @@ public class Observing
 
         void ISerializable.Serialize<TSer>(TSer serializer)
         {
-            serializer.ObjectNext("a").Write("b");
+            serializer.ObjectNext("a").Serialize("b");
         }
     }
 
@@ -134,7 +134,7 @@ public class Observing
 
         void ISerializable.Serialize<TSer>(TSer serializer)
         {
-            serializer.ObjectNext("a").Write("b");
+            serializer.ObjectNext("a").Serialize("b");
         }
     }
 

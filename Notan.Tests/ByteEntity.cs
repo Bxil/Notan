@@ -15,12 +15,12 @@ public partial struct ByteEntityOnDestroy : IEntity<ByteEntityOnDestroy>
 
     void ISerializable.Serialize<TSer>(TSer serializer)
     {
-        serializer.Write(Value);
+        serializer.Serialize(Value);
     }
 
     void ISerializable.Deserialize<TDeser>(TDeser deserializer)
     {
-        Value = deserializer.GetByte();
+        deserializer.Deserialize(ref Value);
     }
 }
 

@@ -284,14 +284,14 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         foreach (var index in indexToEntity.AsSpan())
         {
             serializer.ArrayNext().ObjectBegin();
-            serializer.ObjectNext("gen").Write(generations[i]);
+            serializer.ObjectNext("gen").Serialize(generations[i]);
             if (entityToIndex.Count > index && entityToIndex[index] == i)
             {
                 entities[index].Serialize(serializer.ObjectNext("entity"));
             }
             else
             {
-                serializer.ObjectNext("dead").Write(true);
+                serializer.ObjectNext("dead").Serialize(true);
             }
             serializer.ObjectEnd();
             i++;
@@ -325,11 +325,12 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
             {
                 if (key == "gen")
                 {
-                    gen = deserializer.GetInt32();
+                    deserializer.Deserialize(ref gen);
                 }
                 else if (key == "dead")
                 {
-                    _ = deserializer.GetBoolean();
+                    Unsafe.SkipInit(out bool dummy);
+                    deserializer.Deserialize(ref dummy);
                     dead = true;
                 }
                 else if (key == "entity")
