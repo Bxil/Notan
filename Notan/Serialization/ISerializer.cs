@@ -24,7 +24,7 @@ public interface ISerializer<T> where T : ISerializer<T>
 
 public static class SerializerExtensions
 {
-    public static void Serialize<TSer, T>(this TSer serializer, T value)
+    public static void Serialize<TSer, T>(this TSer serializer, in T value)
         where TSer : ISerializer<TSer>
         where T : ISerializable
     {

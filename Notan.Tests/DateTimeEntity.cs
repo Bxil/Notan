@@ -12,7 +12,7 @@ public partial struct DateTimeEntity : IEntity<DateTimeEntity>
 
 public static class DateTimeSerialization
 {
-    public static void Serialize<T>(this T serializer, DateTime dateTime) where T : ISerializer<T>
+    public static void Serialize<T>(this T serializer, in DateTime dateTime) where T : ISerializer<T>
     {
         serializer.Write(dateTime.Ticks);
     }
