@@ -200,9 +200,9 @@ public record struct ClientHandle<T> : ISerializable where T : struct, IEntity<T
 
     public void RequestDestroy() => Storage!.RequestDestroy(Index, Generation);
 
-    public void RequestUpdate() => Storage!.RequestUpdate(Index, Generation, Get());
+    public void RequestUpdate() => Storage!.RequestUpdate(Index, Generation, ref Get());
 
-    public void RequestUpdate(T entity) => Storage!.RequestUpdate(Index, Generation, entity);
+    public void RequestUpdate(T entity) => Storage!.RequestUpdate(Index, Generation, ref entity);
 
     public static implicit operator Handle(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 

@@ -449,7 +449,7 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
         server.Send(Id, MessageType.Create, 0, 0, ref entity);
     }
 
-    internal void RequestUpdate(int index, int generation, T entity)
+    internal void RequestUpdate(int index, int generation, ref T entity)
     {
         server.Send(Id, MessageType.Update, index, generation, ref entity);
     }
