@@ -202,7 +202,12 @@ public record struct ClientHandle<T> : ISerializable where T : struct, IEntity<T
 
     public void RequestUpdate() => Storage!.RequestUpdate(Index, Generation, ref Get());
 
-    public void RequestUpdate(T entity) => Storage!.RequestUpdate(Index, Generation, ref entity);
+    public void RequestUpdate(T entity)
+    {
+        ref var realEntity = ref Get();
+        realEntity = entity;
+        Storage!.RequestUpdate(Index, Generation, ref realEntity);
+    }
 
     public static implicit operator Handle(ClientHandle<T> handle) => new(handle.Storage, handle.Index, handle.Generation);
 
