@@ -9,7 +9,7 @@ namespace Notan;
 //For storing in collections
 public abstract class Storage
 {
-    private protected FastList<int> generations = new();
+    private protected FastList<int> indexToGeneration = new();
 
     internal readonly bool Impermanent;
 
@@ -26,7 +26,7 @@ public abstract class Storage
 
     internal bool Alive(int index, int generation)
     {
-        return generations.Count > index && generations[index] == generation;
+        return indexToGeneration.Count > index && indexToGeneration[index] == generation;
     }
 
     internal abstract void Serialize<T>(T serializer) where T : ISerializer<T>;
@@ -44,6 +44,7 @@ public abstract class Storage
 public abstract class Storage<T> : Storage where T : struct, IEntity<T>
 {
     private protected FastList<T> entities = new();
+    private protected FastList<int> entityToGeneration = new();
     private protected FastList<int> entityToIndex = new();
     private protected FastList<int> indexToEntity = new();
 
@@ -96,14 +97,16 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         {
             hndind = indexToEntity.Count;
             indexToEntity.Add(entind);
-            generations.Add(0);
+            indexToGeneration.Add(0);
         }
 
         entities.Add(entity);
         entityToIndex.Add(hndind);
 
-        var handle = new ServerHandle<T>(this, hndind, generations[hndind]);
-        Get(hndind, generations[hndind]).PostUpdate(handle);
+        var generation = indexToGeneration[hndind];
+        entityToGeneration.Add(generation);
+        var handle = new ServerHandle<T>(this, hndind, generation);
+        Get(hndind, generation).PostUpdate(handle);
         return handle;
     }
 
@@ -119,11 +122,11 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
         foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
         {
-            observer.Send(Id, MessageType.Destroy, index, generations[index], ref Unsafe.NullRef<T>());
+            observer.Send(Id, MessageType.Destroy, index, generation, ref Unsafe.NullRef<T>());
         }
 
         entityIsDead[indexToEntity[index]] = true;
-        generations[index]++;
+        indexToGeneration[index]++;
         destroyedEntityIndices.Add(index);
 
         entity.OnDestroy();
@@ -265,7 +268,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
             if (!entityIsDead[i])
             {
                 var index = entityToIndex[i];
-                system.Work(new(this, index, generations[index]), ref entities[i]);
+                system.Work(new(this, index, entityToGeneration[i]), ref entities[i]);
             }
         }
         system.PostWork();
@@ -284,7 +287,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         foreach (var index in indexToEntity.AsSpan())
         {
             serializer.ArrayNext().ObjectBegin();
-            serializer.ObjectNext("gen").Serialize(generations[i]);
+            serializer.ObjectNext("gen").Serialize(indexToGeneration[i]);
             if (entityToIndex.Count > index && entityToIndex[index] == i)
             {
                 entities[index].Serialize(serializer.ObjectNext("entity"));
@@ -309,8 +312,9 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         entityIsDead.Clear();
         entityToObservers.Clear();
         entityToAuthority.Clear();
+        entityToGeneration.Clear();
         indexToEntity.Clear();
-        generations.Clear();
+        indexToGeneration.Clear();
 
         deserializer.ArrayBegin();
         var i = 0;
@@ -343,7 +347,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
                 }
             }
 
-            generations.Add(gen);
+            indexToGeneration.Add(gen);
 
             if (!dead)
             {
@@ -352,6 +356,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
                 entityIsDead.Add(false);
                 entityToObservers.Add(new());
                 entityToAuthority.Add(null);
+                entityToGeneration.Add(gen);
                 indexToEntity.Add(entities.Count - 1);
             }
             else
@@ -368,7 +373,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         var i = 0;
         foreach (ref var entity in entities.AsSpan())
         {
-            entity.PostUpdate(new(this, entityToIndex[i], generations[entityToIndex[i]]));
+            entity.PostUpdate(new(this, entityToIndex[i], entityToGeneration[i]));
             i++;
         }
     }
@@ -465,7 +470,7 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
         {
             NotanException.Throw("Entity is not alive.");
         }
-        generations[index] = -1;
+        indexToGeneration[index] = -1;
         entityIsForgotten[indexToEntity[index]] = true;
         forgottenEntityIndices.Add(index);
     }
@@ -484,8 +489,9 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
                     entityIsForgotten.Add(false);
                     indexToEntity.EnsureSize(index + 1);
                     indexToEntity[index] = entid;
-                    generations.EnsureSize(index + 1);
-                    generations[index] = generation;
+                    indexToGeneration.EnsureSize(index + 1);
+                    indexToGeneration[index] = generation;
+                    entityToGeneration.Add(generation);
                     Get(index, generation).PostUpdate(new(this, index, generation));
                 }
                 break;
@@ -507,7 +513,7 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
                 if (Alive(index, generation))
                 {
                     Get(index, generation).PreUpdate(new(this, index, generation));
-                    generations[index] = -1;
+                    indexToGeneration[index] = -1;
                     DestroyInternal(index);
                 }
                 break;
@@ -532,8 +538,7 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
             i--;
             if (!entityIsForgotten[i])
             {
-                var index = entityToIndex[i];
-                system.Work(new(this, index, generations[index]), ref entities[i]);
+                system.Work(new(this, entityToIndex[i], entityToGeneration[i]), ref entities[i]);
             }
         }
         system.PostWork();
