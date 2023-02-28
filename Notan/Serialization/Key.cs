@@ -3,11 +3,8 @@ using System.Buffers;
 using System.Text;
 
 namespace Notan.Serialization;
-#pragma warning disable CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
-#pragma warning disable CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
+
 public readonly ref struct Key
-#pragma warning restore CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
-#pragma warning restore CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
 {
     private readonly Encoding encoding;
     private readonly ReadOnlySpan<byte> bytes;
@@ -29,7 +26,7 @@ public readonly ref struct Key
 
     public static bool operator !=(Key left, string right) => !(left == right);
 
-    public static bool operator ==(string left, Key right) => left == right;
+    public static bool operator ==(string left, Key right) => right == left;
     public static bool operator !=(string left, Key right) => !(left == right);
 
     public override string ToString()

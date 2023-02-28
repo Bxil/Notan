@@ -5,7 +5,7 @@
     <Nullable>Enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>Notan</RootNamespace>
-    <Version>0.63.3</Version>
+    <Version>0.63.4</Version>
     <Authors>Bxil</Authors>
     <PackageProjectUrl>https://github.com/Bxil/Notan</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Bxil/Notan.git</RepositoryUrl>
@@ -16,6 +16,10 @@
     <PackageId>Notan</PackageId>
     <Description>Not an ECS: a simple and fast library designed for real-time applications, persistence, and networking.</Description>
     <PackageIcon>Notan.png</PackageIcon>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <NoWarn>1701;1702;CS0660;CS0661</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' != 'DEBUG'">
