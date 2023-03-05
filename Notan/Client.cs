@@ -45,8 +45,8 @@ public sealed class Client
         writer = new BinaryWriter(outgoing, encoding, true);
         reader = new BinaryReader(stream, encoding, true);
 
-        serializer = new(outgoing, encoding);
-        deserializer = new(world, stream, encoding);
+        serializer = new(outgoing);
+        deserializer = new(world, stream);
 
         lengthPrefix = 0;
     }

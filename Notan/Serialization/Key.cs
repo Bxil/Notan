@@ -1,27 +1,42 @@
 ﻿using System;
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Unicode;
 
 namespace Notan.Serialization;
 
 public readonly ref struct Key
 {
-    private readonly Encoding encoding;
-    private readonly ReadOnlySpan<byte> bytes;
+    private readonly ReadOnlySpan<byte> utf8;
 
-    public Key(Encoding encoding, ReadOnlySpan<byte> bytes)
+    public Key(ReadOnlySpan<byte> utf8)
     {
-        this.encoding = encoding;
-        this.bytes = bytes;
+        this.utf8 = utf8;
     }
 
     public static bool operator ==(Key left, string right)
     {
-        var buffer = ArrayPool<char>.Shared.Rent(left.encoding.GetMaxCharCount(left.bytes.Length));
-        var count = left.encoding.GetChars(left.bytes, buffer);
-        var ok = ((ReadOnlySpan<char>)buffer[..count]).Equals(right, StringComparison.Ordinal);
-        ArrayPool<char>.Shared.Return(buffer);
-        return ok;
+        var utf8 = left.utf8;
+        var utf16 = right.AsSpan();
+        Span<char> buffer = stackalloc char[16];
+
+        do
+        {
+            var status = Utf8.ToUtf16(utf8, buffer, out var read8, out var written16);
+            if (status is not OperationStatus.Done and not OperationStatus.DestinationTooSmall ||
+                written16 > utf16.Length ||
+                !utf16[..written16].SequenceEqual(buffer[..written16]))
+            {
+                break;
+            }
+
+            utf16 = utf16[written16..];
+            utf8 = utf8[read8..];
+        }
+        while (utf8.Length > 0);
+
+        return utf8.IsEmpty;
     }
 
     public static bool operator !=(Key left, string right) => !(left == right);
@@ -29,8 +44,5 @@ public readonly ref struct Key
     public static bool operator ==(string left, Key right) => right == left;
     public static bool operator !=(string left, Key right) => !(left == right);
 
-    public override string ToString()
-    {
-        return encoding.GetString(bytes);
-    }
+    public override string ToString() => Encoding.UTF8.GetString(utf8);
 }

@@ -85,7 +85,7 @@ public readonly struct JsonDeserializer : IDeserializer<JsonDeserializer>
             key = default;
             return false;
         }
-        key = new(Encoding.UTF8, stream.Span((int)reader.TokenStartIndex + 1, (int)(reader.BytesConsumed - reader.TokenStartIndex - 3)));
+        key = new(stream.Span((int)reader.TokenStartIndex + 1, (int)(reader.BytesConsumed - reader.TokenStartIndex - 3)));
         return true;
     }
 

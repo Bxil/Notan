@@ -7,7 +7,7 @@ public readonly struct BinarySerializer : ISerializer<BinarySerializer>
 {
     private readonly BinaryWriter writer;
 
-    public BinarySerializer(Stream stream, Encoding encoding) => writer = new BinaryWriter(stream, encoding, true);
+    public BinarySerializer(Stream stream) => writer = new BinaryWriter(stream, Encoding.UTF8, true);
 
     public void Serialize(bool value)
     {

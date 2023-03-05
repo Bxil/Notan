@@ -10,15 +10,13 @@ public readonly struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
     public World World { get; }
 
     private readonly BinaryReader reader;
-    private readonly Encoding encoding;
 
     private readonly StrongBox<byte[]> buffer = new(new byte[64]);
 
-    public BinaryDeserializer(World world, Stream stream, Encoding encoding)
+    public BinaryDeserializer(World world, Stream stream)
     {
         World = world;
-        reader = new BinaryReader(stream, encoding, true);
-        this.encoding = encoding;
+        reader = new BinaryReader(stream, Encoding.UTF8, true);
     }
 
     public void Deserialize(ref bool value)
@@ -128,7 +126,7 @@ public readonly struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
             Array.Resize(ref buffer.Value, keylength);
         }
         _ = reader.Read(buffer.Value.AsSpan(0, keylength));
-        key = new(encoding, buffer.Value.AsSpan(0, keylength));
+        key = new(buffer.Value.AsSpan(0, keylength));
         return true;
     }
 
@@ -141,7 +139,7 @@ public readonly struct BinaryDeserializer : IDeserializer<BinaryDeserializer>
             Array.Resize(ref buffer.Value, keylength);
         }
         _ = reader.Read(buffer.Value.AsSpan(0, keylength));
-        key = new(encoding, buffer.Value.AsSpan(0, keylength));
+        key = new(buffer.Value.AsSpan(0, keylength));
         return this;
     }
 
