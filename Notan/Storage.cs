@@ -427,6 +427,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
             entityToObservers.RemoveAt(entityIndex);
             entityToAuthority.RemoveAt(entityIndex);
             entityIsDead.RemoveAt(entityIndex);
+            entityToGeneration.RemoveAt(entityIndex);
             entities.RemoveAt(entityIndex);
             indexToEntity[entityToIndex[^1]] = entityIndex;
             entityToIndex.RemoveAt(entityIndex);
