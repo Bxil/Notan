@@ -528,6 +528,7 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
         entities.RemoveAt(entityIndex);
         indexToEntity[entityToIndex[^1]] = entityIndex;
         entityToIndex.RemoveAt(entityIndex);
+        entityToGeneration.RemoveAt(entityIndex);
     }
 
     public void Run<TSystem>(ref TSystem system) where TSystem : IClientSystem<T>
