@@ -74,6 +74,12 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     private readonly ClientAuthority authority;
 
+    public delegate void Delegate(ServerHandle<T> handle, ref T entity);
+
+    public event Delegate? PreUpdate;
+    public event Delegate? PostUpdate;
+    public event Delegate? OnDestroy;
+
     internal ServerStorage(int id, StorageOptionsAttribute? options) : base(id, options != null && options.Impermanent)
     {
         authority = options == null ? ClientAuthority.None : options.ClientAuthority;
@@ -106,7 +112,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         var generation = indexToGeneration[hndind];
         entityToGeneration.Add(generation);
         var handle = new ServerHandle<T>(this, hndind, generation);
-        Get(hndind, generation).PostUpdate(handle);
+        PostUpdate?.Invoke(handle, ref Get(hndind, generation));
         return handle;
     }
 
@@ -118,7 +124,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         }
 
         ref var entity = ref Get(index, generation);
-        entity.PreUpdate(new(this, index, generation));
+        PreUpdate?.Invoke(new(this, index, generation), ref entity);
 
         foreach (var observer in entityToObservers[indexToEntity[index]].AsSpan())
         {
@@ -129,7 +135,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         indexToGeneration[index]++;
         destroyedEntityIndices.Add(index);
 
-        entity.OnDestroy();
+        OnDestroy?.Invoke(new(this, index, generation), ref entity);
     }
 
     private void Recycle(int index)
@@ -260,7 +266,6 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     public void Run<TSystem>(ref TSystem system) where TSystem : IServerSystem<T>
     {
-        system.PreWork();
         var i = entities.Count;
         while (i > 0)
         {
@@ -271,7 +276,6 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
                 system.Work(new(this, index, entityToGeneration[i]), ref entities[i]);
             }
         }
-        system.PostWork();
     }
 
     public TSystem Run<TSystem>(TSystem system) where TSystem : IServerSystem<T>
@@ -373,7 +377,7 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
         var i = 0;
         foreach (ref var entity in entities.AsSpan())
         {
-            entity.PostUpdate(new(this, entityToIndex[i], entityToGeneration[i]));
+            PostUpdate?.Invoke(new(this, entityToIndex[i], entityToGeneration[i]), ref entity);
             i++;
         }
     }
@@ -400,9 +404,9 @@ public sealed class ServerStorage<T> : Storage<T> where T : struct, IEntity<T>
                 if (Alive(index, generation) && entityToAuthority[indexToEntity[index]] == client)
                 {
                     ref var entity = ref Get(index, generation);
-                    entity.PreUpdate(new(this, index, generation));
+                    PreUpdate?.Invoke(new(this, index, generation), ref entity);
                     client.ReadIntoEntity(ref entity);
-                    entity.PostUpdate(new(this, index, generation));
+                    PostUpdate?.Invoke(new(this, index, generation), ref entity);
                 }
                 else
                 {
@@ -444,6 +448,11 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     private FastList<int> forgottenEntityIndices = new();
     private FastList<bool> entityIsForgotten = new();
+
+    public delegate void Delegate(ClientHandle<T> handle, ref T entity);
+
+    public event Delegate? PreUpdate;
+    public event Delegate? PostUpdate;
 
     internal ClientStorage(int id, StorageOptionsAttribute? options, Client server) : base(id, options != null && options.Impermanent)
     {
@@ -493,16 +502,16 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
                     indexToGeneration.EnsureSize(index + 1);
                     indexToGeneration[index] = generation;
                     entityToGeneration.Add(generation);
-                    Get(index, generation).PostUpdate(new(this, index, generation));
+                    PostUpdate?.Invoke(new(this, index, generation), ref Get(index, generation));
                 }
                 break;
             case MessageType.Update:
                 if (Alive(index, generation))
                 {
                     ref var entity = ref Get(index, generation);
-                    entity.PreUpdate(new(this, index, generation));
+                    PreUpdate?.Invoke(new(this, index, generation), ref entity);
                     client.ReadIntoEntity(ref entity);
-                    entity.PostUpdate(new(this, index, generation));
+                    PostUpdate?.Invoke(new(this, index, generation), ref entity);
                 }
                 else
                 {
@@ -513,7 +522,7 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
             case MessageType.Destroy:
                 if (Alive(index, generation))
                 {
-                    Get(index, generation).PreUpdate(new(this, index, generation));
+                    PreUpdate?.Invoke(new(this, index, generation), ref Get(index, generation));
                     indexToGeneration[index] = -1;
                     DestroyInternal(index);
                 }
@@ -533,7 +542,6 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
 
     public void Run<TSystem>(ref TSystem system) where TSystem : IClientSystem<T>
     {
-        system.PreWork();
         var i = entities.Count;
         while (i > 0)
         {
@@ -543,7 +551,6 @@ public sealed class ClientStorage<T> : Storage<T> where T : struct, IEntity<T>
                 system.Work(new(this, entityToIndex[i], entityToGeneration[i]), ref entities[i]);
             }
         }
-        system.PostWork();
     }
 
     public TSystem Run<TSystem>(TSystem system) where TSystem : IClientSystem<T>

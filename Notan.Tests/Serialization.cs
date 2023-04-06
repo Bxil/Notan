@@ -30,45 +30,52 @@ public class Serialization
     [TestMethod]
     public void JsonDeserialize()
     {
-        const string jsonsave = @"
+        const string jsonsave =
+"""
 {
-    ""HandleIdentifiers"": {
-        ""Notan.Tests.ByteEntityOnDestroy"": 1
+    "HandleIdentifiers": {
+        "Notan.Tests.ByteEntity": 1
     },
-    ""Entities"": {
-        ""Notan.Tests.ByteEntityOnDestroy"": [
+    "Entities": {
+        "Notan.Tests.ByteEntity": [
             {
-                ""gen"": 0,
-                ""entity"": 2
+                "gen": 0,
+                "entity": {
+                    "Value": 2
+                }
             },
             {
-                ""gen"": 42,
-                ""dead"": true
+                "gen": 42,
+                "dead": true
             },
             {
-                ""gen"": 12,
-                ""entity"": 3
+                "gen": 12,
+                "entity": {
+                    "Value": 3
+                }
             },
             {
-                ""gen"": 12,
-                ""entity"": 5
+                "gen": 12,
+                "entity": {
+                    "Value": 5
+                }
             },
             {
-                ""gen"": 12,
-                ""dead"": true
+                "gen": 12,
+                "dead": true
             }
         ],
-        ""Notan.Tests.HandleEntity"": [
+        "Notan.Tests.HandleEntity": [
             {
-                ""gen"": 1,
-                ""entity"": {
-                    ""Value"": [1, 0, 0]
+                "gen": 1,
+                "entity": {
+                    "Value": [1, 0, 0]
                 }
             }
         ]
     }
 }
-";
+""";
 
         var mem = new MemoryStream();
         var writer = new StreamWriter(mem);
@@ -98,11 +105,11 @@ public class Serialization
     {
         for (var i = 0; i < 1000; i++)
         {
-            _ = world.GetStorage<ByteEntityOnDestroy>().Create(new ByteEntityOnDestroy { Value = (byte)(i % 100) });
+            _ = world.GetStorage<ByteEntity>().Create(new ByteEntity { Value = (byte)(i % 100) });
         }
         for (var i = 0; i < 100; i++)
         {
-            _ = world.GetStorage<ByteEntityOnDestroy>().Create(new ByteEntityOnDestroy { Value = new() });
+            _ = world.GetStorage<ByteEntity>().Create(new ByteEntity { Value = new() });
         }
         var mem = new MemoryStream();
         using (var writer = new Utf8JsonWriter(mem, new JsonWriterOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }))

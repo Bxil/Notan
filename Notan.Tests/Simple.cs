@@ -9,11 +9,11 @@ public class Simple
 {
     private ServerWorld world;
 
-    private ServerStorage<ByteEntityOnDestroy> bytestorage;
+    private ServerStorage<ByteEntity> bytestorage;
 
     private ByteSystem system;
 
-    private readonly Maybe<ByteEntityOnDestroy>[] bytehandles = new Maybe<ByteEntityOnDestroy>[byte.MaxValue];
+    private readonly Maybe<ByteEntity>[] bytehandles = new Maybe<ByteEntity>[byte.MaxValue];
 
     private int SumBytes()
     {
@@ -33,11 +33,20 @@ public class Simple
     {
         world = new ServerWorld(0);
         world.AddStorages(Assembly.GetExecutingAssembly());
-        bytestorage = world.GetStorage<ByteEntityOnDestroy>();
+
+        var cyclicStorage = world.GetStorage<CyclicEntity>();
+        cyclicStorage.PostUpdate
+            += (ServerHandle<CyclicEntity> handle, ref CyclicEntity entity) => entity.Self = handle;
+        cyclicStorage.OnDestroy
+            += (ServerHandle<CyclicEntity> handle, ref CyclicEntity entity) => entity.Self.Server<CyclicEntity>().Destroy();
+
+        bytestorage = world.GetStorage<ByteEntity>();
+        bytestorage.OnDestroy
+            += (ServerHandle<ByteEntity> handle, ref ByteEntity entity) => entity.Value--;
 
         for (byte i = 0; i < byte.MaxValue; i++)
         {
-            bytehandles[i] = bytestorage.Create(new ByteEntityOnDestroy { Value = i });
+            bytehandles[i] = bytestorage.Create(new ByteEntity { Value = i });
         }
 
         system = new();
@@ -99,7 +108,7 @@ public class Simple
 
         for (byte i = 0; i < bytehandles.Length / 2; i++)
         {
-            bytehandles[i * 2 + 1] = bytestorage.Create(new ByteEntityOnDestroy { Value = i });
+            bytehandles[i * 2 + 1] = bytestorage.Create(new ByteEntity { Value = i });
         }
 
         for (var i = 0; i < bytehandles.Length; i++)
@@ -141,13 +150,13 @@ public class Simple
         world.GetStorage<CyclicEntity>().Create(new()).Destroy();
     }
 
-    struct ByteSystem : IServerSystem<ByteEntityOnDestroy>
+    struct ByteSystem : IServerSystem<ByteEntity>
     {
         public int Sum;
 
         public int Count;
 
-        public void Work(ServerHandle<ByteEntityOnDestroy> handle, ref ByteEntityOnDestroy entity)
+        public void Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
         {
             Sum += entity.Value;
             Count += 1;

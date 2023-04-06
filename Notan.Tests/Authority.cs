@@ -16,12 +16,15 @@ public class Authority
     {
         serverWorld = new ServerWorld(0);
         serverWorld.AddStorages(Assembly.GetExecutingAssembly());
+        serverWorld.GetStorage<ByteEntity>().PostUpdate += PostUpdate;
 
         clientWorld1 = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).Result;
         clientWorld1.AddStorages(Assembly.GetExecutingAssembly());
+        clientWorld1.GetStorage<ByteEntity>().PostUpdate += PostUpdate;
 
         clientWorld2 = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).Result;
         clientWorld2.AddStorages(Assembly.GetExecutingAssembly());
+        clientWorld2.GetStorage<ByteEntity>().PostUpdate += PostUpdate;
 
         _ = serverWorld.Tick();
     }
@@ -37,22 +40,25 @@ public class Authority
         _ = clientWorld2.Tick();
     }
 
+    private static void PostUpdate(ServerHandle<ByteEntity> _, ref ByteEntity entity) => entity.Value++;
+
+    private static void PostUpdate(ClientHandle<ByteEntity> _, ref ByteEntity entity) => entity.Value++;
+
     [TestMethod]
     public void Updates()
     {
-        var storage1 = clientWorld1.GetStorage<ByteEntityPostUpdate>();
-        var storage2 = clientWorld2.GetStorage<ByteEntityPostUpdate>();
+        var storage1 = clientWorld1.GetStorage<ByteEntity>();
+        var storage2 = clientWorld2.GetStorage<ByteEntity>();
 
-        storage1.RequestCreate(new ByteEntityPostUpdate { Value = 1 });
-        storage2.RequestCreate(new ByteEntityPostUpdate { Value = 3 });
-        //Note ByteEntityPostUpdate's PostUpdate.
+        storage1.RequestCreate(new ByteEntity { Value = 1 });
+        storage2.RequestCreate(new ByteEntity { Value = 3 });
 
         _ = clientWorld1.Tick();
         _ = clientWorld2.Tick();
 
         _ = serverWorld.Tick(); //2, 4
 
-        Assert.AreEqual(6, serverWorld.GetStorage<ByteEntityPostUpdate>().Run(new SumSystem()).Sum);
+        Assert.AreEqual(6, serverWorld.GetStorage<ByteEntity>().Run(new SumSystem()).Sum);
 
         _ = clientWorld1.Tick(); //3
         _ = clientWorld2.Tick(); //5
@@ -65,9 +71,9 @@ public class Authority
 
         _ = serverWorld.Tick(); //5, 7
 
-        Assert.AreEqual(12, serverWorld.GetStorage<ByteEntityPostUpdate>().Run(new SumSystem()).Sum);
+        Assert.AreEqual(12, serverWorld.GetStorage<ByteEntity>().Run(new SumSystem()).Sum);
 
-        _ = serverWorld.GetStorage<ByteEntityPostUpdate>().Run(new DestroySystem());
+        _ = serverWorld.GetStorage<ByteEntity>().Run(new DestroySystem());
 
         _ = serverWorld.Tick();
 
@@ -78,32 +84,32 @@ public class Authority
         Assert.AreEqual(0, storage2.Run(new SumSystem()).Sum);
     }
 
-    struct IncSystem : IClientSystem<ByteEntityPostUpdate>
+    struct IncSystem : IClientSystem<ByteEntity>
     {
-        void IClientSystem<ByteEntityPostUpdate>.Work(ClientHandle<ByteEntityPostUpdate> handle, ref ByteEntityPostUpdate entity)
+        void IClientSystem<ByteEntity>.Work(ClientHandle<ByteEntity> handle, ref ByteEntity entity)
         {
-            handle.RequestUpdate(new ByteEntityPostUpdate { Value = (byte)(entity.Value + 1) });
+            handle.RequestUpdate(new ByteEntity { Value = (byte)(entity.Value + 1) });
         }
     }
 
-    struct SumSystem : IServerSystem<ByteEntityPostUpdate>, IClientSystem<ByteEntityPostUpdate>
+    struct SumSystem : IServerSystem<ByteEntity>, IClientSystem<ByteEntity>
     {
         public int Sum;
 
-        void IServerSystem<ByteEntityPostUpdate>.Work(ServerHandle<ByteEntityPostUpdate> handle, ref ByteEntityPostUpdate entity)
+        void IServerSystem<ByteEntity>.Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
         {
             Sum += entity.Value;
         }
 
-        void IClientSystem<ByteEntityPostUpdate>.Work(ClientHandle<ByteEntityPostUpdate> handle, ref ByteEntityPostUpdate entity)
+        void IClientSystem<ByteEntity>.Work(ClientHandle<ByteEntity> handle, ref ByteEntity entity)
         {
             Sum += entity.Value;
         }
     }
 
-    struct DestroySystem : IServerSystem<ByteEntityPostUpdate>
+    struct DestroySystem : IServerSystem<ByteEntity>
     {
-        void IServerSystem<ByteEntityPostUpdate>.Work(ServerHandle<ByteEntityPostUpdate> handle, ref ByteEntityPostUpdate entity)
+        void IServerSystem<ByteEntity>.Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
         {
             handle.Destroy();
         }

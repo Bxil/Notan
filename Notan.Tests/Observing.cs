@@ -35,17 +35,17 @@ public class Observing
     [TestMethod]
     public void AddAndDisconnect()
     {
-        clientWorld.GetStorage<ByteEntityOnDestroy>().RequestCreate(new ByteEntityOnDestroy());
+        clientWorld.GetStorage<ByteEntity>().RequestCreate(new ByteEntity());
         _ = clientWorld.Tick();
         _ = serverWorld.Tick();
         var system = new ByteSystem();
-        serverWorld.GetStorage<ByteEntityOnDestroy>().Run(ref system);
+        serverWorld.GetStorage<ByteEntity>().Run(ref system);
         clientWorld.Exit();
         _ = clientWorld.Tick();
         _ = serverWorld.Tick();
-        serverWorld.GetStorage<ByteEntityOnDestroy>().Run(ref system);
+        serverWorld.GetStorage<ByteEntity>().Run(ref system);
         _ = serverWorld.Tick();
-        serverWorld.GetStorage<ByteEntityOnDestroy>().Run(ref system);
+        serverWorld.GetStorage<ByteEntity>().Run(ref system);
     }
 
     [TestMethod]
@@ -68,11 +68,11 @@ public class Observing
     [TestMethod]
     public void StayDead()
     {
-        var byteStorage = serverWorld.GetStorage<ByteEntityOnDestroy>();
+        var byteStorage = serverWorld.GetStorage<ByteEntity>();
         var handleStorage = serverWorld.GetStorage<HandleEntity>();
         var byteEntity = byteStorage.Create(new());
         byteEntity.AddObserver(serverWorld.Clients[0]);
-        var handle1 = handleStorage.Create(new HandleEntity { Value = (Handle<ByteEntityOnDestroy>)byteEntity });
+        var handle1 = handleStorage.Create(new HandleEntity { Value = (Handle<ByteEntity>)byteEntity });
         Assert.AreEqual(0, handle1.Index);
         Assert.AreEqual(0, handle1.Generation);
         Assert.IsTrue(new Maybe<HandleEntity>(handle1).Alive());
@@ -87,9 +87,9 @@ public class Observing
         Assert.AreEqual(1, clientWorld.GetStorage<HandleEntity>().Run(new AliveCountSystem()).Count);
     }
 
-    struct ByteSystem : IServerSystem<ByteEntityOnDestroy>
+    struct ByteSystem : IServerSystem<ByteEntity>
     {
-        public void Work(ServerHandle<ByteEntityOnDestroy> handle, ref ByteEntityOnDestroy entity)
+        public void Work(ServerHandle<ByteEntity> handle, ref ByteEntity entity)
         {
             handle.UpdateObservers();
         }
@@ -98,8 +98,6 @@ public class Observing
     struct AliveCountSystem : IClientSystem<HandleEntity>
     {
         public int Count;
-
-        void IClientSystem<HandleEntity>.PreWork() => Count = 0;
 
         void IClientSystem<HandleEntity>.Work(ClientHandle<HandleEntity> handle, ref HandleEntity entity)
         {

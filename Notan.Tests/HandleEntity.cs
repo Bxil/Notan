@@ -8,5 +8,5 @@ namespace Notan.Tests;
 partial struct HandleEntity : IEntity<HandleEntity>
 {
     [Serialize]
-    public Maybe<ByteEntityOnDestroy> Value;
+    public Maybe<ByteEntity> Value;
 }
