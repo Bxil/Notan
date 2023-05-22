@@ -16,15 +16,12 @@ public class Authority
     {
         serverWorld = new ServerWorld(0);
         serverWorld.AddStorages(Assembly.GetExecutingAssembly());
-        serverWorld.GetStorage<ByteEntity>().PostUpdate += PostUpdate;
 
         clientWorld1 = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).Result;
         clientWorld1.AddStorages(Assembly.GetExecutingAssembly());
-        clientWorld1.GetStorage<ByteEntity>().PostUpdate += PostUpdate;
 
         clientWorld2 = ClientWorld.StartAsync("localhost", serverWorld.EndPoint.Port).Result;
         clientWorld2.AddStorages(Assembly.GetExecutingAssembly());
-        clientWorld2.GetStorage<ByteEntity>().PostUpdate += PostUpdate;
 
         _ = serverWorld.Tick();
     }
@@ -39,10 +36,6 @@ public class Authority
         clientWorld2.Exit();
         _ = clientWorld2.Tick();
     }
-
-    private static void PostUpdate(ServerHandle<ByteEntity> _, ref ByteEntity entity) => entity.Value++;
-
-    private static void PostUpdate(ClientHandle<ByteEntity> _, ref ByteEntity entity) => entity.Value++;
 
     [TestMethod]
     public void Updates()

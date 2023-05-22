@@ -22,7 +22,7 @@ public abstract class World
         IdToStorage.Add(null!);
     }
 
-    private protected Storage<T> GetStorageBase<T>() where T : struct, IEntity<T>
+    public Storage<T> GetStorage<T>() where T : struct, IEntity<T>
     {
         return Unsafe.As<Storage<T>>(TypeNameToStorage[typeof(T).ToString()]);
     }
@@ -57,9 +57,9 @@ public sealed class ServerWorld : World
         IdToStorage.Add(newstorage);
     }
 
-    public ServerStorage<T> GetStorage<T>() where T : struct, IEntity<T>
+    public new ServerStorage<T> GetStorage<T>() where T : struct, IEntity<T>
     {
-        return Unsafe.As<ServerStorage<T>>(GetStorageBase<T>());
+        return Unsafe.As<ServerStorage<T>>(base.GetStorage<T>());
     }
 
     public bool Tick()
@@ -237,9 +237,9 @@ public sealed class ClientWorld : World
         IdToStorage.Add(newstorage);
     }
 
-    public ClientStorage<T> GetStorage<T>() where T : struct, IEntity<T>
+    public new ClientStorage<T> GetStorage<T>() where T : struct, IEntity<T>
     {
-        return Unsafe.As<ClientStorage<T>>(GetStorageBase<T>());
+        return Unsafe.As<ClientStorage<T>>(base.GetStorage<T>());
     }
 
     public bool Tick()
